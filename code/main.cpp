@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <intrin.h>
 #include <windows.h>
-#include "main.h"
 
 #pragma intrinsic(__rdtsc)
 
@@ -12,6 +11,25 @@
 global_variable bool32 global_running;
 global_variable LARGE_INTEGER global_performance_frequency;
 global_variable WINDOWPLACEMENT global_window_position = { sizeof(global_window_position) };
+
+struct Win32_Offscreen_Buffer
+{
+    int width;
+    int height;
+    int pitch;
+    void *memory;
+    BITMAPINFO info;
+};
+    
+struct Game_Code
+{
+    Game_Update_And_Render *game_update_and_render;
+
+    HMODULE library;
+    FILETIME last_write_time;
+    
+    bool32 is_valid;
+};
 
 internal void
 toggle_fullscreen(HWND window)
