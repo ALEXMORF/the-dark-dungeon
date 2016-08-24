@@ -24,6 +24,14 @@ typedef double real64;
 #define gigabytes(Value) (megabytes(Value)*1024LL)
 #define terabytes(Value) (gigabytes(Value)*1024LL)
 
+#define assert(value) do {if(!(value)) *(int*)0 = 0;} while (0)
+
+#define PLATFORM_LOAD_IMAGE(name) uint8 * name(const char *filename, int32 *width, int32 *height, int32 *bytes_per_pixel, int32 default_byte_per_pixel)
+typedef PLATFORM_LOAD_IMAGE(Platform_Load_Image);
+
+#define PLATFORM_FREE_IMAGE(name) void name(void *data)
+typedef PLATFORM_FREE_IMAGE(Platform_Free_Image);
+			 
 struct Game_Memory
 {
     void *permanent_storage;
@@ -32,6 +40,9 @@ struct Game_Memory
     uint32 transient_storage_size;
 
     bool32 is_initialized;
+
+    Platform_Load_Image *platform_load_image;
+    Platform_Free_Image *platform_free_image;
 };
 
 struct Game_Offscreen_Buffer
@@ -52,6 +63,11 @@ struct Game_Input
 	bool32 down;
 	bool32 space;
     } keyboard;
+    struct
+    {
+	real32 dx;
+	real32 dy;
+    } mouse;
     real32 dt_per_frame;
 };
 

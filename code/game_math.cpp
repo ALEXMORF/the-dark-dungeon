@@ -1,6 +1,22 @@
 #include "math.h"
 
 inline v2
+normalize(v2 a)
+{
+    real32 length = sqrtf(a.x*a.x + a.y*a.y);
+
+    if (a.x)
+    {
+	a.x /= length;
+    }
+    if (a.y)
+    {
+	a.y /= length;
+    }
+    return a;
+}
+
+inline v2
 operator+(v2 a, v2 b)
 {
     v2 result;
@@ -80,4 +96,17 @@ radian_to_degree(real32 radian)
     result /= pi32;
     result *= 180.0f;
     return result;
+}
+
+inline void
+recanonicalize_angle(real32 *angle)
+{
+    while (*angle >= pi32*2.0f)
+    {
+	*angle -= pi32*2.0f;
+    }
+    while (*angle < 0.0f)
+    {
+	*angle += pi32*2.0f;
+    }
 }

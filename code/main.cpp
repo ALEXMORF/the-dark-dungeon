@@ -3,6 +3,13 @@
 #include <stdio.h>
 #include <intrin.h>
 #include <windows.h>
+#include <windowsx.h>
+
+#pragma warning(push)
+#pragma warning(disable: 4244)
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#pragma warning(pop)
 
 #pragma intrinsic(__rdtsc)
 
@@ -11,6 +18,9 @@
 global_variable bool32 global_running;
 global_variable LARGE_INTEGER global_performance_frequency;
 global_variable WINDOWPLACEMENT global_window_position = { sizeof(global_window_position) };
+
+global_variable int32 global_previous_mouse_x;
+global_variable int32 global_previous_mouse_y;
 
 struct Win32_Offscreen_Buffer
 {
@@ -226,6 +236,17 @@ win32_main_window_callback(HWND window, UINT message, WPARAM w_param, LPARAM l_p
     LRESULT result = 0;
     switch (message)
     {
+	case WM_MOUSEMOVE:
+	{
+	    global_previous_mouse_x = GET_X_LPARAM(l_param);
+	    global_previous_mouse_y = GET_Y_LPARAM(l_param);
+	} break;
+	
+	case WM_SETCURSOR:
+	{
+	    SetCursor(0);
+	} break;
+	
 	case WM_CLOSE:
 	{
 	    global_running = false;
@@ -268,6 +289,11 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 						 MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
     game_memory.transient_storage = ((uint8 *)game_memory.permanent_storage +
 				     permanent_game_memory_size);
+
+    game_memory.platform_load_image = stbi_load;
+    game_memory.platform_free_image = stbi_image_free;
+    assert(game_memory.platform_load_image);
+    assert(game_memory.platform_free_image);
     
     Game_Input game_input = {};
     Game_Offscreen_Buffer game_buffer = {};
@@ -297,6 +323,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 	    win32_load_game_code(&game_code);
 	}
 
+	    
 	//handles input
 	MSG message;
 	while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
@@ -325,10 +352,10 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 			}
 			
 #define bind_key(win32_key, game_key) if (key_code == (win32_key)) game_key = key_down;
-			bind_key(VK_LEFT, game_input.keyboard.left);
-			bind_key(VK_RIGHT, game_input.keyboard.right);
-			bind_key(VK_UP, game_input.keyboard.up);
-			bind_key(VK_DOWN, game_input.keyboard.down);
+			bind_key('A', game_input.keyboard.left);
+			bind_key('D', game_input.keyboard.right);
+			bind_key('W', game_input.keyboard.up);
+			bind_key('S', game_input.keyboard.down);
 			bind_key(VK_SPACE, game_input.keyboard.space);
 		    }
 		} break;
@@ -340,6 +367,22 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 		} break;
 	    }
 	}
+
+	/*NOTE(chen): calculate difference between mouse and middle of screen, 
+	  then lock the cursor back to center
+	 */
+	{
+	    RECT client_rect;
+	    GetClientRect(window, &client_rect);
+	    POINT screen_center = {(client_rect.right - client_rect.left)/2,
+				   (client_rect.bottom - client_rect.top)/2};
+	    game_input.mouse.dx = (real32)(global_previous_mouse_x - screen_center.x);
+	    game_input.mouse.dy = (real32)(global_previous_mouse_y - screen_center.y);
+
+	    ClientToScreen(window, &screen_center);	    
+	    SetCursorPos(screen_center.x , screen_center.y);
+	}
+	
 	game_input.dt_per_frame = ms_per_frame / 1000.0f;
 	
 	game_buffer.width = win32_buffer.width;
