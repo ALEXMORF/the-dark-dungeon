@@ -1,9 +1,5 @@
 #include "game.h"
 
-#define abs(value) ((value) > 0? (value): -(value))
-#define swap(x, y) do {x ^= y; y ^= x; x ^= y;} while (0)
-#define if_do(condition, action) do { if (condition) action; } while (0)
-
 #include "game_math.cpp"
 #include "game_tiles.cpp"
 
@@ -21,7 +17,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	game_state->player_position = {3.0f, 3.0f};
 	game_state->player_angle = 0.0f;
 	
-	game_state->wall_texture = load_image(memory->platform_load_image, "../data/redbrick.png");
+	game_state->wall_texture = load_image(memory->platform_load_image, "../data/mossy.png");
 	assert(game_state->wall_texture.data);
 	       
 	memory->is_initialized = true;
@@ -34,7 +30,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 	    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 	    1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
-	    1, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+	    1, 0, 0, 1, 0, 0, 1, 1, 1, 1,
 	    1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
 	    1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
 	    1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
@@ -78,7 +74,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     player_delta_direction.x += cosf(game_state->player_angle + pi32/2.0f) * left;
     player_delta_direction = normalize(player_delta_direction);
     
-    real32 player_speed = 1.5f;
+    real32 player_speed = 1.0f;
     player_delta_direction *= player_speed;
     game_state->player_position += player_delta_direction * input->dt_per_frame;
     
@@ -86,7 +82,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //
     //
 
-    real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f;
+    real32 mouse_sensitivity = 0.7f;
+    real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity;
     game_state->player_angle += player_delta_angle;
     recanonicalize_angle(&game_state->player_angle);
     
@@ -110,10 +107,10 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	real32 left_most_angle = game_state->player_angle + projection_spec.fov/2.0f;
 	real32 delta_angle = projection_spec.fov / (real32)ray_count;
 
-	for (int32 i = 0; i < ray_count; ++i)
+	for (int32 slice_index = 0; slice_index < ray_count; ++slice_index)
 	{
 	    //get reflection sample
-	    real32 angle = left_most_angle - delta_angle*i;
+	    real32 angle = left_most_angle - delta_angle*slice_index;
 	    recanonicalize_angle(&angle);
 	    Reflection_Sample reflection = cast_ray(&tile_map,
 						    game_state->player_position,
@@ -140,24 +137,43 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	      inverse of that of screen dimension (screen coordinate)
 	     */
 	    real32 wall_height = projection_spec.dim * (real32)buffer->width / (real32)buffer->height;
-#if 0
-	    real32 projected_wall_height = (wall_height * projection_spec.view_distance /
-					    (reflection.ray_length + projection_spec.view_distance));
-#else
 	    real32 projected_wall_height = (real32)(wall_height / reflection.ray_length);
-#endif
 
 	    //draw the actual slice
 	    int32 wall_slice_height = (int32)(projected_wall_height * buffer->height);
 	    int32 wall_top = (int32)(buffer->height - wall_slice_height) / 2;
-	    
+
+#if 0
 	    uint32 wall_color = 0x00555555;
 	    if (reflection.x_side_faced)
 	    {
 		wall_color = 0x00FFFFFF;		
 	    }
+	    draw_line(buffer, slice_index, wall_top, slice_index, wall_top+wall_slice_height, wall_color);
+#else
+	    Loaded_Image *wall_texture = &game_state->wall_texture;
+
+	    real32 texture_x_unscaled = 0.0f;
+	    if (reflection.x_side_faced)
+	    {
+		real32 divisor = floorf(reflection.hit_position.x);
+		texture_x_unscaled = reflection.hit_position.x - divisor;
+	    }
+	    else
+	    {
+		real32 divisor = floorf(reflection.hit_position.y);
+		texture_x_unscaled = reflection.hit_position.y - divisor;
+	    }
+	    int32 texture_x = (int32)(texture_x_unscaled * (wall_texture->width - 1));
 	    
-	    draw_line(buffer, i, wall_top, i, wall_top+wall_slice_height, wall_color);
+	    copy_slice(buffer, wall_texture, texture_x, slice_index, wall_top, wall_slice_height);
+#endif
+	}
+
+	//debug test stb_image
+	for (int32 i = 0; i < 64; ++i)
+	{
+	    copy_slice(buffer, &game_state->wall_texture, i, i, 0, 64);
 	}
     }
     else

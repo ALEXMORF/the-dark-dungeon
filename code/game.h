@@ -2,6 +2,10 @@
 
 #include "game_platform.h"
 
+#define abs(value) ((value) > 0? (value): -(value))
+#define swap(x, y) do {x ^= y; y ^= x; x ^= y;} while (0)
+#define if_do(condition, action) do { if (condition) action; } while (0)
+
 #include "game_math.h"
 #include "game_tiles.h"
 

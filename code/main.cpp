@@ -19,6 +19,7 @@ global_variable bool32 global_running;
 global_variable LARGE_INTEGER global_performance_frequency;
 global_variable WINDOWPLACEMENT global_window_position = { sizeof(global_window_position) };
 
+global_variable bool32 global_app_is_active;
 global_variable int32 global_previous_mouse_x;
 global_variable int32 global_previous_mouse_y;
 
@@ -236,6 +237,11 @@ win32_main_window_callback(HWND window, UINT message, WPARAM w_param, LPARAM l_p
     LRESULT result = 0;
     switch (message)
     {
+	case WM_ACTIVATEAPP:
+	{
+	    global_app_is_active = (w_param == TRUE);
+	} break;
+	
 	case WM_MOUSEMOVE:
 	{
 	    global_previous_mouse_x = GET_X_LPARAM(l_param);
@@ -370,7 +376,9 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 
 	/*NOTE(chen): calculate difference between mouse and middle of screen, 
 	  then lock the cursor back to center
-	 */
+	  ps: do so only if game is the activated window
+	*/
+	if (global_app_is_active)
 	{
 	    RECT client_rect;
 	    GetClientRect(window, &client_rect);

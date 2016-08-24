@@ -43,7 +43,7 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
 	    real32 dy = abs(hit_y - position.y);
 	    
 	    result.ray_length = sqrtf(dx*dx + dy*dy);
-	    result.x_side_faced = true;
+	    result.x_side_faced = false;
 	    result.hit_position = {hit_x, hit_y};
 	    result.is_valid = true;
 	}
@@ -79,7 +79,7 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
 	    if (!result.is_valid || result.ray_length > temp)
 	    {
 		result.ray_length = temp;
-		result.x_side_faced = false;
+		result.x_side_faced = true;
 		result.hit_position = {hit_x, hit_y};
 		result.is_valid = true;
 	    }
