@@ -138,7 +138,7 @@ win32_create_window(const char *window_name, WNDPROC window_proc = DefWindowProc
     {
 	int screen_width = GetSystemMetrics(SM_CXSCREEN);
 	int screen_height = GetSystemMetrics(SM_CYSCREEN);
-	window_upper_left = (screen_width - window_width) / 2;
+	window_upper_left = (screen_width - window_width) / 4;
 	window_upper_top = (screen_height - window_height) / 2;	
     }
 
@@ -409,7 +409,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 	uint64 current_tsc = __rdtsc();
 	uint64 mtsc = (current_tsc - last_tsc) / 1024*1024;
 	last_tsc = __rdtsc();
- 
+
 	if (target_ms > elapsed_ms)
 	{
 	    Sleep((DWORD)(target_ms - elapsed_ms));

@@ -79,6 +79,7 @@ draw_rectangle(Game_Offscreen_Buffer *buffer,
     }
 }
 
+//TODO(chen): optimize this function by clipping
 internal void
 copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
 	   int32 source_x, int32 dest_x, int32 dest_y, int32 dest_height)
@@ -86,23 +87,33 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
     if (dest_x >= 0 && dest_x < buffer->width)
     {
 	int32 bytes_per_pixel = 4;
-	
 	uint32 *source_pixel = (uint32 *)loaded_image->data + source_x;
-	uint8 *dest_col = (uint8 *)buffer->memory + dest_x * bytes_per_pixel + dest_y*buffer->pitch;
 
 	real32 mapper = (real32)loaded_image->height / (real32)dest_height;
-    
-	for (int32 y = 0; y < dest_height; ++y, ++dest_y)
+	real32 source_y = 0.0f;
+
+	//NOTE(chen): clip the size and move the source pointer to where it should be 
+	uint32 *dest_pixel = (uint32 *)buffer->memory + dest_x + dest_y * buffer->width;
+	if (dest_y < 0)
 	{
-	    if (dest_y >= 0 && dest_y < buffer->height)
-	    {
-		uint32 *dest_pixel = (uint32 *)dest_col;
-	
-		int32 source_y = (int32)(mapper * y);
-	    
-		*dest_pixel = source_pixel[loaded_image->width * source_y];
-	    }
-	    dest_col += buffer->pitch;
+	    dest_pixel += -dest_y * buffer->width;
+	    source_y += mapper * -dest_y;
+	    dest_y = 0;
+	    dest_height = buffer->height;
+	}
+	if (dest_height > buffer->height)
+	{
+	    dest_height = buffer->height;
+	}
+	assert(dest_height - dest_y <= buffer->height);
+
+	//render
+	for (int32 y = 0; y < dest_height; ++y)
+	{
+	    *dest_pixel = source_pixel[(int32)source_y * loaded_image->width];
+	    source_y += mapper;
+
+	    dest_pixel += buffer->width;
 	}
     }
 }

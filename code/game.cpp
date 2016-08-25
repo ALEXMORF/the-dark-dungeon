@@ -17,7 +17,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	game_state->player_position = {3.0f, 3.0f};
 	game_state->player_angle = 0.0f;
 	
-	game_state->wall_texture = load_image(memory->platform_load_image, "../data/mossy.png");
+	game_state->wall_texture = load_image(memory->platform_load_image, "../data/greystone.png");
 	assert(game_state->wall_texture.data);
 	       
 	memory->is_initialized = true;
@@ -74,7 +74,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     player_delta_direction.x += cosf(game_state->player_angle + pi32/2.0f) * left;
     player_delta_direction = normalize(player_delta_direction);
     
-    real32 player_speed = 1.0f;
+    real32 player_speed = 1.5f;
     player_delta_direction *= player_speed;
     game_state->player_position += player_delta_direction * input->dt_per_frame;
     
@@ -138,42 +138,30 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	     */
 	    real32 wall_height = projection_spec.dim * (real32)buffer->width / (real32)buffer->height;
 	    real32 projected_wall_height = (real32)(wall_height / reflection.ray_length);
-
+	    
 	    //draw the actual slice
 	    int32 wall_slice_height = (int32)(projected_wall_height * buffer->height);
 	    int32 wall_top = (int32)(buffer->height - wall_slice_height) / 2;
 
-#if 0
-	    uint32 wall_color = 0x00555555;
-	    if (reflection.x_side_faced)
+	    //texture mapping & rendering
 	    {
-		wall_color = 0x00FFFFFF;		
-	    }
-	    draw_line(buffer, slice_index, wall_top, slice_index, wall_top+wall_slice_height, wall_color);
-#else
-	    Loaded_Image *wall_texture = &game_state->wall_texture;
-
-	    real32 texture_x_unscaled = 0.0f;
-	    if (reflection.x_side_faced)
-	    {
-		real32 divisor = floorf(reflection.hit_position.x);
-		texture_x_unscaled = reflection.hit_position.x - divisor;
-	    }
-	    else
-	    {
-		real32 divisor = floorf(reflection.hit_position.y);
-		texture_x_unscaled = reflection.hit_position.y - divisor;
-	    }
-	    int32 texture_x = (int32)(texture_x_unscaled * (wall_texture->width - 1));
+		Loaded_Image *wall_texture = &game_state->wall_texture;
 	    
-	    copy_slice(buffer, wall_texture, texture_x, slice_index, wall_top, wall_slice_height);
-#endif
-	}
+		real32 texture_x_unscaled = 0.0f;
+		if (reflection.x_side_faced)
+		{
+		    real32 divisor = floorf(reflection.hit_position.x);
+		    texture_x_unscaled = reflection.hit_position.x - divisor;
+		}
+		else
+		{
+		    real32 divisor = floorf(reflection.hit_position.y);
+		    texture_x_unscaled = reflection.hit_position.y - divisor;
+		}
+		int32 texture_x = (int32)(texture_x_unscaled * (wall_texture->width - 1));
 
-	//debug test stb_image
-	for (int32 i = 0; i < 64; ++i)
-	{
-	    copy_slice(buffer, &game_state->wall_texture, i, i, 0, 64);
+		copy_slice(buffer, wall_texture, texture_x, slice_index, wall_top, wall_slice_height);
+	    }
 	}
     }
     else
