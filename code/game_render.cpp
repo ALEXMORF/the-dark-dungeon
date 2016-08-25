@@ -79,7 +79,6 @@ draw_rectangle(Game_Offscreen_Buffer *buffer,
     }
 }
 
-//TODO(chen): optimize this function by clipping
 internal void
 copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
 	   int32 source_x, int32 dest_x, int32 dest_y, int32 dest_height)

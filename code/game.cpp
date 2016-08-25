@@ -17,8 +17,12 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	game_state->player_position = {3.0f, 3.0f};
 	game_state->player_angle = 0.0f;
 	
-	game_state->wall_texture = load_image(memory->platform_load_image, "../data/greystone.png");
+	game_state->wall_texture = load_image(memory->platform_load_image, "../data/redbrick.png");
+	game_state->floor_texture = load_image(memory->platform_load_image, "../data/greystone.png");
+	game_state->ceiling_texture = load_image(memory->platform_load_image, "../data/mossy.png");
 	assert(game_state->wall_texture.data);
+	assert(game_state->floor_texture.data);
+	assert(game_state->ceiling_texture.data);
 	       
 	memory->is_initialized = true;
     }
@@ -107,63 +111,124 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	real32 left_most_angle = game_state->player_angle + projection_spec.fov/2.0f;
 	real32 delta_angle = projection_spec.fov / (real32)ray_count;
 
+	/*NOTE(chen):
+	  The aspect ratio of wall dimension (world coordinate) must match the
+	  inverse of that of screen dimension (screen coordinate)
+	*/	    
+	real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
+	
 	for (int32 slice_index = 0; slice_index < ray_count; ++slice_index)
 	{
 	    //get reflection sample
 	    real32 angle = left_most_angle - delta_angle*slice_index;
 	    recanonicalize_angle(&angle);
-	    Reflection_Sample reflection = cast_ray(&tile_map,
-						    game_state->player_position,
-						    angle);
-	    
-	    //adjust sample's ray length
+	    Reflection_Sample reflection = cast_ray(&tile_map, game_state->player_position, angle);
+
+	    //correct the ray length to perpendicular
 	    real32 beta = angle - game_state->player_angle;
 	    reflection.ray_length *= cosf(beta);
-	    
-	    //calculate projection
-	    /*NOTE(chen): yo check this shit out!!!
-	      I already set the projection width to 1.0f in world coord,
-	      and set the wall width to the same as wall height,
-	      however, the screen is wider than its height,
-	      so therefore, when a wall is up close in your face,
-	      the wall-width fills the projection-width,
-	      however, wall-height can't just be 1.0f, which is equal to projection height,
-	      because that would mean it's attached to the aspect ratio of screen.
-	      To acheive realistic effect,
-	      it must exceed to to simulate the effect of a cube of equal sides
 
-	      TL:DR,
-	      The aspect ratio of wall dimension (world coordinate) must match the
-	      inverse of that of screen dimension (screen coordinate)
-	     */
-	    real32 wall_height = projection_spec.dim * (real32)buffer->width / (real32)buffer->height;
-	    real32 projected_wall_height = (real32)(wall_height / reflection.ray_length);
+	    real32 wall_height = projection_spec.dim;
+	    real32 projected_wall_height = (wall_height / reflection.ray_length *
+					    inverse_aspect_ratio);
 	    
 	    //draw the actual slice
 	    int32 wall_slice_height = (int32)(projected_wall_height * buffer->height);
 	    int32 wall_top = (int32)(buffer->height - wall_slice_height) / 2;
 
-	    //texture mapping & rendering
+	    //rendering & texture mapping the walls
 	    {
 		Loaded_Image *wall_texture = &game_state->wall_texture;
 	    
 		real32 texture_x_unscaled = 0.0f;
 		if (reflection.x_side_faced)
 		{
-		    real32 divisor = floorf(reflection.hit_position.x);
-		    texture_x_unscaled = reflection.hit_position.x - divisor;
+		    real32 subtracter = floorf(reflection.hit_position.x);
+		    texture_x_unscaled = reflection.hit_position.x - subtracter;
 		}
 		else
 		{
-		    real32 divisor = floorf(reflection.hit_position.y);
-		    texture_x_unscaled = reflection.hit_position.y - divisor;
+		    real32 subtracter = floorf(reflection.hit_position.y);
+		    texture_x_unscaled = reflection.hit_position.y - subtracter;
 		}
 		int32 texture_x = (int32)(texture_x_unscaled * (wall_texture->width - 1));
+		copy_slice(buffer, wall_texture, texture_x, slice_index,
+			   wall_top, wall_slice_height);
 
-		copy_slice(buffer, wall_texture, texture_x, slice_index, wall_top, wall_slice_height);
+		//darken the slice if it's x faced
+		if (!reflection.x_side_faced)
+		{
+		    uint32 *buffer_pixels = (uint32 *)buffer->memory;		    
+		    for (int32 y = wall_top; y < wall_slice_height+wall_top; ++y)
+		    {
+			if (y < 0) y = 0;
+			if (y >= buffer->height) break;
+
+			buffer_pixels[slice_index + y*buffer->width] =
+			    ((buffer_pixels[slice_index + y*buffer->width] >> 1) & 0x7F7F7F);
+		    }
+		}
+	    }
+
+	    //floor casting & texturing
+	    {
+		Loaded_Image *floor_texture = &game_state->floor_texture;
+		Loaded_Image *ceiling_texture = &game_state->ceiling_texture;
+		
+		//scan downward from the bottom of the wall and locate & draw floor pixels 
+		for (int32 scan_y = wall_top + wall_slice_height; scan_y < buffer->height; ++scan_y)
+		{
+		    /*NOTE(chen):
+		      this scan_y is fake, because it was stretched by multiplying
+		      inverse aspect ratio, in order to get the real scan y, we must
+		      reverse the process and get the real_scan_y.
+
+		      Note that, this process is raycasting, which means casting a ray from
+		      projection onto the world to find the world coordinate, this scenario indicates
+		      that in our renderer, Y coordinates are fucked due to the inverse
+		      aspect ratio multiplier, so if we were to encounter a similiar situation,
+		      we must take this into account.
+		      
+		      reverse the effect that inverse aspect ratio multiplier,
+		      let this code calculate what it would be if the wall is not stretched,
+		      then cast it back to our stretched coordinates
+		    */
+		    real32 real_scan_y = (buffer->height/2 +
+					  (scan_y - buffer->height/2)/inverse_aspect_ratio);
+		    
+		    real32 current_dist = ((real32)buffer->height /
+					   (2*real_scan_y - buffer->height));
+		    
+		    real32 interpolent = (current_dist / reflection.ray_length);
+		    v2 hit_position = reflection.hit_position;
+		    v2 player_position = game_state->player_position;
+		    
+		    v2 floor_position = lerp(player_position, hit_position, interpolent);
+
+		    real32 rel_x = floor_position.x - floorf(floor_position.x);
+		    real32 rel_y = floor_position.y - floorf(floor_position.y);
+
+		    int32 texture_x = (int32)(rel_x * floor_texture->width);
+		    int32 texture_y = (int32)(rel_y * floor_texture->height);
+
+		    int32 screen_x = slice_index;
+		    int32 screen_y = scan_y;
+
+		    uint32 *dest_pixels = (uint32 *)buffer->memory;
+		    uint32 *floor_source_pixels = (uint32 *)floor_texture->data;
+		    uint32 *ceiling_source_pixels = (uint32 *)ceiling_texture->data;
+		    
+		    dest_pixels[screen_x + screen_y*buffer->width] =
+			floor_source_pixels[texture_x + texture_y*floor_texture->width];
+		    
+		    int32 reverse_scan_y = buffer->height - screen_y;
+		    dest_pixels[screen_x + reverse_scan_y*buffer->width] =
+			ceiling_source_pixels[texture_x + texture_y*floor_texture->width];
+		}
 	    }
 	}
     }
+    //NOTE(chen): Debug top-down view
     else
     {
 	for (int32 y = 0; y < map_height; ++y)

@@ -17,5 +17,8 @@ struct Game_State
 {
     v2 player_position;
     real32 player_angle;
+    
     Loaded_Image wall_texture;
+    Loaded_Image floor_texture;
+    Loaded_Image ceiling_texture;
 };

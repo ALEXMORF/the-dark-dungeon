@@ -4,7 +4,7 @@ call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
 
 pushd ..\build
 
-set compiler_flags=-nologo -Z7 -MT -Od -WX -W4 -wd4100 -wd4189 -wd4505 -wd4127 -DPOOR_DEBUG=1
+set compiler_flags=-nologo -Z7 -MT -O2 -WX -W4 -wd4100 -wd4189 -wd4505 -wd4127 -DPOOR_DEBUG=1
 set linker_flags=-incremental:no user32.lib gdi32.lib winmm.lib
 
 del *.pdb 1> NUL 2> NUL

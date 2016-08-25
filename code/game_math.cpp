@@ -110,3 +110,19 @@ recanonicalize_angle(real32 *angle)
 	*angle += pi32*2.0f;
     }
 }
+
+inline real32
+lerp(real32 start, real32 end, real32 t)
+{
+    real32 result = start * (1.0f - t) + end * t;
+    return result;
+}
+
+inline v2
+lerp(v2 start, v2 end, real32 t)
+{
+    v2 result = {};
+    result.x = lerp(start.x, end.x, t);
+    result.y = lerp(start.y, end.y, t);
+    return result;
+}
