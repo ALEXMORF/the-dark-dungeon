@@ -1,7 +1,7 @@
 # the-dark-dungeon
 a game with the application of raycasting.
 
-All the game code and render code is coded by hand with only a few libraries. The render code is written without external libraries, but the asset loading does use external libraries, since it's a bit tricky.
+All the game code and render code is coded by hand with only a few libraries. The render code is written without any external libraries, but the asset loading does use external libraries, since it's a bit tricky.
 
 libraries being used:
 1. stb_image.h 
