@@ -282,8 +282,8 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     
     HWND window = win32_create_window("Dark Dungeon", win32_main_window_callback,
 				      window_width, window_height);
-    Win32_Offscreen_Buffer win32_buffer = win32_create_offscreen_buffer(window_width,
-									window_height);
+    Win32_Offscreen_Buffer win32_buffer = win32_create_offscreen_buffer(window_width, window_height);
+    
     QueryPerformanceFrequency(&global_performance_frequency);
     timeBeginPeriod(1);
     

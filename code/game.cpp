@@ -1,5 +1,7 @@
 #include "game.h"
 
+#define array_count(array) (sizeof(array)/sizeof(array[0]))
+
 #include "game_math.cpp"
 #include "game_tiles.cpp"
 
@@ -7,6 +9,37 @@
 #include "game_render.cpp"
 #include "game_raycaster.cpp"
 
+#define Copy_Array(source, dest, count, type) copy_memory(source, dest, count*sizeof(type))
+inline void
+copy_memory(void *source_in, void *dest_in, uint32 size)
+{
+    uint8 *source = (uint8 *)source_in;
+    uint8 *dest = (uint8 *)dest_in;
+    for (uint32 i = 0; i < size; ++i)
+    {
+	dest[i] = source[i];
+    }
+}
+
+inline void
+initialize_linear_allocator(Linear_Allocator *allocator, void *base_ptr, uint32 size)
+{
+    allocator->base_ptr = (uint8 *)base_ptr;
+    allocator->size = size;
+    allocator->used = 0;
+}
+
+#define Allocator_Push_Array(allocator, wanted_size, type) (type *)linear_allocate(allocator, wanted_size*sizeof(type))
+inline void *
+linear_allocate(Linear_Allocator *allocator, uint32 wanted_size)
+{
+    assert(allocator->used + wanted_size <= allocator->size);
+    void *result = allocator->base_ptr;
+    allocator->base_ptr += wanted_size;
+    allocator->used += wanted_size;
+    return result;
+}
+		
 extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 {
     assert(sizeof(Game_State) <= memory->permanent_storage_size);
@@ -14,9 +47,41 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     
     if (!memory->is_initialized)
     {
+	//memory
+	initialize_linear_allocator(&game_state->permanent_allocator,
+				    (uint8 *)memory->permanent_storage + sizeof(Game_State),
+				    memory->permanent_storage_size - sizeof(Game_State));
+
+	//game
 	game_state->player_position = {3.0f, 3.0f};
 	game_state->player_angle = 0.0f;
+
+#define map_width 10
+#define map_height 10
+	uint32 tiles[map_width*map_height] =
+	    {
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+		1, 0, 0, 1, 0, 0, 1, 1, 1, 1,
+		1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	    };
+	Tile_Map *tile_map = &game_state->tile_map;
+	tile_map->tile_count_x = 10;
+	tile_map->tile_count_y = 10;
+	tile_map->exception_tile_value = 1;
+	int32 tile_count = tile_map->tile_count_x * tile_map->tile_count_y;
+	tile_map->tiles = Allocator_Push_Array(&game_state->permanent_allocator,
+					       tile_count,
+					       uint32);
+	Copy_Array(tiles, tile_map->tiles, tile_count, uint32);
 	
+	//asset
 	game_state->wall_texture = load_image(memory->platform_load_image,
 					      "../data/redbrick.png");
 	game_state->floor_texture = load_image(memory->platform_load_image,
@@ -26,30 +91,21 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	assert(game_state->wall_texture.data);
 	assert(game_state->floor_texture.data);
 	assert(game_state->ceiling_texture.data);
-	       
+
+	//floorcast lookup table
+	int32 table_count = buffer->height/2;
+	game_state->floorcast_table = Allocator_Push_Array(&game_state->permanent_allocator,
+							   table_count, real32);	
+	for (int32 i = 0; i < table_count; ++i)
+	{
+	    real32 inverse_aspect_ratio = (real32)buffer->width / buffer->height;
+	    real32 real_scan_y = (buffer->height/2 + i / inverse_aspect_ratio);
+	    game_state->floorcast_table[i] = ((real32)buffer->height /
+						(2*real_scan_y - buffer->height));
+	}
+	
 	memory->is_initialized = true;
     }
-
-#define map_width 10
-#define map_height 10
-    uint32 tiles[map_width*map_height] =
-	{
-	    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-	    1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
-	    1, 0, 0, 1, 0, 0, 1, 1, 1, 1,
-	    1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
-	    1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
-	    1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
-	    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-	    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-	    1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-	};
-    Tile_Map tile_map = {};
-    tile_map.tiles = tiles;
-    tile_map.exception_tile_value = 1;
-    tile_map.tile_count_x = map_width;
-    tile_map.tile_count_y = map_height;
 
     //
     //
@@ -129,7 +185,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    //get reflection sample
 	    real32 angle = left_most_angle - delta_angle*slice_index;
 	    recanonicalize_angle(&angle);
-	    Reflection_Sample reflection = cast_ray(&tile_map, game_state->player_position, angle);
+	    Reflection_Sample reflection = cast_ray(&game_state->tile_map, game_state->player_position, angle);
 
 	    //correct the ray length to perpendicular
 	    real32 beta = angle - game_state->player_angle;
@@ -199,11 +255,16 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		      let this code calculate what it would be if the wall is not stretched,
 		      then cast it back to our stretched coordinates
 		    */
+
+//TODO(chen): change this hard-coded renderer table to real code		    
+#if 1
+		    real32 current_dist = game_state->floorcast_table[scan_y - buffer->height/2];
+#else
 		    real32 real_scan_y = (buffer->height/2 +
 					  (scan_y - buffer->height/2)/inverse_aspect_ratio);
-		    
 		    real32 current_dist = ((real32)buffer->height /
 					   (2*real_scan_y - buffer->height));
+#endif
 		    
 		    real32 interpolent = (current_dist / reflection.ray_length);
 		    v2 hit_position = reflection.hit_position;
@@ -212,14 +273,13 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 /*NOTE(chen): for some reason, if code is compiled with -Od, inline functions are disabled,
               so for now, let's do it inlined manually. turn it back when compiled with -O2
  */
-#if 0
+#if RELEASE_BUILD
 		    v2 floor_position = lerp(player_position, hit_position, interpolent);
 #else
-		    v2 floor_position;
-		    floor_position.x = (player_position.x*(1.0f - interpolent) +
-					hit_position.x*interpolent);
-		    floor_position.y = (player_position.y*(1.0f - interpolent) +
-					hit_position.y*interpolent);
+		    v2 floor_position = {(player_position.x*(1.0f - interpolent) +
+					  hit_position.x*interpolent),
+					 (player_position.y*(1.0f - interpolent) +
+					  hit_position.y*interpolent)};
 #endif
 
 		    int32 texture_x = ((int32)(floor_position.x*floor_texture->width) %
@@ -251,7 +311,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	{
 	    for (int32 x = 0; x < map_width; ++x)
 	    {
-		uint32 tile_value = get_tile_value(&tile_map, x, y);
+		uint32 tile_value = get_tile_value(&game_state->tile_map, x, y);
 
 		uint32 color = 0x000055;
 		if (tile_value == 1)
@@ -285,7 +345,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	{
 	    real32 angle = starting_angle + (angle_step*i);
 	    recanonicalize_angle(&angle);
-	    real32 ray_length = cast_ray(&tile_map, game_state->player_position, angle).ray_length;
+	    real32 ray_length = cast_ray(&game_state->tile_map, game_state->player_position, angle).ray_length;
 	    real32 ray_end_x = game_state->player_position.x + cosf(angle) * ray_length;
 	    real32 ray_end_y = game_state->player_position.y + sinf(angle) * ray_length;
 						   

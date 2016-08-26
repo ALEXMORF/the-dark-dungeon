@@ -13,12 +13,28 @@
 #include "game_render.h"
 #include "game_raycaster.h"
 
+struct Linear_Allocator
+{
+    uint8 *base_ptr;
+    uint32 size;
+    uint32 used;
+};
+
 struct Game_State
 {
+    //memory
+    Linear_Allocator permanent_allocator;
+    
+    //game
     v2 player_position;
     real32 player_angle;
+    Tile_Map tile_map;
     
+    //asset
     Loaded_Image wall_texture;
     Loaded_Image floor_texture;
     Loaded_Image ceiling_texture;
+
+    //render
+    real32 *floorcast_table;
 };
