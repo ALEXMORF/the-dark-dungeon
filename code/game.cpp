@@ -221,12 +221,11 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		    floor_position.y = (player_position.y*(1.0f - interpolent) +
 					hit_position.y*interpolent);
 #endif
-		    
-		    real32 rel_x = floor_position.x - floorf(floor_position.x);
-		    real32 rel_y = floor_position.y - floorf(floor_position.y);
 
-		    int32 texture_x = (int32)(rel_x * floor_texture->width);
-		    int32 texture_y = (int32)(rel_y * floor_texture->height);
+		    int32 texture_x = ((int32)(floor_position.x*floor_texture->width) %
+				       floor_texture->width);
+		    int32 texture_y = ((int32)(floor_position.y*floor_texture->height) %
+				       floor_texture->height);
 
 		    int32 screen_x = slice_index;
 		    int32 screen_y = scan_y;
