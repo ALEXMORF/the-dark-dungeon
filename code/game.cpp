@@ -17,9 +17,12 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	game_state->player_position = {3.0f, 3.0f};
 	game_state->player_angle = 0.0f;
 	
-	game_state->wall_texture = load_image(memory->platform_load_image, "../data/redbrick.png");
-	game_state->floor_texture = load_image(memory->platform_load_image, "../data/greystone.png");
-	game_state->ceiling_texture = load_image(memory->platform_load_image, "../data/mossy.png");
+	game_state->wall_texture = load_image(memory->platform_load_image,
+					      "../data/redbrick.png");
+	game_state->floor_texture = load_image(memory->platform_load_image,
+					       "../data/greystone.png");
+	game_state->ceiling_texture = load_image(memory->platform_load_image,
+						 "../data/greystone.png");
 	assert(game_state->wall_texture.data);
 	assert(game_state->floor_texture.data);
 	assert(game_state->ceiling_texture.data);
@@ -107,6 +110,10 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	projection_spec.fov = pi32 / 3.0f;
 	projection_spec.view_distance = projection_spec.dim / 2.0f * sqrtf(3.0f);
 
+	World_Spec world_spec = {};
+	world_spec.wall_width = 1.0f;
+	world_spec.wall_height = 1.0f;
+	
 	int32 ray_count = buffer->width;
 	real32 left_most_angle = game_state->player_angle + projection_spec.fov/2.0f;
 	real32 delta_angle = projection_spec.fov / (real32)ray_count;
@@ -128,11 +135,10 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    real32 beta = angle - game_state->player_angle;
 	    reflection.ray_length *= cosf(beta);
 
-	    real32 wall_height = projection_spec.dim;
-	    real32 projected_wall_height = (wall_height / reflection.ray_length *
+	    real32 projected_wall_height = (world_spec.wall_height / reflection.ray_length *
 					    inverse_aspect_ratio);
 	    
-	    //draw the actual slice
+	    //calculate the upper and lower end of this slice of wall
 	    int32 wall_slice_height = (int32)(projected_wall_height * buffer->height);
 	    int32 wall_top = (int32)(buffer->height - wall_slice_height) / 2;
 
@@ -202,9 +208,20 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		    real32 interpolent = (current_dist / reflection.ray_length);
 		    v2 hit_position = reflection.hit_position;
 		    v2 player_position = game_state->player_position;
-		    
-		    v2 floor_position = lerp(player_position, hit_position, interpolent);
 
+/*NOTE(chen): for some reason, if code is compiled with -Od, inline functions are disabled,
+              so for now, let's do it inlined manually. turn it back when compiled with -O2
+ */
+#if 0
+		    v2 floor_position = lerp(player_position, hit_position, interpolent);
+#else
+		    v2 floor_position;
+		    floor_position.x = (player_position.x*(1.0f - interpolent) +
+					hit_position.x*interpolent);
+		    floor_position.y = (player_position.y*(1.0f - interpolent) +
+					hit_position.y*interpolent);
+#endif
+		    
 		    real32 rel_x = floor_position.x - floorf(floor_position.x);
 		    real32 rel_y = floor_position.y - floorf(floor_position.y);
 

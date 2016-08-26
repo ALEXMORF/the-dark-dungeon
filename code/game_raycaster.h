@@ -7,6 +7,12 @@ struct Projection_Spec
     real32 view_distance;
 };
 
+struct World_Spec
+{
+    real32 wall_height;
+    real32 wall_width;
+};
+
 struct Reflection_Sample
 {
     bool32 x_side_faced;
