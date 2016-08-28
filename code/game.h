@@ -24,9 +24,11 @@ struct Game_State
 {
     //memory
     Linear_Allocator permanent_allocator;
+    Linear_Allocator transient_allocator;
     
     //game
     v2 player_position;
+    v2 barrel_position;
     real32 player_angle;
     Tile_Map tile_map;
     
@@ -34,7 +36,9 @@ struct Game_State
     Loaded_Image wall_texture;
     Loaded_Image floor_texture;
     Loaded_Image ceiling_texture;
-
+    Loaded_Image barrel_texture;
+    
     //render
     real32 *floorcast_table;
+    int32 floorcast_table_count;
 };

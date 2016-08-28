@@ -341,7 +341,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 		case WM_KEYUP:
 		case WM_KEYDOWN:
 		{
-		    DWORD key_code = message.wParam;
+		    WPARAM key_code = message.wParam;
 		    bool32 key_down = ((message.lParam & (1 << 31)) == 0);
 		    bool32 key_was_down = ((message.lParam & (1 << 30)) != 0);
 

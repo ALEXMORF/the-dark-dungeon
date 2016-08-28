@@ -1,5 +1,11 @@
 #include "game_render.h"
 
+inline uint32
+darken(uint32 original)
+{
+    return ((original >> 1) & 0x7F7F7F);
+}
+
 internal void
 fill_buffer(Game_Offscreen_Buffer *buffer, uint32 color)
 {
@@ -81,7 +87,8 @@ draw_rectangle(Game_Offscreen_Buffer *buffer,
 
 internal void
 copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
-	   int32 source_x, int32 dest_x, int32 dest_y, int32 dest_height)
+	   int32 source_x, int32 dest_x, int32 dest_y, int32 dest_height,
+	   Pixel_Manip *pixel_manipulate = 0)
 {
     if (dest_x >= 0 && dest_x < buffer->width)
     {
@@ -109,7 +116,14 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
 	//render
 	for (int32 y = 0; y < dest_height; ++y)
 	{
-	    *dest_pixel = source_pixel[(int32)source_y * loaded_image->width];
+	    if (pixel_manipulate)
+	    {
+		*dest_pixel = pixel_manipulate(source_pixel[(int32)source_y * loaded_image->width]);
+	    }
+	    else
+	    {
+		*dest_pixel = source_pixel[(int32)source_y * loaded_image->width];
+	    }
 	    source_y += mapper;
 
 	    dest_pixel += buffer->width;
