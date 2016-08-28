@@ -229,7 +229,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    recanonicalize_angle(&angle);
 	    Reflection_Sample reflection = cast_ray(&game_state->tile_map, game_state->player_position, angle);
 
-	    //correct the ray length to perpendicular
+	    //NOTE(chen): fix fisheye
 	    real32 beta = angle - game_state->player_angle;
 	    reflection.ray_length *= cosf(beta);
 	    
@@ -327,6 +327,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    
 	    real32 player_to_sprite_distance = sqrtf(player_to_sprite.x*player_to_sprite.x +
 						     player_to_sprite.y*player_to_sprite.y);
+	    //NOTE(chen): fix fisheye
 	    player_to_sprite_distance *= cosf(direction_angle - game_state->player_angle);
 	    
 
