@@ -88,7 +88,7 @@ draw_rectangle(Game_Offscreen_Buffer *buffer,
 internal void
 copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
 	   int32 source_x, int32 dest_x, int32 dest_y, int32 dest_height,
-	   Pixel_Manip *pixel_manipulate = 0)
+	   Shader_Fn *shader = 0)
 {
     if (dest_x >= 0 && dest_x < buffer->width)
     {
@@ -116,9 +116,9 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
 	//render
 	for (int32 y = 0; y < dest_height; ++y)
 	{
-	    if (pixel_manipulate)
+	    if (shader)
 	    {
-		*dest_pixel = pixel_manipulate(source_pixel[(int32)source_y * loaded_image->width]);
+		*dest_pixel = shader(source_pixel[(int32)source_y * loaded_image->width]);
 	    }
 	    else
 	    {

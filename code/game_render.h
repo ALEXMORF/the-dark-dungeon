@@ -1,3 +1,3 @@
 #pragma once
 
-typedef uint32 Pixel_Manip(uint32 original);
+typedef uint32 Shader_Fn(uint32 original);

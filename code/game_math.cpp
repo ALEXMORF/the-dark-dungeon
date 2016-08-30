@@ -17,6 +17,29 @@ normalize(v2 a)
 }
 
 inline v2
+v2_from_angle(real32 angle, real32 len)
+{
+    v2 result = {};
+    result.x = cosf(angle)*len;
+    result.y = sinf(angle)*len;
+    return result;
+}
+
+inline real32
+det(v2 a, v2 b)
+{
+    real32 result = a.x*b.y - a.y*b.x;
+    return result;
+}
+
+inline real32
+dot(v2 a, v2 b)
+{
+    real32 result = a.x*b.x + a.y*b.y;
+    return result;
+}
+
+inline v2
 operator+(v2 a, v2 b)
 {
     v2 result;
@@ -109,6 +132,20 @@ recanonicalize_angle(real32 *angle)
     {
 	*angle += pi32*2.0f;
     }
+}
+
+inline real32
+get_angle_diff(real32 a, real32 b)
+{
+    real32 result = 0.0f;
+    v2 unit_a = v2_from_angle(a, 1.0f);
+    v2 unit_b = v2_from_angle(b, 1.0f);
+
+    real32 dot_value = dot(unit_a, unit_b);
+    real32 det_value = det(unit_a, unit_b);
+
+    result = atan2f(det_value, dot_value);
+    return result;
 }
 
 inline real32

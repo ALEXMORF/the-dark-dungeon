@@ -9,26 +9,6 @@
 #include "game_render.cpp"
 #include "game_raycaster.cpp"
 
-//TODO(chen): slow, replace with intrinsics 
-inline void
-zero_memory(void *ptr, uint32 size)
-{
-    uint32 chunk_count = size / 8; //8-byte chunks
-    uint32 left_over = size % 8;
-
-    uint64 *writer = (uint64 *)ptr;
-    for (uint32 i = 0; i < chunk_count; ++i)
-    {
-	*writer++ = 0;
-    }
-
-    uint8 *small_writer = (uint8 *)writer;
-    for (uint32 i = 0; i < left_over; ++i)
-    {
-	*small_writer++ = 0;
-    }
-}
-
 #define Copy_Array(source, dest, count, type) copy_memory(source, dest, count*sizeof(type))
 inline void
 copy_memory(void *source_in, void *dest_in, uint32 size)
@@ -139,7 +119,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	      then cast it back to our stretched coordinates
 	    */
 	    real32 inverse_aspect_ratio = (real32)buffer->width / buffer->height;
-	    real32 real_scan_y = (buffer->height/2 + i / inverse_aspect_ratio);
+	    real32 real_scan_y = ((real32)buffer->height/2 + (real32)i / inverse_aspect_ratio);
 	    game_state->floorcast_table[i] = ((real32)buffer->height /
 					      (2*real_scan_y - buffer->height));
 	}
@@ -201,6 +181,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
     if (!input->keyboard.space)
     {
+	real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
+	
 	Projection_Spec projection_spec = {};
 	projection_spec.dim = 1.0f;
 	projection_spec.fov = pi32 / 3.0f;
@@ -213,79 +195,55 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	int32 ray_count = buffer->width;
 	real32 left_most_angle = game_state->player_angle + projection_spec.fov/2.0f;
 	real32 delta_angle = projection_spec.fov / (real32)ray_count;
-
+	
 	real32 *z_buffer = Push_Array(&game_state->transient_allocator, buffer->width, real32);
-	
-	/*NOTE(chen):
-	  The aspect ratio of wall dimension (world coordinate) must match the
-	  inverse of that of screen dimension (screen coordinate)
-	*/	    
-	real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
-	
+
 	for (int32 slice_index = 0; slice_index < ray_count; ++slice_index)
 	{
-	    //get reflection sample
 	    real32 angle = left_most_angle - delta_angle*slice_index;
 	    recanonicalize_angle(&angle);
 	    Reflection_Sample reflection = cast_ray(&game_state->tile_map, game_state->player_position, angle);
 
 	    //NOTE(chen): fix fisheye
-	    real32 beta = angle - game_state->player_angle;
-	    reflection.ray_length *= cosf(beta);
+	    reflection.ray_length *= cosf(angle - game_state->player_angle);
+
+	    //this is the z-buffer for sprite-rendering
+	    z_buffer[slice_index] = reflection.ray_length;
 	    
 	    real32 projected_wall_height = (world_spec.wall_height / reflection.ray_length *
 					    inverse_aspect_ratio);
-	    
-	    //calculate the upper and lower end of this slice of wall
 	    int32 wall_slice_height = (int32)(projected_wall_height * buffer->height);
 	    int32 wall_top = (int32)(buffer->height - wall_slice_height) / 2;
-		
-	    //rendering & texture mapping the walls
+
+	    //wall rendering routine
 	    {
 		Loaded_Image *wall_texture = &game_state->wall_texture;
-		
-		real32 texture_x_unscaled = 0.0f;
-		if (reflection.x_side_faced)
-		{
-		    real32 subtracter = floorf(reflection.hit_position.x);
-		    texture_x_unscaled = reflection.hit_position.x - subtracter;
-		}
-		else
-		{
-		    real32 subtracter = floorf(reflection.hit_position.y);
-		    texture_x_unscaled = reflection.hit_position.y - subtracter;
-		}
-		int32 texture_x = (int32)(texture_x_unscaled * (wall_texture->width - 1));
 
-		Pixel_Manip *pixel_manipulator = 0;
-		if (!reflection.x_side_faced)
-		{
-		    pixel_manipulator = darken;
-		}
-		
+		real32 tile_size = 1.0f;
+		real32 texture_x_percentage = (reflection.x_side_faced?
+					       modff(reflection.hit_position.x, &tile_size):
+					       modff(reflection.hit_position.y, &tile_size));
+		int32 texture_x = (int32)(texture_x_percentage * (wall_texture->width - 1));
+
+		Shader_Fn *shader = (reflection.x_side_faced? 0: darken);
 		copy_slice(buffer, wall_texture, texture_x, slice_index,
-			   wall_top, wall_slice_height, pixel_manipulator);
+			   wall_top, wall_slice_height, shader);
 	    }
-
-	    //floor casting & texturing
+	    
+	    //floor casting routine
 	    {
 		Loaded_Image *floor_texture = &game_state->floor_texture;
 		Loaded_Image *ceiling_texture = &game_state->ceiling_texture;
 		
-		//scan downward from the bottom of the wall and locate & draw floor pixels 
 		for (int32 scan_y = wall_top + wall_slice_height; scan_y < buffer->height; ++scan_y)
 		{
 
-		    //NOTE(chen): uses a look-up table to find distance, fast
 		    real32 current_dist = game_state->floorcast_table[scan_y - buffer->height/2];
 		    
 		    real32 interpolent = (current_dist / reflection.ray_length);
 		    v2 hit_position = reflection.hit_position;
 		    v2 player_position = game_state->player_position;
 
-/*NOTE(chen): for some reason, if code is compiled with -Od, inline functions are disabled,
-  so for now, let's do it inlined manually. turn it back when compiled with -O2
-*/
 #if RELEASE_BUILD
 		    v2 floor_position = lerp(player_position, hit_position, interpolent);
 #else
@@ -307,34 +265,27 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		    uint32 *floor_source_pixels = (uint32 *)floor_texture->data;
 		    uint32 *ceiling_source_pixels = (uint32 *)ceiling_texture->data;
 		    
-		    dest_pixels[screen_x + screen_y*buffer->width] =
-			floor_source_pixels[texture_x + texture_y*floor_texture->width];
-		    
-		    int32 reverse_scan_y = buffer->height - screen_y;
-		    dest_pixels[screen_x + reverse_scan_y*buffer->width] =
-			ceiling_source_pixels[texture_x + texture_y*floor_texture->width];
+		    dest_pixels[screen_x + screen_y*buffer->width] = floor_source_pixels[texture_x + texture_y*floor_texture->width];
+		    dest_pixels[screen_x + (buffer->height - screen_y)*buffer->width] = ceiling_source_pixels[texture_x + texture_y*floor_texture->width];
 		}
 	    } 
-	    
-	    //record the ray-length in a z-buffer
-	    z_buffer[slice_index] = reflection.ray_length;
 	} 
-
-	//TODO(chen): render sprites
+	
+	//TODO(chen): sprite rendering routine
 	{
 	    v2 player_to_sprite = game_state->barrel_position - game_state->player_position;
 	    real32 direction_angle = atan2f(player_to_sprite.y, player_to_sprite.x);
+	    recanonicalize_angle(&direction_angle);
 	    
 	    real32 player_to_sprite_distance = sqrtf(player_to_sprite.x*player_to_sprite.x +
 						     player_to_sprite.y*player_to_sprite.y);
 	    //NOTE(chen): fix fisheye
 	    player_to_sprite_distance *= cosf(direction_angle - game_state->player_angle);
-	    
 
-
-	    //calculate sprite GroundPoint
 	    v2 sprite_ground_point = {};
-	    sprite_ground_point.x = (left_most_angle - direction_angle) / delta_angle;
+	    sprite_ground_point.x = (get_angle_diff(direction_angle, game_state->player_angle) +
+				     projection_spec.fov/2.0f) / delta_angle;
+#if 1
 	    for (int32 table_index = 0;
 		 table_index < game_state->floorcast_table_count-1;
 		 ++table_index)
@@ -345,7 +296,18 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		    sprite_ground_point.y = buffer->height/2 + (real32)table_index;
 		}
 	    }
-
+#else
+	    /*TODO(chen): manual y-projection
+	      To project the entity's ground-point manually, first project the groundpoint to
+	      the projection point the gol' ol' way, then multiply by inverse aspect ratio,
+	      if the entity is closer than 1.0f away, then reverse the projection backward onto
+	      the plane. 
+	    */
+	    
+	    real32 y = (0.5f - (0.5f/player_to_sprite_distance)) * inverse_aspect_ratio;
+	    sprite_ground_point.y = (y * buffer->height/2) + buffer->height/2;   
+#endif
+	    
 	    int32 sprite_height = 80;
 	    int32 sprite_width = 20;
 	    int32 sprite_upper_left = (int32)(sprite_ground_point.x - sprite_width/2);
@@ -358,7 +320,6 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 			   0);
 	}
     }
-    //NOTE(chen): Debug top-down view
     else
     {
 	int32 tile_size_in_pixels = 32;    
