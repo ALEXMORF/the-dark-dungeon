@@ -61,10 +61,10 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	uint32 tiles[map_width*map_height] =
 	    {
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
-		1, 0, 0, 1, 0, 0, 1, 1, 1, 1,
 		1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 1, 0, 0, 0, 0, 1, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 		1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
 		1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
@@ -97,10 +97,12 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	assert(game_state->ceiling_texture.data);
 	assert(game_state->barrel_texture.data);
 
+	game_state->z_buffer = Push_Array(&game_state->permanent_allocator, buffer->width, real32);
+	
 	//floorcast lookup table
 	game_state->floorcast_table_count = buffer->height/2;
 	game_state->floorcast_table = Push_Array(&game_state->permanent_allocator,
-						 game_state->floorcast_table_count, real32);	
+						 game_state->floorcast_table_count, real32);
 	for (int32 i = 0; i < game_state->floorcast_table_count; ++i)
 	{
 	    /*NOTE(chen):
@@ -123,7 +125,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    game_state->floorcast_table[i] = ((real32)buffer->height /
 					      (2*real_scan_y - buffer->height));
 	}
-	
+
 	memory->is_initialized = true;
     }
 
@@ -196,8 +198,6 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	real32 left_most_angle = game_state->player_angle + projection_spec.fov/2.0f;
 	real32 delta_angle = projection_spec.fov / (real32)ray_count;
 	
-	real32 *z_buffer = Push_Array(&game_state->transient_allocator, buffer->width, real32);
-
 	for (int32 slice_index = 0; slice_index < ray_count; ++slice_index)
 	{
 	    real32 angle = left_most_angle - delta_angle*slice_index;
@@ -208,7 +208,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    reflection.ray_length *= cosf(angle - game_state->player_angle);
 
 	    //this is the z-buffer for sprite-rendering
-	    z_buffer[slice_index] = reflection.ray_length;
+	    game_state->z_buffer[slice_index] = reflection.ray_length;
 	    
 	    real32 projected_wall_height = (world_spec.wall_height / reflection.ray_length *
 					    inverse_aspect_ratio);
@@ -283,30 +283,27 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    player_to_sprite_distance *= cosf(direction_angle - game_state->player_angle);
 
 	    v2 sprite_ground_point = {};
-	    sprite_ground_point.x = (get_angle_diff(direction_angle, game_state->player_angle) +
-				     projection_spec.fov/2.0f) / delta_angle;
-#if 1
-	    for (int32 table_index = 0;
-		 table_index < game_state->floorcast_table_count-1;
-		 ++table_index)
+	    //compute sprite-ground-point
 	    {
-		if (game_state->floorcast_table[table_index] > player_to_sprite_distance &&
-		    game_state->floorcast_table[table_index+1] < player_to_sprite_distance)
+		real32 beta = get_angle_diff(direction_angle, game_state->player_angle);
+		
+		sprite_ground_point.x = (beta + projection_spec.fov/2.0f) / delta_angle;
+#if 0
+		for (int32 table_index = 0;
+		     table_index < game_state->floorcast_table_count-1;
+		     ++table_index)
 		{
-		    sprite_ground_point.y = buffer->height/2 + (real32)table_index;
+		    if (game_state->floorcast_table[table_index] > player_to_sprite_distance &&
+			game_state->floorcast_table[table_index+1] < player_to_sprite_distance)
+		    {
+			sprite_ground_point.y = buffer->height/2 + (real32)table_index;
+		    }
 		}
-	    }
 #else
-	    /*TODO(chen): manual y-projection
-	      To project the entity's ground-point manually, first project the groundpoint to
-	      the projection point the gol' ol' way, then multiply by inverse aspect ratio,
-	      if the entity is closer than 1.0f away, then reverse the projection backward onto
-	      the plane. 
-	    */
-	    
-	    real32 y = (0.5f - (0.5f/player_to_sprite_distance)) * inverse_aspect_ratio;
-	    sprite_ground_point.y = (y * buffer->height/2) + buffer->height/2;   
+		real32 y = 0.5f - 0.5f * (1.0f - (1.0f / player_to_sprite_distance*cosf(beta)));
+		sprite_ground_point.y = (y * buffer->height/2) + buffer->height/2;   
 #endif
+	    }
 	    
 	    int32 sprite_height = 80;
 	    int32 sprite_width = 20;

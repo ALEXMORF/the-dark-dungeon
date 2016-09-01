@@ -41,4 +41,5 @@ struct Game_State
     //render
     real32 *floorcast_table;
     int32 floorcast_table_count;
+    real32 *z_buffer;
 };
