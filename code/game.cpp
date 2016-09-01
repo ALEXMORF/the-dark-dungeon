@@ -56,24 +56,34 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	
 	//game
 //TODO(chen): this is some improv tile-map init code, replace this with procedural generation later
-#define map_width 10
-#define map_height 10
+#define map_width 20
+#define map_height 20
 	uint32 tiles[map_width*map_height] =
 	    {
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 1, 0, 0, 0, 0, 1, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 1, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1,
+		1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 	    };
 	Tile_Map *tile_map = &game_state->tile_map;
-	tile_map->tile_count_x = 10;
-	tile_map->tile_count_y = 10;
+	tile_map->tile_count_x = 20;
+	tile_map->tile_count_y = 20;
 	tile_map->exception_tile_value = 1;
 	int32 tile_count = tile_map->tile_count_x * tile_map->tile_count_y;
 	tile_map->tiles = Push_Array(&game_state->permanent_allocator, tile_count, uint32);
@@ -270,7 +280,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		}
 	    } 
 	} 
-	
+
+#if 0
 	//TODO(chen): sprite rendering routine
 	{
 	    v2 player_to_sprite = game_state->barrel_position - game_state->player_position;
@@ -301,7 +312,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		}
 #else
 		real32 y = 0.5f - 0.5f * (1.0f - (1.0f / player_to_sprite_distance*cosf(beta)));
-		sprite_ground_point.y = (y * buffer->height/2) + buffer->height/2;   
+		sprite_ground_point.y = (y * buffer->height/2)*inverse_aspect_ratio + buffer->height/2;   
 #endif
 	    }
 	    
@@ -316,6 +327,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 			   sprite_lower_right, sprite_lower_bottom,
 			   0);
 	}
+#endif
     }
     else
     {
