@@ -114,6 +114,11 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 						 "../data/greystone.png");
 	game_state->barrel_texture = load_image(memory->platform_load_image,
 						"../data/barrel.png");
+
+	for (int32 i = 0; i < game_state->wall_textures.count; ++i)
+	{
+	    assert(game_state->wall_textures.E[i].data);
+	}
 	assert(game_state->floor_texture.data);
 	assert(game_state->ceiling_texture.data);
 	assert(game_state->barrel_texture.data);

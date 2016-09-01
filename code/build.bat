@@ -5,7 +5,7 @@ call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
 
 pushd ..\build
 
-set compiler_flags=-nologo -Z7 -MT -Gm- -GR- -EHa- -O2 -Oi -WX -W4 -wd4100 -wd4189 -wd4505 -wd4127 
+set compiler_flags=-nologo -Z7 -MT -Gm- -GR- -EHa- -Od -Oi -WX -W4 -wd4100 -wd4189 -wd4505 -wd4127 
 set macro_flags=-DPOOR_DEBUG=1 -DRELEASE_BUILD=0
 set linker_flags=-incremental:no user32.lib gdi32.lib winmm.lib
 
