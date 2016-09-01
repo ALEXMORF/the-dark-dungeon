@@ -94,9 +94,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	game_state->barrel_position = {5.0f, 5.0f};
 	    
 	//asset
+#define Load_Wall_Tex(index, filename) game_state->wall_textures.E[index] = load_image(memory->platform_load_image, filename);	
 	{
-#define Load_Wall_Tex(index, filename) game_state->wall_textures.E[index] = load_image(memory->platform_load_image, filename);
-	    
 	    game_state->wall_textures.count = 6;
 	    game_state->wall_textures.E = Push_Array(&game_state->permanent_allocator,
 						     game_state->wall_textures.count,
@@ -108,6 +107,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    Load_Wall_Tex(4, "../data/purplestone.png");
 	    Load_Wall_Tex(5, "../data/wood.png");
 	}
+	
 	game_state->floor_texture = load_image(memory->platform_load_image,
 					       "../data/greystone.png");
 	game_state->ceiling_texture = load_image(memory->platform_load_image,
@@ -359,7 +359,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		uint32 tile_value = get_tile_value(&game_state->tile_map, x, y);
 
 		uint32 color = 0x000055;
-		if (tile_value == 1)
+		if (tile_value != 0)
 		{
 		    color = 0x0000FF;
 		}
