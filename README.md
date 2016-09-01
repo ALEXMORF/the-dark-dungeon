@@ -9,6 +9,7 @@ libraries being used:
 existing features:
  1. texture mapping for wall rendering. 
  2. floor & ceiling casting along with texture mapping.
+ 3. supports multiple wall textures (8/31/2016)
 
 currently working on: Sprite rendering. (Renderer)
  
