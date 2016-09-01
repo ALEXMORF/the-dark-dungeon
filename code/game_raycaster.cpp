@@ -45,6 +45,8 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
 	    result.ray_length = sqrtf(dx*dx + dy*dy);
 	    result.x_side_faced = false;
 	    result.hit_position = {hit_x, hit_y};
+	    result.tile_x = (int32)hit_x + tile_x_offset;
+	    result.tile_y = (int32)hit_y;
 	    result.is_valid = true;
 	}
     }
@@ -72,7 +74,7 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
 		hit_x += sign/tanf(angle);
 		hit_y += sign;
 	    }
-
+	    
 	    real32 dx = abs(hit_x - position.x);
 	    real32 dy = abs(hit_y - position.y);
 	    real32 temp = sqrtf(dx*dx + dy*dy);
@@ -81,6 +83,8 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
 		result.ray_length = temp;
 		result.x_side_faced = true;
 		result.hit_position = {hit_x, hit_y};
+		result.tile_x = (int32)hit_x;
+		result.tile_y = (int32)hit_y + tile_y_offset;
 		result.is_valid = true;
 	    }
 	}

@@ -16,6 +16,8 @@ struct World_Spec
 struct Reflection_Sample
 {
     bool32 x_side_faced;
+    int32 tile_x;
+    int32 tile_y;
     
     v2 hit_position;
     real32 ray_length;

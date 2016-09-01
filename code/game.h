@@ -20,6 +20,12 @@ struct Linear_Allocator
     uint32 used;
 };
 
+struct Wall_Textures
+{
+    Loaded_Image *E;
+    int32 count;
+};
+
 struct Game_State
 {
     //memory
@@ -33,7 +39,7 @@ struct Game_State
     Tile_Map tile_map;
     
     //asset
-    Loaded_Image wall_texture;
+    Wall_Textures wall_textures;
     Loaded_Image floor_texture;
     Loaded_Image ceiling_texture;
     Loaded_Image barrel_texture;

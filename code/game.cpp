@@ -60,30 +60,30 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 #define map_height 20
 	uint32 tiles[map_width*map_height] =
 	    {
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4,
+		4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1,
-		1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1,
+		1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 0, 0, 2, 1, 1, 1,
+		1, 1, 1, 2, 0, 0, 2, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4,
+		4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+		1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1
 	    };
 	Tile_Map *tile_map = &game_state->tile_map;
-	tile_map->tile_count_x = 20;
-	tile_map->tile_count_y = 20;
+	tile_map->tile_count_x = map_width;
+	tile_map->tile_count_y = map_height;
 	tile_map->exception_tile_value = 1;
 	int32 tile_count = tile_map->tile_count_x * tile_map->tile_count_y;
 	tile_map->tiles = Push_Array(&game_state->permanent_allocator, tile_count, uint32);
@@ -94,15 +94,26 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	game_state->barrel_position = {5.0f, 5.0f};
 	    
 	//asset
-	game_state->wall_texture = load_image(memory->platform_load_image,
-					      "../data/redbrick.png");
+	{
+#define Load_Wall_Tex(index, filename) game_state->wall_textures.E[index] = load_image(memory->platform_load_image, filename);
+	    
+	    game_state->wall_textures.count = 6;
+	    game_state->wall_textures.E = Push_Array(&game_state->permanent_allocator,
+						     game_state->wall_textures.count,
+						     Loaded_Image);
+	    Load_Wall_Tex(0, "../data/redbrick.png");
+	    Load_Wall_Tex(1, "../data/bluestone.png");
+	    Load_Wall_Tex(2, "../data/colorstone.png");
+	    Load_Wall_Tex(3, "../data/eagle.png");
+	    Load_Wall_Tex(4, "../data/purplestone.png");
+	    Load_Wall_Tex(5, "../data/wood.png");
+	}
 	game_state->floor_texture = load_image(memory->platform_load_image,
 					       "../data/greystone.png");
 	game_state->ceiling_texture = load_image(memory->platform_load_image,
 						 "../data/greystone.png");
 	game_state->barrel_texture = load_image(memory->platform_load_image,
 						"../data/barrel.png");
-	assert(game_state->wall_texture.data);
 	assert(game_state->floor_texture.data);
 	assert(game_state->ceiling_texture.data);
 	assert(game_state->barrel_texture.data);
@@ -227,7 +238,9 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
 	    //wall rendering routine
 	    {
-		Loaded_Image *wall_texture = &game_state->wall_texture;
+		uint32 tile_value = get_tile_value(&game_state->tile_map,
+						   reflection.tile_x, reflection.tile_y);
+		Loaded_Image *wall_texture = &game_state->wall_textures.E[tile_value-1];
 
 		real32 tile_size = 1.0f;
 		real32 texture_x_percentage = (reflection.x_side_faced?
@@ -274,7 +287,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		    uint32 *dest_pixels = (uint32 *)buffer->memory;
 		    uint32 *floor_source_pixels = (uint32 *)floor_texture->data;
 		    uint32 *ceiling_source_pixels = (uint32 *)ceiling_texture->data;
-		    
+
 		    dest_pixels[screen_x + screen_y*buffer->width] = floor_source_pixels[texture_x + texture_y*floor_texture->width];
 		    dest_pixels[screen_x + (buffer->height - screen_y)*buffer->width] = ceiling_source_pixels[texture_x + texture_y*floor_texture->width];
 		}
