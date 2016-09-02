@@ -270,16 +270,17 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		    real32 interpolent = (current_dist / reflection.ray_length);
 		    v2 hit_position = reflection.hit_position;
 		    v2 player_position = game_state->player_position;
-
-#if RELEASE_BUILD
+		    
+#if 0
 		    v2 floor_position = lerp(player_position, hit_position, interpolent);
 #else
-		    v2 floor_position = {(player_position.x*(1.0f - interpolent) +
-					  hit_position.x*interpolent),
-					 (player_position.y*(1.0f - interpolent) +
-					  hit_position.y*interpolent)};
+		    v2 floor_position = {};
+		    floor_position.x = (player_position.x * (1.0f - interpolent) +
+					hit_position.x * interpolent);
+		    floor_position.y =  (player_position.y * (1.0f - interpolent) +
+					hit_position.y * interpolent);
 #endif
-
+		    
 		    int32 texture_x = ((int32)(floor_position.x*floor_texture->width) %
 				       floor_texture->width);
 		    int32 texture_y = ((int32)(floor_position.y*floor_texture->height) %
@@ -292,14 +293,20 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		    uint32 *floor_source_pixels = (uint32 *)floor_texture->data;
 		    uint32 *ceiling_source_pixels = (uint32 *)ceiling_texture->data;
 
-		    dest_pixels[screen_x + screen_y*buffer->width] = floor_source_pixels[texture_x + texture_y*floor_texture->width];
-		    dest_pixels[screen_x + (buffer->height - screen_y)*buffer->width] = ceiling_source_pixels[texture_x + texture_y*floor_texture->width];
+		    dest_pixels[screen_x + screen_y*buffer->width] =
+			floor_source_pixels[texture_x + texture_y*floor_texture->width];
+		    dest_pixels[screen_x + (buffer->height - screen_y)*buffer->width] =
+			ceiling_source_pixels[texture_x + texture_y*floor_texture->width];
 		}
 	    } 
 	} 
 
 	//TODO(chen): sprite rendering routine
 	{
+	    Loaded_Image *sprite_image = &game_state->barrel_texture;
+	    real32 world_sprite_width = 0.5f;
+	    real32 world_sprite_height = 0.5f;
+	    
 	    v2 player_to_sprite = game_state->barrel_position - game_state->player_position;
 	    real32 direction_angle = atan2f(player_to_sprite.y, player_to_sprite.x);
 	    recanonicalize_angle(&direction_angle);
@@ -310,7 +317,6 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    player_to_sprite_distance *= cosf(direction_angle - game_state->player_angle);
 
 	    v2 sprite_ground_point = {};
-	    //compute sprite-ground-point
 	    {
 		real32 beta = get_angle_diff(direction_angle, game_state->player_angle);
 		
@@ -320,17 +326,39 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		real32 scan_y = (0.5f - (d - 1.0f) / (2.0f * d)) * (real32)buffer->height;
 		sprite_ground_point.y = scan_y*inverse_aspect_ratio + buffer->height/2;
 	    }
+
+	    real32 projection_scale = 1.0f / player_to_sprite_distance;
 	    
-	    int32 sprite_height = 80;
-	    int32 sprite_width = 20;
+	    int32 sprite_height = (int32)(projection_scale * world_sprite_height *
+					  inverse_aspect_ratio * buffer->height);
+	    int32 sprite_width = (int32)(projection_scale * world_sprite_width * buffer->width);
+	    
 	    int32 sprite_upper_left = (int32)(sprite_ground_point.x - sprite_width/2);
 	    int32 sprite_upper_top = (int32)(sprite_ground_point.y - sprite_height);
 	    int32 sprite_lower_right = (int32)(sprite_ground_point.x + sprite_width/2);
 	    int32 sprite_lower_bottom = (int32)(sprite_ground_point.y);
 
+#if 0
 	    draw_rectangle(buffer, sprite_upper_left, sprite_upper_top,
 			   sprite_lower_right, sprite_lower_bottom,
 			   0);
+#else
+	    int32 sprite_texture_width = 64;
+	    real32 texture_mapper = (real32)sprite_texture_width / sprite_width;
+	    real32 sprite_texture_x = 0.0f;
+
+	    for (int32 slice_index = sprite_upper_left;
+		 slice_index < sprite_lower_right;
+		 ++slice_index)
+	    {
+		if (player_to_sprite_distance < game_state->z_buffer[slice_index])
+		{
+		    copy_slice(buffer, sprite_image, (int32)(sprite_texture_x),
+			       slice_index, sprite_upper_top, sprite_height, 0);
+		}
+		sprite_texture_x += texture_mapper;
+	    }
+#endif
 	}
     }
     else
@@ -338,9 +366,9 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	int32 tile_size_in_pixels = 32;    
 	real32 meters_to_pixels = (real32)tile_size_in_pixels;
 
-	for (int32 y = 0; y < map_height; ++y)
+	for (int32 y = 0; y < game_state->tile_map.tile_count_y; ++y)
 	{
-	    for (int32 x = 0; x < map_width; ++x)
+	    for (int32 x = 0; x < game_state->tile_map.tile_count_x; ++x)
 	    {
 		uint32 tile_value = get_tile_value(&game_state->tile_map, x, y);
 

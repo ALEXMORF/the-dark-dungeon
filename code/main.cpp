@@ -278,7 +278,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     int32 window_height = 540;
     uint32 permanent_game_memory_size = megabytes(64);
     uint32 transient_game_memory_size = megabytes(128);
-    int32 target_frame_per_second = 30;
+    int32 target_frame_per_second = 60;
     
     HWND window = win32_create_window("Dark Dungeon", win32_main_window_callback,
 				      window_width, window_height);

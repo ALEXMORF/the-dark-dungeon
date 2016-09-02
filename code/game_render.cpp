@@ -94,7 +94,7 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
     {
 	int32 bytes_per_pixel = 4;
 	uint32 *source_pixel = (uint32 *)loaded_image->data + source_x;
-
+ 
 	real32 mapper = (real32)loaded_image->height / (real32)dest_height;
 	real32 source_y = 0.0f;
 
