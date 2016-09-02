@@ -1,13 +1,12 @@
 #include "game.h"
 
-#define array_count(array) (sizeof(array)/sizeof(array[0]))
-
 #include "game_math.cpp"
 #include "game_tiles.cpp"
 
 #include "game_asset.cpp"
 #include "game_render.cpp"
 #include "game_raycaster.cpp"
+
 
 #define Copy_Array(source, dest, count, type) copy_memory(source, dest, count*sizeof(type))
 inline void
@@ -60,12 +59,12 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 #define map_height 20
 	uint32 tiles[map_width*map_height] =
 	    {
-		1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4,
-		4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		3, 3, 3, 3, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1,
+		3, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		3, 0, 0, 0, 4, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		3, 0, 0, 0, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4,
+		3, 1, 4, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 		1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
@@ -94,7 +93,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	game_state->barrel_position = {5.0f, 5.0f};
 	    
 	//asset
-        #define Load_Wall_Tex(index, filename) game_state->wall_textures.E[index] = load_image(memory->platform_load_image, filename);	
+#define Load_Wall_Tex(index, filename) game_state->wall_textures.E[index] = load_image(memory->platform_load_image, filename);	
 	{
 	    game_state->wall_textures.count = 6;
 	    game_state->wall_textures.E = Push_Array(&game_state->permanent_allocator,
@@ -210,7 +209,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     if (!input->keyboard.space)
     {
 	real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
-	
+
 	Projection_Spec projection_spec = {};
 	projection_spec.dim = 1.0f;
 	projection_spec.fov = pi32 / 3.0f;
@@ -299,7 +298,6 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    } 
 	} 
 
-#if 0
 	//TODO(chen): sprite rendering routine
 	{
 	    v2 player_to_sprite = game_state->barrel_position - game_state->player_position;
@@ -317,21 +315,10 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		real32 beta = get_angle_diff(direction_angle, game_state->player_angle);
 		
 		sprite_ground_point.x = (beta + projection_spec.fov/2.0f) / delta_angle;
-#if 0
-		for (int32 table_index = 0;
-		     table_index < game_state->floorcast_table_count-1;
-		     ++table_index)
-		{
-		    if (game_state->floorcast_table[table_index] > player_to_sprite_distance &&
-			game_state->floorcast_table[table_index+1] < player_to_sprite_distance)
-		    {
-			sprite_ground_point.y = buffer->height/2 + (real32)table_index;
-		    }
-		}
-#else
-		real32 y = 0.5f - 0.5f * (1.0f - (1.0f / player_to_sprite_distance*cosf(beta)));
-		sprite_ground_point.y = (y * buffer->height/2)*inverse_aspect_ratio + buffer->height/2;   
-#endif
+		
+		real32 d = player_to_sprite_distance;
+		real32 scan_y = (0.5f - (d - 1.0f) / (2.0f * d)) * (real32)buffer->height;
+		sprite_ground_point.y = scan_y*inverse_aspect_ratio + buffer->height/2;
 	    }
 	    
 	    int32 sprite_height = 80;
@@ -340,12 +327,11 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    int32 sprite_upper_top = (int32)(sprite_ground_point.y - sprite_height);
 	    int32 sprite_lower_right = (int32)(sprite_ground_point.x + sprite_width/2);
 	    int32 sprite_lower_bottom = (int32)(sprite_ground_point.y);
-	    
+
 	    draw_rectangle(buffer, sprite_upper_left, sprite_upper_top,
 			   sprite_lower_right, sprite_lower_bottom,
 			   0);
 	}
-#endif
     }
     else
     {

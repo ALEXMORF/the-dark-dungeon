@@ -93,3 +93,4 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
     assert(result.is_valid);
     return result;
 }
+
