@@ -24,3 +24,17 @@ struct Reflection_Sample
     
     bool32 is_valid;
 };
+
+struct Render_Context
+{
+    real32 *floorcast_table;
+    int32 floorcast_table_count;
+    real32 *z_buffer;
+};
+
+struct Sprite
+{
+    v2 size;
+    v2 position;
+    Loaded_Image *texture;
+};

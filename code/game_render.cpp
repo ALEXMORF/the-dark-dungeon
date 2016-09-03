@@ -90,6 +90,7 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
 	   int32 source_x, int32 dest_x, int32 dest_y, int32 dest_height,
 	   Shader_Fn *shader = 0)
 {
+    
     if (dest_x >= 0 && dest_x < buffer->width)
     {
 	int32 bytes_per_pixel = 4;
@@ -111,18 +112,28 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
 	{
 	    dest_height = buffer->height;
 	}
+	if (dest_y + dest_height >= buffer->height)
+	{
+	    dest_height = (buffer->height - 1) - dest_y;
+	}
 	assert(dest_height - dest_y <= buffer->height);
-
+	assert(dest_y + dest_height < buffer->height);
+	
 	//render
 	for (int32 y = 0; y < dest_height; ++y)
 	{
-	    if (shader)
+#define alpha_mask 0xFF000000
+
+	    if ((source_pixel[(int32)source_y * loaded_image->width] & alpha_mask) != 0)
 	    {
-		*dest_pixel = shader(source_pixel[(int32)source_y * loaded_image->width]);
-	    }
-	    else
-	    {
-		*dest_pixel = source_pixel[(int32)source_y * loaded_image->width];
+		if (shader)
+		{
+		    *dest_pixel = shader(source_pixel[(int32)source_y * loaded_image->width]);
+		}
+		else
+		{
+		    *dest_pixel = source_pixel[(int32)source_y * loaded_image->width];
+		}
 	    }
 	    source_y += mapper;
 

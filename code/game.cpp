@@ -45,7 +45,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     
     if (!memory->is_initialized)
     {
-	//memory
+	//prepare memory allocators
 	initialize_linear_allocator(&game_state->permanent_allocator,
 				    (uint8 *)memory->permanent_storage + sizeof(Game_State),
 				    memory->permanent_storage_size - sizeof(Game_State));
@@ -88,32 +88,30 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	tile_map->tiles = Push_Array(&game_state->permanent_allocator, tile_count, uint32);
 	Copy_Array(tiles, tile_map->tiles, tile_count, uint32);
 
+	//init all game states
 	game_state->player_position = {3.0f, 3.0f};
 	game_state->player_angle = 0.0f;
 	game_state->barrel_position = {5.0f, 5.0f};
 	    
-	//asset
+	//load all assets
 #define Load_Wall_Tex(index, filename) game_state->wall_textures.E[index] = load_image(memory->platform_load_image, filename);	
-	{
-	    game_state->wall_textures.count = 6;
-	    game_state->wall_textures.E = Push_Array(&game_state->permanent_allocator,
-						     game_state->wall_textures.count,
-						     Loaded_Image);
-	    Load_Wall_Tex(0, "../data/redbrick.png");
-	    Load_Wall_Tex(1, "../data/bluestone.png");
-	    Load_Wall_Tex(2, "../data/colorstone.png");
-	    Load_Wall_Tex(3, "../data/eagle.png");
-	    Load_Wall_Tex(4, "../data/purplestone.png");
-	    Load_Wall_Tex(5, "../data/wood.png");
-	}
+	game_state->wall_textures.count = 6;
+	game_state->wall_textures.E = Push_Array(&game_state->permanent_allocator,
+						 game_state->wall_textures.count,
+						 Loaded_Image);
+	Load_Wall_Tex(0, "../data/redbrick.png");
+	Load_Wall_Tex(1, "../data/bluestone.png");
+	Load_Wall_Tex(2, "../data/colorstone.png");
+	Load_Wall_Tex(3, "../data/eagle.png");
+	Load_Wall_Tex(4, "../data/purplestone.png");
+	Load_Wall_Tex(5, "../data/wood.png");
 	
-	game_state->floor_texture = load_image(memory->platform_load_image,
-					       "../data/greystone.png");
-	game_state->ceiling_texture = load_image(memory->platform_load_image,
-						 "../data/greystone.png");
-	game_state->barrel_texture = load_image(memory->platform_load_image,
-						"../data/barrel.png");
+	game_state->floor_texture = load_image(memory->platform_load_image, "../data/greystone.png");
+	game_state->ceiling_texture = load_image(memory->platform_load_image, "../data/greystone.png");
+	game_state->barrel_texture = load_image(memory->platform_load_image, "../data/barrel.png");
+	game_state->pillar_texture = load_image(memory->platform_load_image, "../data/pillar.png");
 
+	//safety checking all assets are there
 	for (int32 i = 0; i < game_state->wall_textures.count; ++i)
 	{
 	    assert(game_state->wall_textures.E[i].data);
@@ -122,33 +120,20 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	assert(game_state->ceiling_texture.data);
 	assert(game_state->barrel_texture.data);
 
-	game_state->z_buffer = Push_Array(&game_state->permanent_allocator, buffer->width, real32);
+	//prepare renderer context
+	Render_Context *render_context = &game_state->render_context;
 	
-	//floorcast lookup table
-	game_state->floorcast_table_count = buffer->height/2;
-	game_state->floorcast_table = Push_Array(&game_state->permanent_allocator,
-						 game_state->floorcast_table_count, real32);
-	for (int32 i = 0; i < game_state->floorcast_table_count; ++i)
+	render_context->z_buffer = Push_Array(&game_state->permanent_allocator,
+					      buffer->width, real32);
+	render_context->floorcast_table_count = buffer->height/2;
+	render_context->floorcast_table = Push_Array(&game_state->permanent_allocator,
+						     render_context->floorcast_table_count, real32);
+	for (int32 i = 0; i < render_context->floorcast_table_count; ++i)
 	{
-	    /*NOTE(chen):
-	      this scan_y is fake, because it was stretched by multiplying
-	      inverse aspect ratio, in order to get the real scan y, we must
-	      reverse the process and get the real_scan_y.
-
-	      Note that, this process is raycasting, which means casting a ray from
-	      projection onto the world to find the world coordinate, this scenario indicates
-	      that in our renderer, Y coordinates are fucked due to the inverse
-	      aspect ratio multiplier, so if we were to encounter a similiar situation,
-	      we must take this into account.
-		      
-	      reverse the effect that inverse aspect ratio multiplier,
-	      let this code calculate what it would be if the wall is not stretched,
-	      then cast it back to our stretched coordinates
-	    */
 	    real32 inverse_aspect_ratio = (real32)buffer->width / buffer->height;
 	    real32 real_scan_y = ((real32)buffer->height/2 + (real32)i / inverse_aspect_ratio);
-	    game_state->floorcast_table[i] = ((real32)buffer->height /
-					      (2*real_scan_y - buffer->height));
+	    render_context->floorcast_table[i] = ((real32)buffer->height /
+						  (2*real_scan_y - buffer->height));
 	}
 
 	memory->is_initialized = true;
@@ -205,216 +190,15 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //
 
     fill_buffer(buffer, 0);
-
-    if (!input->keyboard.space)
-    {
-	real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
-
-	Projection_Spec projection_spec = {};
-	projection_spec.dim = 1.0f;
-	projection_spec.fov = pi32 / 3.0f;
-	projection_spec.view_distance = projection_spec.dim / 2.0f * sqrtf(3.0f);
-
-	World_Spec world_spec = {};
-	world_spec.wall_width = 1.0f;
-	world_spec.wall_height = 1.0f;
-	
-	int32 ray_count = buffer->width;
-	real32 left_most_angle = game_state->player_angle + projection_spec.fov/2.0f;
-	real32 delta_angle = projection_spec.fov / (real32)ray_count;
-	
-	for (int32 slice_index = 0; slice_index < ray_count; ++slice_index)
-	{
-	    real32 angle = left_most_angle - delta_angle*slice_index;
-	    recanonicalize_angle(&angle);
-	    Reflection_Sample reflection = cast_ray(&game_state->tile_map, game_state->player_position, angle);
-
-	    //NOTE(chen): fix fisheye
-	    reflection.ray_length *= cosf(angle - game_state->player_angle);
-
-	    //this is the z-buffer for sprite-rendering
-	    game_state->z_buffer[slice_index] = reflection.ray_length;
-	    
-	    real32 projected_wall_height = (world_spec.wall_height / reflection.ray_length *
-					    inverse_aspect_ratio);
-	    int32 wall_slice_height = (int32)(projected_wall_height * buffer->height);
-	    int32 wall_top = (int32)(buffer->height - wall_slice_height) / 2;
-
-	    //wall rendering routine
-	    {
-		uint32 tile_value = get_tile_value(&game_state->tile_map,
-						   reflection.tile_x, reflection.tile_y);
-		Loaded_Image *wall_texture = &game_state->wall_textures.E[tile_value-1];
-
-		real32 tile_size = 1.0f;
-		real32 texture_x_percentage = (reflection.x_side_faced?
-					       modff(reflection.hit_position.x, &tile_size):
-					       modff(reflection.hit_position.y, &tile_size));
-		int32 texture_x = (int32)(texture_x_percentage * (wall_texture->width - 1));
-
-		Shader_Fn *shader = (reflection.x_side_faced? 0: darken);
-		copy_slice(buffer, wall_texture, texture_x, slice_index,
-			   wall_top, wall_slice_height, shader);
-	    }
-	    
-	    //floor casting routine
-	    {
-		Loaded_Image *floor_texture = &game_state->floor_texture;
-		Loaded_Image *ceiling_texture = &game_state->ceiling_texture;
-		
-		for (int32 scan_y = wall_top + wall_slice_height; scan_y < buffer->height; ++scan_y)
-		{
-
-		    real32 current_dist = game_state->floorcast_table[scan_y - buffer->height/2];
-		    
-		    real32 interpolent = (current_dist / reflection.ray_length);
-		    v2 hit_position = reflection.hit_position;
-		    v2 player_position = game_state->player_position;
-		    
-#if 0
-		    v2 floor_position = lerp(player_position, hit_position, interpolent);
-#else
-		    v2 floor_position = {};
-		    floor_position.x = (player_position.x * (1.0f - interpolent) +
-					hit_position.x * interpolent);
-		    floor_position.y =  (player_position.y * (1.0f - interpolent) +
-					hit_position.y * interpolent);
-#endif
-		    
-		    int32 texture_x = ((int32)(floor_position.x*floor_texture->width) %
-				       floor_texture->width);
-		    int32 texture_y = ((int32)(floor_position.y*floor_texture->height) %
-				       floor_texture->height);
-
-		    int32 screen_x = slice_index;
-		    int32 screen_y = scan_y;
-
-		    uint32 *dest_pixels = (uint32 *)buffer->memory;
-		    uint32 *floor_source_pixels = (uint32 *)floor_texture->data;
-		    uint32 *ceiling_source_pixels = (uint32 *)ceiling_texture->data;
-
-		    dest_pixels[screen_x + screen_y*buffer->width] =
-			floor_source_pixels[texture_x + texture_y*floor_texture->width];
-		    dest_pixels[screen_x + (buffer->height - screen_y)*buffer->width] =
-			ceiling_source_pixels[texture_x + texture_y*floor_texture->width];
-		}
-	    } 
-	} 
-
-	//TODO(chen): sprite rendering routine
-	{
-	    Loaded_Image *sprite_image = &game_state->barrel_texture;
-	    real32 world_sprite_width = 0.5f;
-	    real32 world_sprite_height = 0.5f;
-	    
-	    v2 player_to_sprite = game_state->barrel_position - game_state->player_position;
-	    real32 direction_angle = atan2f(player_to_sprite.y, player_to_sprite.x);
-	    recanonicalize_angle(&direction_angle);
-	    
-	    real32 player_to_sprite_distance = sqrtf(player_to_sprite.x*player_to_sprite.x +
-						     player_to_sprite.y*player_to_sprite.y);
-	    //NOTE(chen): fix fisheye
-	    player_to_sprite_distance *= cosf(direction_angle - game_state->player_angle);
-
-	    v2 sprite_ground_point = {};
-	    {
-		real32 beta = get_angle_diff(direction_angle, game_state->player_angle);
-		
-		sprite_ground_point.x = (beta + projection_spec.fov/2.0f) / delta_angle;
-		
-		real32 d = player_to_sprite_distance;
-		real32 scan_y = (0.5f - (d - 1.0f) / (2.0f * d)) * (real32)buffer->height;
-		sprite_ground_point.y = scan_y*inverse_aspect_ratio + buffer->height/2;
-	    }
-
-	    real32 projection_scale = 1.0f / player_to_sprite_distance;
-	    
-	    int32 sprite_height = (int32)(projection_scale * world_sprite_height *
-					  inverse_aspect_ratio * buffer->height);
-	    int32 sprite_width = (int32)(projection_scale * world_sprite_width * buffer->width);
-	    
-	    int32 sprite_upper_left = (int32)(sprite_ground_point.x - sprite_width/2);
-	    int32 sprite_upper_top = (int32)(sprite_ground_point.y - sprite_height);
-	    int32 sprite_lower_right = (int32)(sprite_ground_point.x + sprite_width/2);
-	    int32 sprite_lower_bottom = (int32)(sprite_ground_point.y);
-
-#if 0
-	    draw_rectangle(buffer, sprite_upper_left, sprite_upper_top,
-			   sprite_lower_right, sprite_lower_bottom,
-			   0);
-#else
-	    int32 sprite_texture_width = 64;
-	    real32 texture_mapper = (real32)sprite_texture_width / sprite_width;
-	    real32 sprite_texture_x = 0.0f;
-
-	    for (int32 slice_index = sprite_upper_left;
-		 slice_index < sprite_lower_right;
-		 ++slice_index)
-	    {
-		if (player_to_sprite_distance < game_state->z_buffer[slice_index])
-		{
-		    copy_slice(buffer, sprite_image, (int32)(sprite_texture_x),
-			       slice_index, sprite_upper_top, sprite_height, 0);
-		}
-		sprite_texture_x += texture_mapper;
-	    }
-#endif
-	}
-    }
-    else
-    {
-	int32 tile_size_in_pixels = 32;    
-	real32 meters_to_pixels = (real32)tile_size_in_pixels;
-
-	for (int32 y = 0; y < game_state->tile_map.tile_count_y; ++y)
-	{
-	    for (int32 x = 0; x < game_state->tile_map.tile_count_x; ++x)
-	    {
-		uint32 tile_value = get_tile_value(&game_state->tile_map, x, y);
-
-		uint32 color = 0x000055;
-		if (tile_value != 0)
-		{
-		    color = 0x0000FF;
-		}
-
-		int32 upper_left = (int32)tile_size_in_pixels*x;
-		int32 upper_top = buffer->height - (int32)tile_size_in_pixels*(y+1);
-		draw_rectangle(buffer, upper_left, upper_top,
-			       upper_left + (int32)tile_size_in_pixels-1,
-			       upper_top + (int32)tile_size_in_pixels-1, color);
-	    }
-	}
-
-	int32 player_size_in_pixels = 8;
-	int32 player_upper_left = (int32)(game_state->player_position.x*meters_to_pixels - player_size_in_pixels/2);
-	int32 player_upper_top = (int32)(buffer->height - game_state->player_position.y*meters_to_pixels - player_size_in_pixels/2);
-	int32 player_lower_right = player_upper_left + player_size_in_pixels;
-	int32 player_lower_bottom = player_upper_top + player_size_in_pixels;
-	draw_rectangle(buffer, player_upper_left, player_upper_top,
-		       player_lower_right, player_lower_bottom, 0x00FFFF00);
-
-	//test ray-casting
-	int32 ray_count = 960;
-	real32 fov = pi32 / 3.0f;
-	real32 starting_angle = game_state->player_angle - fov/2.0f;
-	real32 angle_step = fov / (real32)ray_count;
     
-	for (int32 i = 0; i < ray_count; ++i)
+    Sprite sprite_list[1] =
 	{
-	    real32 angle = starting_angle + (angle_step*i);
-	    recanonicalize_angle(&angle);
-	    real32 ray_length = cast_ray(&game_state->tile_map, game_state->player_position, angle).ray_length;
-	    real32 ray_end_x = game_state->player_position.x + cosf(angle) * ray_length;
-	    real32 ray_end_y = game_state->player_position.y + sinf(angle) * ray_length;
-	    
-	    draw_line(buffer,
-		      (int32)(game_state->player_position.x*meters_to_pixels),
-		      (int32)(buffer->height-game_state->player_position.y*meters_to_pixels),
-		      (int32)(ray_end_x*meters_to_pixels-1),
-		      (int32)(buffer->height - ray_end_y*meters_to_pixels-1),
-		      0x00FF5500);
-	}
-    }
-    /*END OF DEBUG DRAWING*/
+	    {{1.0f, 1.0f}, {5.0f, 5.0f}, &game_state->barrel_texture} 
+	};
+    
+    render_3d_scene(buffer, &game_state->render_context, &game_state->tile_map,
+		    game_state->player_position, game_state->player_angle,
+		    &game_state->floor_texture, &game_state->ceiling_texture,
+		    &game_state->wall_textures,
+		    sprite_list, array_count(sprite_list));
 }

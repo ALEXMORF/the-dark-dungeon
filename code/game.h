@@ -44,9 +44,8 @@ struct Game_State
     Loaded_Image floor_texture;
     Loaded_Image ceiling_texture;
     Loaded_Image barrel_texture;
+    Loaded_Image pillar_texture;
     
     //render
-    real32 *floorcast_table;
-    int32 floorcast_table_count;
-    real32 *z_buffer;
+    Render_Context render_context;
 };

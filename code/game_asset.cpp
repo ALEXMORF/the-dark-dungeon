@@ -30,3 +30,4 @@ free_image(Platform_Free_Image *platform_free_image, Loaded_Image *loaded_image)
 {
     platform_free_image(loaded_image->data);
 }
+

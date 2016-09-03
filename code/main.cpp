@@ -298,8 +298,10 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 
     game_memory.platform_load_image = stbi_load;
     game_memory.platform_free_image = stbi_image_free;
+    game_memory.platform_allocate_memory = malloc;
     assert(game_memory.platform_load_image);
     assert(game_memory.platform_free_image);
+    assert(game_memory.platform_allocate_memory);
     
     Game_Input game_input = {};
     Game_Offscreen_Buffer game_buffer = {};
@@ -328,7 +330,6 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 	    win32_unload_game_code(&game_code);
 	    win32_load_game_code(&game_code);
 	}
-
 	    
 	//handles input
 	MSG message;
