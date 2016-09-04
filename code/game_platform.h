@@ -35,6 +35,9 @@ typedef PLATFORM_FREE_IMAGE(Platform_Free_Image);
 #define PLATFORM_ALLOCATE_MEMORY(name) void *name(size_t size)
 typedef PLATFORM_ALLOCATE_MEMORY(Platform_Allocate_Memory);
 
+#define PLATFORM_PLAY_SOUND(name) void name(char *filename)
+typedef PLATFORM_PLAY_SOUND(Platform_Play_Sound);
+
 struct Game_Memory
 {
     void *permanent_storage;
@@ -47,6 +50,7 @@ struct Game_Memory
     Platform_Load_Image *platform_load_image;
     Platform_Free_Image *platform_free_image;
     Platform_Allocate_Memory *platform_allocate_memory;
+    Platform_Play_Sound *platform_play_sound;
 };
 
 struct Game_Offscreen_Buffer
@@ -71,6 +75,7 @@ struct Game_Input
     {
 	real32 dx;
 	real32 dy;
+	bool32 down;
     } mouse;
     real32 dt_per_frame;
 };

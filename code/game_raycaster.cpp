@@ -232,10 +232,10 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 	    int32 sprite_lower_right = (int32)(sprite_ground_point.x + sprite_width/2);
 	    int32 sprite_lower_bottom = (int32)(sprite_ground_point.y);
 	    
-	    int32 sprite_texture_width = 64;
+	    int32 sprite_texture_width = sprites[i].texture->width;
 	    real32 texture_mapper = (real32)sprite_texture_width / sprite_width;
+	    
 	    real32 sprite_texture_x = 0.0f;
-
 	    for (int32 slice_index = sprite_upper_left;
 		 slice_index < sprite_lower_right;
 		 ++slice_index)
@@ -257,8 +257,7 @@ compute_sprite_order(Sprite *sprite_list, int32 len, v2 relative_position)
 {
     for (int32 i = 0; i < len; ++i)
     {
-	sprite_list[i].distance_squared = get_distance_squared(sprite_list[i].position,
-							       relative_position);
+	sprite_list[i].distance_squared = get_distance_squared(sprite_list[i].position, relative_position);
     }
 }
 

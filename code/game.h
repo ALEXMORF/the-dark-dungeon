@@ -27,6 +27,26 @@ struct Wall_Textures
     int32 count;
 };
 
+enum Weapon
+{
+    knife,
+    pistol,
+    rifle,
+    minigun,
+    weapon_count
+};
+
+struct Player
+{
+    v2 position;
+    real32 angle;
+    
+    Weapon weapon;
+    int32 weapon_animation_index;
+    real32 weapon_cd;
+    real32 weapon_cd_counter;
+};
+
 struct Game_State
 {
     //memory
@@ -34,9 +54,8 @@ struct Game_State
     Linear_Allocator transient_allocator;
     
     //game
-    v2 player_position;
+    Player player;
     v2 barrel_position;
-    real32 player_angle;
     Tile_Map tile_map;
     
     //asset
@@ -46,6 +65,8 @@ struct Game_State
     Loaded_Image barrel_texture;
     Loaded_Image pillar_texture;
     Loaded_Image light_texture;
+
+    Loaded_Image_Sheet weapon_texture_sheet;
     
     //render
     Render_Context render_context;

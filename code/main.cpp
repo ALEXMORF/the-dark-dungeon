@@ -22,6 +22,7 @@ global_variable WINDOWPLACEMENT global_window_position = { sizeof(global_window_
 global_variable bool32 global_app_is_active;
 global_variable int32 global_previous_mouse_x;
 global_variable int32 global_previous_mouse_y;
+global_variable bool32 global_mouse_down;
 
 struct Win32_Offscreen_Buffer
 {
@@ -241,6 +242,16 @@ win32_main_window_callback(HWND window, UINT message, WPARAM w_param, LPARAM l_p
 	{
 	    global_app_is_active = (w_param == TRUE);
 	} break;
+
+	case WM_LBUTTONDOWN:
+	{
+	    global_mouse_down = true;
+	} break;
+
+	case WM_LBUTTONUP:
+	{
+	    global_mouse_down = false;
+	} break;
 	
 	case WM_MOUSEMOVE:
 	{
@@ -271,6 +282,12 @@ win32_main_window_callback(HWND window, UINT message, WPARAM w_param, LPARAM l_p
     return result;
 }
 
+internal void
+play_sound(char *filename)
+{
+    PlaySound(filename, 0 , SND_FILENAME | SND_ASYNC);
+}
+
 int CALLBACK
 WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd_show)
 {
@@ -279,6 +296,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     uint32 permanent_game_memory_size = megabytes(64);
     uint32 transient_game_memory_size = megabytes(128);
     int32 target_frame_per_second = 60;
+    bool32 frame_rate_lock = true;
     
     HWND window = win32_create_window("Dark Dungeon", win32_main_window_callback,
 				      window_width, window_height);
@@ -295,13 +313,15 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 						 MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
     game_memory.transient_storage = ((uint8 *)game_memory.permanent_storage +
 				     permanent_game_memory_size);
-
+    
     game_memory.platform_load_image = stbi_load;
     game_memory.platform_free_image = stbi_image_free;
     game_memory.platform_allocate_memory = malloc;
+    game_memory.platform_play_sound = play_sound;
     assert(game_memory.platform_load_image);
     assert(game_memory.platform_free_image);
     assert(game_memory.platform_allocate_memory);
+    assert(game_memory.platform_play_sound);
     
     Game_Input game_input = {};
     Game_Offscreen_Buffer game_buffer = {};
@@ -387,11 +407,12 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 				   (client_rect.bottom - client_rect.top)/2};
 	    game_input.mouse.dx = (real32)(global_previous_mouse_x - screen_center.x);
 	    game_input.mouse.dy = (real32)(global_previous_mouse_y - screen_center.y);
-
+	    
 	    ClientToScreen(window, &screen_center);	    
 	    SetCursorPos(screen_center.x , screen_center.y);
 	}
-	
+
+	game_input.mouse.down = global_mouse_down;
 	game_input.dt_per_frame = ms_per_frame / 1000.0f;
 	
 	game_buffer.width = win32_buffer.width;
@@ -411,13 +432,20 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 	uint64 mtsc = (current_tsc - last_tsc) / 1024*1024;
 	last_tsc = __rdtsc();
 
-	if (target_ms > elapsed_ms)
+	if (frame_rate_lock)
 	{
-	    Sleep((DWORD)(target_ms - elapsed_ms));
-	    do
+	    if (target_ms > elapsed_ms)
 	    {
-		elapsed_ms = win32_get_elapsed_ms(last_counter, win32_get_wallclock());
-	    } while (elapsed_ms < target_ms);
+		Sleep((DWORD)(target_ms - elapsed_ms));
+		do
+		{
+		    elapsed_ms = win32_get_elapsed_ms(last_counter, win32_get_wallclock());
+		} while (elapsed_ms < target_ms);
+	    }
+	}
+	else
+	{
+	    Sleep(2);
 	}
 	last_counter = win32_get_wallclock();	
 	ms_per_frame = elapsed_ms;
