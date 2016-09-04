@@ -13,6 +13,7 @@ existing features:
  4. sprite sorting & rendering (9/3/2016)
 
 currently working on: none
+
 things on my mind: bilinear filtering???
 
  screenshot 1 (8/25/2016) 
