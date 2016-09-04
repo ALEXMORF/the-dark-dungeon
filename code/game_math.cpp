@@ -163,3 +163,10 @@ lerp(v2 start, v2 end, real32 t)
     result.y = lerp(start.y, end.y, t);
     return result;
 }
+
+inline real32
+get_distance_squared(v2 a, v2 b)
+{
+    v2 dist = a - b;
+    return (dist.x*dist.x + dist.y*dist.y);
+}

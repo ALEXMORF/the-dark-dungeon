@@ -37,4 +37,6 @@ struct Sprite
     v2 size;
     v2 position;
     Loaded_Image *texture;
+
+    real32 distance_squared;
 };

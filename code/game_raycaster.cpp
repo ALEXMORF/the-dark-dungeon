@@ -94,6 +94,7 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
     return result;
 }
 
+//NOTE(chen): precondition: have the sprite list sorted 
 internal void
 render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 		Tile_Map *tile_map, v2 position, real32 view_angle,
@@ -230,11 +231,7 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 	    int32 sprite_upper_top = (int32)(sprite_ground_point.y - sprite_height);
 	    int32 sprite_lower_right = (int32)(sprite_ground_point.x + sprite_width/2);
 	    int32 sprite_lower_bottom = (int32)(sprite_ground_point.y);
-#if 0
-	    draw_rectangle(buffer, sprite_upper_left, sprite_upper_top,
-			   sprite_lower_right, sprite_lower_bottom,
-			   0);
-#else
+	    
 	    int32 sprite_texture_width = 64;
 	    real32 texture_mapper = (real32)sprite_texture_width / sprite_width;
 	    real32 sprite_texture_x = 0.0f;
@@ -252,6 +249,34 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 		sprite_texture_x += texture_mapper;
 	    }
 	}
-#endif
+    }
+}
+
+internal void
+compute_sprite_order(Sprite *sprite_list, int32 len, v2 relative_position)
+{
+    for (int32 i = 0; i < len; ++i)
+    {
+	sprite_list[i].distance_squared = get_distance_squared(sprite_list[i].position,
+							       relative_position);
+    }
+}
+
+internal void
+sort_sprites(Sprite *sprite_list, int32 len, v2 relative_position)
+{
+    compute_sprite_order(sprite_list, len, relative_position);
+    
+    for (int32 i = len-1; i > 0; --i)
+    {
+	for (int32 j = len - 1; j > 0; --j)
+	{
+	    if (sprite_list[j-1].distance_squared < sprite_list[j].distance_squared)
+	    {
+		Sprite temp = sprite_list[j-1];
+		sprite_list[j-1] = sprite_list[j];
+		sprite_list[j] = temp;
+	    }
+	}
     }
 }

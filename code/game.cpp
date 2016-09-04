@@ -7,7 +7,6 @@
 #include "game_render.cpp"
 #include "game_raycaster.cpp"
 
-
 #define Copy_Array(source, dest, count, type) copy_memory(source, dest, count*sizeof(type))
 inline void
 copy_memory(void *source_in, void *dest_in, uint32 size)
@@ -191,11 +190,16 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
     fill_buffer(buffer, 0);
     
-    Sprite sprite_list[1] =
+    Sprite sprite_list[] =
 	{
-	    {{1.0f, 1.0f}, {5.0f, 5.0f}, &game_state->barrel_texture} 
+	    {{1.0f, 1.0f}, {5.0f, 5.0f}, &game_state->barrel_texture},
+	    {{1.0f, 1.0f}, {6.0f, 5.0f}, &game_state->pillar_texture},
+	    {{1.0f, 1.0f}, {6.0f, 6.0f}, &game_state->pillar_texture},
+	    {{1.0f, 1.0f}, {6.0f, 7.0f}, &game_state->pillar_texture},
+	    {{1.0f, 1.0f}, {7.0f, 7.0f}, &game_state->pillar_texture},
 	};
     
+    sort_sprites(sprite_list, array_count(sprite_list), game_state->player_position);
     render_3d_scene(buffer, &game_state->render_context, &game_state->tile_map,
 		    game_state->player_position, game_state->player_angle,
 		    &game_state->floor_texture, &game_state->ceiling_texture,
