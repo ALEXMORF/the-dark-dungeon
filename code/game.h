@@ -45,6 +45,7 @@ struct Game_State
     Loaded_Image ceiling_texture;
     Loaded_Image barrel_texture;
     Loaded_Image pillar_texture;
+    Loaded_Image light_texture;
     
     //render
     Render_Context render_context;

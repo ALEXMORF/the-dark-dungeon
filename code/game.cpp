@@ -109,7 +109,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	game_state->ceiling_texture = load_image(memory->platform_load_image, "../data/greystone.png");
 	game_state->barrel_texture = load_image(memory->platform_load_image, "../data/barrel.png");
 	game_state->pillar_texture = load_image(memory->platform_load_image, "../data/pillar.png");
-
+	game_state->light_texture = load_image(memory->platform_load_image, "../data/greenlight.png");
+	
 	//safety checking all assets are there
 	for (int32 i = 0; i < game_state->wall_textures.count; ++i)
 	{
@@ -118,6 +119,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	assert(game_state->floor_texture.data);
 	assert(game_state->ceiling_texture.data);
 	assert(game_state->barrel_texture.data);
+	assert(game_state->pillar_texture.data);
+	assert(game_state->light_texture.data);
 
 	//prepare renderer context
 	Render_Context *render_context = &game_state->render_context;
@@ -192,16 +195,21 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     
     Sprite sprite_list[] =
 	{
-	    {{1.0f, 1.0f}, {5.0f, 5.0f}, &game_state->barrel_texture},
-	    {{1.0f, 1.0f}, {6.0f, 5.0f}, &game_state->pillar_texture},
-	    {{1.0f, 1.0f}, {6.0f, 6.0f}, &game_state->pillar_texture},
-	    {{1.0f, 1.0f}, {6.0f, 7.0f}, &game_state->pillar_texture},
-	    {{1.0f, 1.0f}, {7.0f, 7.0f}, &game_state->pillar_texture},
+	    {{1.0f, 1.0f}, {5.0f, 5.0f}, &game_state->light_texture},
+	    {{1.0f, 1.0f}, {15.0f, 5.0f}, &game_state->light_texture},
+	    {{1.0f, 1.0f}, {15.0f, 15.0f}, &game_state->light_texture},
+	    {{1.0f, 1.0f}, {7.0f, 15.0f}, &game_state->light_texture},
+	    
+	    {{1.0f, 1.0f}, {1.5f, 1.5f}, &game_state->barrel_texture},
+	    {{1.0f, 1.0f}, {2.5f, 1.7f}, &game_state->barrel_texture},
+	    {{1.0f, 1.0f}, {3.5f, 1.6f}, &game_state->barrel_texture},
+
+	    {{1.0f, 1.0f}, {4.5f, 15.5f}, &game_state->pillar_texture},
 	};
     
     sort_sprites(sprite_list, array_count(sprite_list), game_state->player_position);
     render_3d_scene(buffer, &game_state->render_context, &game_state->tile_map,
-		    game_state->player_position, game_state->player_angle,
+		    game_state->player_position, game_state->player_angle, 
 		    &game_state->floor_texture, &game_state->ceiling_texture,
 		    &game_state->wall_textures,
 		    sprite_list, array_count(sprite_list));
