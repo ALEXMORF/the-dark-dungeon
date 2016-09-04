@@ -24,3 +24,6 @@ things on my mind: bilinear filtering???
 
  screenshot 3 (9/3/2016)
 ![image](https://cloud.githubusercontent.com/assets/16845654/18228426/77800290-7202-11e6-807d-63ed5401eb38.png)
+
+ screenshot 4 (9/3/2016)
+![image](https://cloud.githubusercontent.com/assets/16845654/18229402/494355e6-722d-11e6-9a59-25f2fd9712a1.png)
