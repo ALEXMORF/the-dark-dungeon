@@ -20,3 +20,6 @@ things on my mind: bilinear filtering???
 
  screenshot 2 (8/31/2016)
 ![image](https://cloud.githubusercontent.com/assets/16845654/18156915/dc756310-6fce-11e6-9cf2-fa83e0385250.png)
+
+ screenshot 3 (9/3/2016)
+![image](https://cloud.githubusercontent.com/assets/16845654/18228426/77800290-7202-11e6-807d-63ed5401eb38.png)
