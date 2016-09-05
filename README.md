@@ -11,6 +11,7 @@ existing features:
  2. floor & ceiling casting along with texture mapping.
  3. supports multiple wall textures (8/31/2016)
  4. sprite sorting & rendering (9/3/2016)
+ 5. graphics-based bullet detection & basic entity and sprite system & enemy hp and death animation
 
 currently working on: none
 
