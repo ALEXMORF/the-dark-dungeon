@@ -35,6 +35,22 @@ add_sprite(Sprite_List *list, Sprite sprite)
     list->content[list->count++] = sprite;
 }
 
+inline int32
+get_current_playing_index(real32 timer, real32 period, int32 index_count)
+{
+    int32 texture_index;  
+    if (timer <= period)
+    {
+	texture_index = (int32)(timer / (period / index_count));
+    }
+    else
+    {
+	texture_index = index_count-1;
+    }
+
+    return texture_index;
+}
+
 internal void
 generate_sprite_list(Game_State *game_state, Sprite_List *list,
 		     Entity *entity_list, int32 entity_count)
@@ -72,18 +88,9 @@ generate_sprite_list(Game_State *game_state, Sprite_List *list,
 		
 		if (is_dead)
 		{
-		    int32 texture_index_x;  
-		    if (entity_list[i].death_timer <= death_animation_period)
-		    {
-			texture_index_x = (int32)(entity_list[i].death_timer /
-						  (death_animation_period /
-						   death_animation_index_count));
-		    }
-		    else
-		    {
-			texture_index_x = death_animation_index_count-1;
-		    }
-			
+		    int32 texture_index_x = get_current_playing_index(entity_list[i].death_timer,
+								      death_animation_period,
+								      death_animation_index_count);  
 		    temp.texture = extract_image_from_sheet(&game_state->guard_texture_sheet, texture_index_x, 5);
 		}
 		else
@@ -93,6 +100,26 @@ generate_sprite_list(Game_State *game_state, Sprite_List *list,
 		}
 	    } break;
 
+	    case ss:
+	    {
+		real32 death_animation_period = 0.5f;
+		int32 death_animation_index_count = 5;
+		
+		if (is_dead)
+		{
+		    int32 texture_index_x = get_current_playing_index(entity_list[i].death_timer,
+								      death_animation_period,
+								      death_animation_index_count);  
+		    temp.texture = extract_image_from_sheet(&game_state->ss_texture_sheet, texture_index_x, 5);
+		}
+		else
+		{
+		    int texture_index_x = 0; 
+		    temp.texture = extract_image_from_sheet(&game_state->ss_texture_sheet, texture_index_x, 0);
+		}
+		
+	    } break;
+	    
 	    default:
 	    {
 		assert(!"unknown entity type");

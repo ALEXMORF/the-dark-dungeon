@@ -102,7 +102,7 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 		Wall_Textures *wall_textures,
 		Sprite *sprites, int32 sprite_count)
 {
-    Entity *result = 0;
+    Entity *currently_aimed_entity = 0;
     real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
 
     Projection_Spec projection_spec = {};
@@ -248,7 +248,7 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 			       slice_index, sprite_upper_top, sprite_height, 0);
 		    if (slice_index == buffer->width/2 && sprites[i].owner->hp != 0)
 		    {
-			result = sprites[i].owner;
+			currently_aimed_entity = sprites[i].owner;
 		    }
 		}
 		sprite_texture_x += texture_mapper;
@@ -256,5 +256,5 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 	}
     }
 
-    return result;
+    return currently_aimed_entity;
 }

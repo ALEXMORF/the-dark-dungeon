@@ -1,7 +1,5 @@
 #pragma once
 
-#define SPRITE_COUNT_MAX 50
-
 struct Sprite
 {
     Entity *owner;

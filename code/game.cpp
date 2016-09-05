@@ -39,6 +39,10 @@ linear_allocate(Linear_Allocator *allocator, uint32 wanted_size)
     return result;
 }
 
+//
+//
+//Game Code
+
 inline void
 load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image)
 {
@@ -60,7 +64,6 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image)
     game_state->pillar_texture = load_image(platform_load_image, "../data/pillar.png");
     game_state->light_texture = load_image(platform_load_image, "../data/greenlight.png");
 
-    //load and configure 1st person weapon sprite sheet
     game_state->weapon_texture_sheet = load_image_sheet(platform_load_image, "../data/weapons.png");
     game_state->weapon_texture_sheet.image_count_x = 5;
     game_state->weapon_texture_sheet.image_count_y = 5;
@@ -74,18 +77,98 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image)
     game_state->guard_texture_sheet.stride_offset = 1;
     game_state->guard_texture_sheet.image_width = 64;
     game_state->guard_texture_sheet.image_height = 64;
-}
 
+    game_state->ss_texture_sheet = load_image_sheet(platform_load_image, "../data/ss.png");
+    game_state->ss_texture_sheet.image_count_x = 8;
+    game_state->ss_texture_sheet.image_count_y = 7;
+    game_state->ss_texture_sheet.stride_offset = 1;
+    game_state->ss_texture_sheet.image_width = 63;
+    game_state->ss_texture_sheet.image_height = 63;
+}
+ 
 inline void
 initialize_entities(Entity_List *entity_list)
 {
-    add_entity(entity_list, make_guard({5.0f, 15.5f}));
-    add_entity(entity_list, make_guard({15.0f, 6.5f}));
-    add_entity(entity_list, make_guard({6.0f, 7.5f}));
-    add_entity(entity_list, make_guard({14.0f, 6.0f}));
-    add_entity(entity_list, make_guard({15.0f, 7.0f}));
-    add_entity(entity_list, make_guard({16.0f, 8.0f}));
+    add_entity(entity_list, make_dynamic_entity(guard, {5.0f, 15.5f}));
+    add_entity(entity_list, make_dynamic_entity(guard, {15.0f, 7.0f}));
+    add_entity(entity_list, make_dynamic_entity(guard, {6.0f, 7.0f}));
+    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 6.0f}));
+    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 8.0f}));
+    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 9.0f}));
 }
+
+//NOTE(chen): returns whether or not the player fired 
+internal bool32
+player_handle_input(Player *player, Game_Input *input, Platform_Play_Sound *play_sound)
+{
+    real32 player_speed = 2.5f;
+    real32 lerp_constant = 0.2f;
+    real32 mouse_sensitivity = 0.7f;
+    char *gun_sound_file_name = "../data/pistol.wav";
+
+    bool32 player_fired = false;
+    
+    real32 forward = 0.0f;
+    real32 left = 0.0f;
+    if_do(input->keyboard.left, left = 1.0f);
+    if_do(input->keyboard.right, left = -1.0f);
+    if_do(input->keyboard.up, forward = 1.0f);
+    if_do(input->keyboard.down, forward = -1.0f);
+    
+    v2 player_d_velocity = {};
+    player_d_velocity.x += cosf(player->angle) *forward;    
+    player_d_velocity.y += sinf(player->angle) * forward;
+    player_d_velocity.x += cosf(player->angle + pi32/2.0f) * left;    
+    player_d_velocity.y += sinf(player->angle + pi32/2.0f) * left;
+    player_d_velocity = normalize(player_d_velocity);
+    
+    player_d_velocity *= player_speed * input->dt_per_frame;
+    player->velocity = lerp(player->velocity, player_d_velocity, lerp_constant);
+    
+    if (input->mouse.down && player->weapon_cd_counter == 0.0f)
+    {
+	play_sound(gun_sound_file_name);	    
+	player->weapon_cd_counter = player->weapon_cd;
+
+	player_fired = true;
+    }
+
+    real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity;
+    player->angle += player_delta_angle;
+    recanonicalize_angle(&player->angle);
+
+    return player_fired;
+}
+
+internal void
+player_update(Player *player, real32 dt)
+{
+    real32 animation_cycle = 0.78f;
+    real32 animation_index_count = 4.0f;
+    int32 animation_ending_index = 1;
+    
+    player->position += player->velocity;
+
+    if (player->weapon_cd_counter)
+    {
+	real32 time_passed = player->weapon_cd - player->weapon_cd_counter;
+	if (time_passed < animation_cycle)
+	{
+	    real32 animation_index_interval = animation_cycle / animation_index_count;
+	    player->weapon_animation_index = (int32)(time_passed / animation_index_interval + (animation_ending_index + 1)) % ((int32)animation_index_count + 1);
+	}
+	else
+	{
+	    player->weapon_animation_index = animation_ending_index;
+	}
+	
+	player->weapon_cd_counter -= (dt < player->weapon_cd_counter? dt: player->weapon_cd_counter);
+    }
+}
+
+//
+//
+//Brain
 
 extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 {
@@ -142,7 +225,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	player->angle = 0.0f;
 	player->weapon_animation_index = 1;
 	player->weapon = pistol;
-	player->weapon_cd = 0.8f;
+	player->weapon_cd = 1.3f;
 
 	initialize_entities(&game_state->entity_list);
 	
@@ -162,17 +245,14 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	
 	memory->is_initialized = true;
     }
-
-    //NOTE(chen): transient memory gets dumped every frame
     game_state->transient_allocator.used = 0;
 
+    //
+    //
+    //
+    
     Player *player = &game_state->player;
-
-    //
-    //
-    //
-
-    //NOTE(chen): if player fired, returns true
+    
     if (player_handle_input(player, input, memory->platform_play_sound)) 
     {
 	if (game_state->currently_aimed_entity && game_state->currently_aimed_entity->hp)
@@ -180,7 +260,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    --game_state->currently_aimed_entity->hp;
 	}
     }
-    
+
     //
     //
     //
@@ -192,23 +272,20 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     {
 	Entity *entity = &entity_list->content[i];
 
-	//update death timer
 	if (entity->hp == 0)
 	{
 	    entity->death_timer += input->dt_per_frame;
 	}
     }
-    
-    //
-    //
-    //
 
+    //
+    //
+    //
+    
     fill_buffer(buffer, 0);
     
     Sprite_List sprite_list = {};
-    generate_sprite_list(game_state, &sprite_list,
-			 game_state->entity_list.content, game_state->entity_list.count);
-    
+    generate_sprite_list(game_state, &sprite_list, game_state->entity_list.content, game_state->entity_list.count);
     sort_sprites(sprite_list.content, sprite_list.count, game_state->player.position);
     game_state->currently_aimed_entity = render_3d_scene(buffer, &game_state->render_context,
 							 &game_state->tile_map,

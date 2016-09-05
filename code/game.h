@@ -7,6 +7,7 @@
 #define if_do(condition, action) do { if (condition) action; } while (0)
 #define array_count(array) (sizeof(array)/sizeof(array[0]))
 
+#include "game_constraint.h"
 #include "game_math.h"
 #include "game_tiles.h"
 #include "game_entity.h"
@@ -50,6 +51,7 @@ struct Game_State
     Loaded_Image light_texture;
 
     Loaded_Image_Sheet guard_texture_sheet;
+    Loaded_Image_Sheet ss_texture_sheet;
     Loaded_Image_Sheet weapon_texture_sheet;
     
     //render

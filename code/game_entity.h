@@ -5,6 +5,7 @@ enum Entity_Type
     barrel,
     pillar,
     guard,
+    ss, 
     entity_type_count
 };
 
@@ -28,7 +29,6 @@ struct Entity
     real32 death_timer;
 };
 
-#define ENTITY_COUNT_MAX 50
 struct Entity_List
 {
     Entity content[ENTITY_COUNT_MAX];
