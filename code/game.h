@@ -9,9 +9,11 @@
 
 #include "game_math.h"
 #include "game_tiles.h"
+#include "game_entity.h"
 
 #include "game_asset.h"
 #include "game_render.h"
+#include "game_sprite.h"
 #include "game_raycaster.h"
 
 struct Linear_Allocator
@@ -27,26 +29,6 @@ struct Wall_Textures
     int32 count;
 };
 
-enum Weapon
-{
-    knife,
-    pistol,
-    rifle,
-    minigun,
-    weapon_count
-};
-
-struct Player
-{
-    v2 position;
-    real32 angle;
-    
-    Weapon weapon;
-    int32 weapon_animation_index;
-    real32 weapon_cd;
-    real32 weapon_cd_counter;
-};
-
 struct Game_State
 {
     //memory
@@ -55,8 +37,9 @@ struct Game_State
     
     //game
     Player player;
-    v2 barrel_position;
     Tile_Map tile_map;
+    Entity_List entity_list;
+    Entity *currently_aimed_entity;
     
     //asset
     Wall_Textures wall_textures;
@@ -66,6 +49,7 @@ struct Game_State
     Loaded_Image pillar_texture;
     Loaded_Image light_texture;
 
+    Loaded_Image_Sheet guard_texture_sheet;
     Loaded_Image_Sheet weapon_texture_sheet;
     
     //render

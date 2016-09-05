@@ -2,9 +2,11 @@
 
 #include "game_math.cpp"
 #include "game_tiles.cpp"
+#include "game_entity.cpp"
 
 #include "game_asset.cpp"
 #include "game_render.cpp"
+#include "game_sprite.cpp"
 #include "game_raycaster.cpp"
 
 #define Copy_Array(source, dest, count, type) copy_memory(source, dest, count*sizeof(type))
@@ -37,10 +39,12 @@ linear_allocate(Linear_Allocator *allocator, uint32 wanted_size)
     return result;
 }
 
-internal void
+inline void
 load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image)
 {
-    #define Load_Wall_Tex(index, filename) game_state->wall_textures.E[index] = load_image(platform_load_image, filename);
+#define Load_Wall_Tex(index, filename)					\
+    game_state->wall_textures.E[index] = load_image(platform_load_image, filename)
+    
     game_state->wall_textures.count = 6;
     game_state->wall_textures.E = Push_Array(&game_state->permanent_allocator, game_state->wall_textures.count, Loaded_Image);
     Load_Wall_Tex(0, "../data/redbrick.png");
@@ -63,6 +67,24 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image)
     game_state->weapon_texture_sheet.stride_offset = 1;
     game_state->weapon_texture_sheet.image_width = 64;
     game_state->weapon_texture_sheet.image_height = 64;
+
+    game_state->guard_texture_sheet = load_image_sheet(platform_load_image, "../data/guard.png");
+    game_state->guard_texture_sheet.image_count_x = 8;
+    game_state->guard_texture_sheet.image_count_y = 7;
+    game_state->guard_texture_sheet.stride_offset = 1;
+    game_state->guard_texture_sheet.image_width = 64;
+    game_state->guard_texture_sheet.image_height = 64;
+}
+
+inline void
+initialize_entities(Entity_List *entity_list)
+{
+    add_entity(entity_list, make_guard({5.0f, 15.5f}));
+    add_entity(entity_list, make_guard({15.0f, 6.5f}));
+    add_entity(entity_list, make_guard({6.0f, 7.5f}));
+    add_entity(entity_list, make_guard({14.0f, 6.0f}));
+    add_entity(entity_list, make_guard({15.0f, 7.0f}));
+    add_entity(entity_list, make_guard({16.0f, 8.0f}));
 }
 
 extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
@@ -72,7 +94,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     
     if (!memory->is_initialized)
     {
-	//prepare memory allocators
+        //prepare memory allocators
 	initialize_linear_allocator(&game_state->permanent_allocator,
 				    (uint8 *)memory->permanent_storage + sizeof(Game_State),
 				    memory->permanent_storage_size - sizeof(Game_State));
@@ -115,32 +137,29 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	tile_map->tiles = Push_Array(&game_state->permanent_allocator, tile_count, uint32);
 	Copy_Array(tiles, tile_map->tiles, tile_count, uint32);
 
-	game_state->player.position = {3.0f, 3.0f};
-	game_state->player.angle = 0.0f;
-	game_state->player.weapon_animation_index = 1;
-	game_state->player.weapon = pistol;
-	game_state->player.weapon_cd = 0.7f;
-	
-	game_state->barrel_position = {5.0f, 5.0f};
+	Player *player = &game_state->player;
+	player->position = {3.0f, 3.0f};
+	player->angle = 0.0f;
+	player->weapon_animation_index = 1;
+	player->weapon = pistol;
+	player->weapon_cd = 0.8f;
+
+	initialize_entities(&game_state->entity_list);
 	
 	load_assets(game_state, memory->platform_load_image);
 	
 	//prepare renderer context
 	Render_Context *render_context = &game_state->render_context;
-	
-	render_context->z_buffer = Push_Array(&game_state->permanent_allocator,
-					      buffer->width, real32);
+	render_context->z_buffer = Push_Array(&game_state->permanent_allocator, buffer->width, real32);
 	render_context->floorcast_table_count = buffer->height/2;
-	render_context->floorcast_table = Push_Array(&game_state->permanent_allocator,
-						     render_context->floorcast_table_count, real32);
+	render_context->floorcast_table = Push_Array(&game_state->permanent_allocator, render_context->floorcast_table_count, real32);
 	for (int32 i = 0; i < render_context->floorcast_table_count; ++i)
 	{
 	    real32 inverse_aspect_ratio = (real32)buffer->width / buffer->height;
 	    real32 real_scan_y = ((real32)buffer->height/2 + (real32)i / inverse_aspect_ratio);
-	    render_context->floorcast_table[i] = ((real32)buffer->height /
-						  (2*real_scan_y - buffer->height));
+	    render_context->floorcast_table[i] = (real32)buffer->height / (2*real_scan_y - buffer->height);
 	}
-
+	
 	memory->is_initialized = true;
     }
 
@@ -148,105 +167,57 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     game_state->transient_allocator.used = 0;
 
     Player *player = &game_state->player;
+
     //
     //
-    //input
+    //
 
-    real32 forward = 0.0f;
-    real32 left = 0.0f;
-    if (input->keyboard.left)
+    //NOTE(chen): if player fired, returns true
+    if (player_handle_input(player, input, memory->platform_play_sound)) 
     {
-	left = 1.0f;
-    }
-    if (input->keyboard.right)
-    {
-	left = -1.0f;
-    }
-    if (input->keyboard.up)
-    {
-	forward = 1.0f;
-    }
-    if (input->keyboard.down)
-    {
-	forward = -1.0f;
-    }
-    
-    v2 player_delta_direction = {};
-    player_delta_direction.y += sinf(game_state->player.angle) * forward;
-    player_delta_direction.x += cosf(game_state->player.angle) *forward;
-    player_delta_direction.y += sinf(game_state->player.angle + pi32/2.0f) * left;
-    player_delta_direction.x += cosf(game_state->player.angle + pi32/2.0f) * left;
-    player_delta_direction = normalize(player_delta_direction);
-    
-    real32 player_speed = 1.5f;
-    player_delta_direction *= player_speed;
-    game_state->player.position += player_delta_direction * input->dt_per_frame;
-
-    //firing system
-    if (input->mouse.down)
-    {
-	if (player->weapon_cd_counter == 0.0f)
+	if (game_state->currently_aimed_entity && game_state->currently_aimed_entity->hp)
 	{
-	    memory->platform_play_sound("../data/pistol.wav");	    
-	    player->weapon_cd_counter = player->weapon_cd;
+	    --game_state->currently_aimed_entity->hp;
 	}
     }
     
     //
     //
-    //update
+    //
     
-    real32 mouse_sensitivity = 0.7f;
-    real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity;
-    player->angle += player_delta_angle;
-    recanonicalize_angle(&player->angle);
+    player_update(player, input->dt_per_frame);
 
-    //reduice cd & animate weapon
-    if (player->weapon_cd_counter)
+    Entity_List *entity_list = &game_state->entity_list;
+    for (int32 i = 0; i < entity_list->count; ++i)
     {
-	real32 time_passed = player->weapon_cd - player->weapon_cd_counter;
-	real32 animation_cycle = 0.6f;
-	if (time_passed < animation_cycle)
+	Entity *entity = &entity_list->content[i];
+
+	//update death timer
+	if (entity->hp == 0)
 	{
-	    real32 animation_index_interval = animation_cycle / 4.0f;
-	    player->weapon_animation_index = (int32)(time_passed / animation_index_interval + 1) % 5;
+	    entity->death_timer += input->dt_per_frame;
 	}
-	else
-	{
-	    player->weapon_animation_index = 1;
-	}
-	
-	//cool down 
-	player->weapon_cd_counter -= (input->dt_per_frame < player->weapon_cd_counter ?
-				      input->dt_per_frame :
-				      player->weapon_cd_counter);
     }
+    
     //
     //
-    //render
+    //
 
     fill_buffer(buffer, 0);
     
-    Sprite sprite_list[] =
-    {
-	{{1.0f, 1.0f}, {5.0f, 5.0f},   &game_state->light_texture},
-	{{1.0f, 1.0f}, {15.0f, 5.0f},  &game_state->light_texture},
-	{{1.0f, 1.0f}, {15.0f, 15.0f}, &game_state->light_texture},
-	{{1.0f, 1.0f}, {7.0f, 15.0f},  &game_state->light_texture},
-	    
-	{{1.0f, 1.0f}, {5.5f, 4.5f},   &game_state->barrel_texture},
-	{{1.0f, 1.0f}, {5.5f, 5.5f},   &game_state->barrel_texture},
-	{{1.0f, 1.0f}, {5.5f, 6.5f},   &game_state->barrel_texture},
-
-	{{1.0f, 1.0f}, {4.5f, 15.5f},  &game_state->pillar_texture},
-    };
+    Sprite_List sprite_list = {};
+    generate_sprite_list(game_state, &sprite_list,
+			 game_state->entity_list.content, game_state->entity_list.count);
     
-    sort_sprites(sprite_list, array_count(sprite_list), game_state->player.position);
-    render_3d_scene(buffer, &game_state->render_context, &game_state->tile_map,
-		    game_state->player.position, game_state->player.angle, 
-		    &game_state->floor_texture, &game_state->ceiling_texture,
-		    &game_state->wall_textures,
-		    sprite_list, array_count(sprite_list));
+    sort_sprites(sprite_list.content, sprite_list.count, game_state->player.position);
+    game_state->currently_aimed_entity = render_3d_scene(buffer, &game_state->render_context,
+							 &game_state->tile_map,
+							 game_state->player.position,
+							 game_state->player.angle, 
+							 &game_state->floor_texture,
+							 &game_state->ceiling_texture,
+							 &game_state->wall_textures,
+							 sprite_list.content, sprite_list.count);
 
     //draw first-person weapon
     {

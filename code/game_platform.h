@@ -1,9 +1,5 @@
 #pragma once
 
-#define global_variable static
-#define internal static
-#define local_persist static
-
 #include <stdint.h>
 #include <math.h>
 typedef uint8_t uint8;
@@ -18,6 +14,10 @@ typedef int bool32;
 typedef bool bool8;
 typedef float real32;
 typedef double real64;
+
+#define global_variable static
+#define internal static
+#define local_persist static
 
 #define kilobytes(Value) ((Value)*1024LL)
 #define megabytes(Value) (kilobytes(Value)*1024LL)

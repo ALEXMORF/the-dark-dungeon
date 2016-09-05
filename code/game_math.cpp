@@ -164,6 +164,27 @@ lerp(v2 start, v2 end, real32 t)
     return result;
 }
 
+
+inline real32
+approach(real32 start, real32 end, real32 t)
+{
+    real32 diff = end - start;
+
+    if (diff > t)
+	return start + t;
+    if (diff < -t)
+	return start - t;
+
+    return end;
+}
+
+inline v2
+approach(v2 start, v2 end, real32 t)
+{
+    return {approach(start.x, end.x, t), approach(start.y, end.y, t)};
+}
+
+
 inline real32
 get_distance_squared(v2 a, v2 b)
 {

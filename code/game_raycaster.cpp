@@ -95,13 +95,14 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
 }
 
 //NOTE(chen): precondition: have the sprite list sorted 
-internal void
+internal Entity *
 render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 		Tile_Map *tile_map, v2 position, real32 view_angle,
 		Loaded_Image *ceiling_texture, Loaded_Image *floor_texture,
 		Wall_Textures *wall_textures,
 		Sprite *sprites, int32 sprite_count)
 {
+    Entity *result = 0;
     real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
 
     Projection_Spec projection_spec = {};
@@ -193,9 +194,9 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
     } 
 
     for (int32 i = 0; i < sprite_count; ++i)
-    //sprite rendering routine polishment
+	//sprite rendering routine polishment
     {
-	Loaded_Image *sprite_image = sprites[i].texture;
+	Loaded_Image sprite_image = sprites[i].texture;
 	real32 world_sprite_width = 1.0f;
 	real32 world_sprite_height = 1.0f;
 
@@ -232,7 +233,7 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 	    int32 sprite_lower_right = (int32)(sprite_ground_point.x + sprite_width/2);
 	    int32 sprite_lower_bottom = (int32)(sprite_ground_point.y);
 	    
-	    int32 sprite_texture_width = sprites[i].texture->width;
+	    int32 sprite_texture_width = sprites[i].texture.width;
 	    real32 texture_mapper = (real32)sprite_texture_width / sprite_width;
 	    
 	    real32 sprite_texture_x = 0.0f;
@@ -243,39 +244,17 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 		if (slice_index >= 0 && slice_index < buffer->width &&
 		    player_to_sprite_distance < render_context->z_buffer[slice_index])
 		{
-		    copy_slice(buffer, sprite_image, (int32)(sprite_texture_x),
+		    copy_slice(buffer, &sprite_image, (int32)(sprite_texture_x),
 			       slice_index, sprite_upper_top, sprite_height, 0);
+		    if (slice_index == buffer->width/2 && sprites[i].owner->hp != 0)
+		    {
+			result = sprites[i].owner;
+		    }
 		}
 		sprite_texture_x += texture_mapper;
 	    }
 	}
     }
-}
 
-internal void
-compute_sprite_order(Sprite *sprite_list, int32 len, v2 relative_position)
-{
-    for (int32 i = 0; i < len; ++i)
-    {
-	sprite_list[i].distance_squared = get_distance_squared(sprite_list[i].position, relative_position);
-    }
-}
-
-internal void
-sort_sprites(Sprite *sprite_list, int32 len, v2 relative_position)
-{
-    compute_sprite_order(sprite_list, len, relative_position);
-    
-    for (int32 i = len-1; i > 0; --i)
-    {
-	for (int32 j = len - 1; j > 0; --j)
-	{
-	    if (sprite_list[j-1].distance_squared < sprite_list[j].distance_squared)
-	    {
-		Sprite temp = sprite_list[j-1];
-		sprite_list[j-1] = sprite_list[j];
-		sprite_list[j] = temp;
-	    }
-	}
-    }
+    return result;
 }
