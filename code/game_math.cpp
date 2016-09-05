@@ -184,6 +184,11 @@ approach(v2 start, v2 end, real32 t)
     return {approach(start.x, end.x, t), approach(start.y, end.y, t)};
 }
 
+inline real32
+len(v2 a)
+{
+    return sqrtf(a.x*a.x + a.y*a.y);
+}
 
 inline real32
 get_distance_squared(v2 a, v2 b)

@@ -30,6 +30,19 @@ struct Wall_Textures
     int32 count;
 };
 
+struct Player
+{
+    v2 position;
+    v2 velocity;
+    real32 pace;
+    real32 angle;
+    
+    Weapon weapon;
+    int32 weapon_animation_index;
+    real32 weapon_cd;
+    real32 weapon_cd_counter;
+};
+
 struct Game_State
 {
     //memory

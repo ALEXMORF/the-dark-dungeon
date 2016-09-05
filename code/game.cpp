@@ -95,6 +95,9 @@ initialize_entities(Entity_List *entity_list)
     add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 6.0f}));
     add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 8.0f}));
     add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 9.0f}));
+    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 15.0f}));
+    add_entity(entity_list, make_dynamic_entity(ss, {14.0f, 15.0f}));
+    add_entity(entity_list, make_dynamic_entity(ss, {16.0f, 15.0f}));
 }
 
 //NOTE(chen): returns whether or not the player fired 
@@ -148,7 +151,7 @@ player_update(Player *player, real32 dt)
     int32 animation_ending_index = 1;
     
     player->position += player->velocity;
-
+    
     if (player->weapon_cd_counter)
     {
 	real32 time_passed = player->weapon_cd - player->weapon_cd_counter;
@@ -298,9 +301,15 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
     //draw first-person weapon
     {
+	real32 y_scale = 5;
+	real32 x_scale = 20;
+	player->pace += len(player->velocity);
+	int32 bob_x = (int32)(sinf(player->pace * 2.5f) * x_scale);
+	int32 bob_y = (int32)(cosf(player->pace * 5.0f) * y_scale) + (int32)y_scale;
+	
 	v2 weapon_sprite_size = {(real32)buffer->height, (real32)buffer->height};
-	int32 weapon_upper_left = (buffer->width - (int32)weapon_sprite_size.x) / 2;
-	int32 weapon_upper_top = 0;
+	int32 weapon_upper_left = bob_x + (buffer->width - (int32)weapon_sprite_size.x) / 2;
+	int32 weapon_upper_top = 0 + bob_y;
 	int32 weapon_lower_right = weapon_upper_left + (int32)weapon_sprite_size.x;
 	
 	Loaded_Image weapon_image = extract_image_from_sheet(&game_state->weapon_texture_sheet,
