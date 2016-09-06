@@ -29,7 +29,7 @@ initialize_linear_allocator(Linear_Allocator *allocator, void *base_ptr, uint32 
     allocator->used = 0;
 }
 
-#define Push_Array(allocator, wanted_size, type) (type *)linear_allocate(allocator, wanted_size*sizeof(type))
+#define Push_Array(allocator, array_length, type) (type *)linear_allocate(allocator, array_length*sizeof(type))
 inline void *
 linear_allocate(Linear_Allocator *allocator, uint32 wanted_size)
 {
