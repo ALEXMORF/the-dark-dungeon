@@ -99,7 +99,7 @@ internal Entity *
 render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 		Tile_Map *tile_map, v2 position, real32 view_angle,
 		Loaded_Image *ceiling_texture, Loaded_Image *floor_texture,
-		Wall_Textures *wall_textures,
+		Texture_List *wall_textures,
 		Sprite *sprites, int32 sprite_count)
 {
     Entity *currently_aimed_entity = 0;
@@ -153,6 +153,7 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 	}
 	    
 	//floor casting routine
+	if (floor_texture && ceiling_texture)
 	{
 	    for (int32 scan_y = wall_top + wall_slice_height; scan_y < buffer->height; ++scan_y)
 	    {
@@ -184,7 +185,7 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 		uint32 *dest_pixels = (uint32 *)buffer->memory;
 		uint32 *floor_source_pixels = (uint32 *)floor_texture->data;
 		uint32 *ceiling_source_pixels = (uint32 *)ceiling_texture->data;
-
+		
 		dest_pixels[screen_x + screen_y*buffer->width] =
 		    floor_source_pixels[texture_x + texture_y*floor_texture->width];
 		dest_pixels[screen_x + (buffer->height - screen_y)*buffer->width] =

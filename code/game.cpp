@@ -89,7 +89,7 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image)
 inline void
 initialize_entities(Entity_List *entity_list)
 {
-    add_entity(entity_list, make_dynamic_entity(guard, {5.0f, 15.5f}));
+    add_entity(entity_list, make_dynamic_entity(guard, {6.0f, 15.5f}));
     add_entity(entity_list, make_dynamic_entity(guard, {15.0f, 7.0f}));
     add_entity(entity_list, make_dynamic_entity(guard, {6.0f, 7.0f}));
     add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 6.0f}));
@@ -98,6 +98,16 @@ initialize_entities(Entity_List *entity_list)
     add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 15.0f}));
     add_entity(entity_list, make_dynamic_entity(ss, {14.0f, 15.0f}));
     add_entity(entity_list, make_dynamic_entity(ss, {16.0f, 15.0f}));
+}
+
+internal void
+initialize_player(Player *player)
+{
+    player->position = {3.0f, 3.0f};
+    player->angle = 0.0f;
+    player->weapon_animation_index = 1;
+    player->weapon = pistol;
+    player->weapon_cd = 1.3f;
 }
 
 //NOTE(chen): returns whether or not the player fired 
@@ -223,12 +233,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	tile_map->tiles = Push_Array(&game_state->permanent_allocator, tile_count, uint32);
 	Copy_Array(tiles, tile_map->tiles, tile_count, uint32);
 
-	Player *player = &game_state->player;
-	player->position = {3.0f, 3.0f};
-	player->angle = 0.0f;
-	player->weapon_animation_index = 1;
-	player->weapon = pistol;
-	player->weapon_cd = 1.3f;
+	initialize_player(&game_state->player);
 
 	initialize_entities(&game_state->entity_list);
 	
@@ -250,11 +255,12 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     }
     game_state->transient_allocator.used = 0;
 
-    //
-    //
-    //
-    
+    //get some pointers for convinience
     Player *player = &game_state->player;
+    
+    //
+    //
+    //
     
     if (player_handle_input(player, input, memory->platform_play_sound)) 
     {
@@ -270,10 +276,9 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     
     player_update(player, input->dt_per_frame);
 
-    Entity_List *entity_list = &game_state->entity_list;
-    for (int32 i = 0; i < entity_list->count; ++i)
+    for (int32 i = 0; i < game_state->entity_list.count; ++i)
     {
-	Entity *entity = &entity_list->content[i];
+	Entity *entity = &game_state->entity_list.content[i];
 
 	if (entity->hp == 0)
 	{
@@ -286,7 +291,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //
     
     fill_buffer(buffer, 0);
-    
+
+    //draw 3d scene and sprites
     Sprite_List sprite_list = {};
     generate_sprite_list(game_state, &sprite_list, game_state->entity_list.content, game_state->entity_list.count);
     sort_sprites(sprite_list.content, sprite_list.count, game_state->player.position);
@@ -311,7 +317,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	int32 weapon_upper_left = bob_x + (buffer->width - (int32)weapon_sprite_size.x) / 2;
 	int32 weapon_upper_top = 0 + bob_y;
 	int32 weapon_lower_right = weapon_upper_left + (int32)weapon_sprite_size.x;
-	
+
 	Loaded_Image weapon_image = extract_image_from_sheet(&game_state->weapon_texture_sheet,
 							     game_state->player.weapon_animation_index,
 							     game_state->player.weapon);

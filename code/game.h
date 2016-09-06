@@ -24,7 +24,7 @@ struct Linear_Allocator
     uint32 used;
 };
 
-struct Wall_Textures
+struct Texture_List
 {
     Loaded_Image *E;
     int32 count;
@@ -56,7 +56,7 @@ struct Game_State
     Entity *currently_aimed_entity;
     
     //asset
-    Wall_Textures wall_textures;
+    Texture_List wall_textures;
     Loaded_Image floor_texture;
     Loaded_Image ceiling_texture;
     Loaded_Image barrel_texture;
