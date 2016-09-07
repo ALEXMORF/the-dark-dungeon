@@ -10,7 +10,7 @@ existing features:
  4. sprite sorting & rendering (9/3/2016)
  5. graphics-based bullet detection & basic entity and sprite system & enemy hp and death animation
 
-currently working on: none
+currently working on: enemy AI
 
 things on my mind: bilinear filtering???
 
