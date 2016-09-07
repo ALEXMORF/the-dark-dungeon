@@ -151,45 +151,46 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 	    copy_slice(buffer, wall_texture, texture_x, slice_index,
 		       wall_top, wall_slice_height, shader);
 	}
-	    
+
 	//floor casting routine
 	if (floor_texture && ceiling_texture)
 	{
+	    int32 pixel_offset_y = (wall_top + wall_slice_height) * buffer->width;
+	    int32 bottom_pixel_offset_y = buffer->width * buffer->height;
+
+	    //TODO(chen):performance-critical code, doing per-pixel operation
 	    for (int32 scan_y = wall_top + wall_slice_height; scan_y < buffer->height; ++scan_y)
 	    {
-
 		real32 current_dist = render_context->floorcast_table[scan_y - buffer->height/2];
 		    
 		real32 interpolent = (current_dist / reflection.ray_length);
 		v2 hit_position = reflection.hit_position;
-		v2 player_position = position;
-		    
-#if RELAESE_BUILD
-		v2 floor_position = lerp(player_position, hit_position, interpolent);
-#else
+
+		//inlined lerp
 		v2 floor_position = {};
-		floor_position.x = (player_position.x * (1.0f - interpolent) +
-				    hit_position.x * interpolent);
-		floor_position.y =  (player_position.y * (1.0f - interpolent) +
-				     hit_position.y * interpolent);
-#endif
-		    
-		int32 texture_x = ((int32)(floor_position.x*floor_texture->width) %
-				   floor_texture->width);
-		int32 texture_y = ((int32)(floor_position.y*floor_texture->height) %
-				   floor_texture->height);
+		floor_position.x = (position.x * (1.0f - interpolent) + hit_position.x * interpolent);
+		floor_position.y =  (position.y * (1.0f - interpolent) + hit_position.y * interpolent);
 
-		int32 screen_x = slice_index;
-		int32 screen_y = scan_y;
-
+		int32 texture_x = ((int32)(floor_position.x*floor_texture->width) % floor_texture->width);
+		int32 texture_y = ((int32)(floor_position.y*floor_texture->height) % floor_texture->height);
+		
 		uint32 *dest_pixels = (uint32 *)buffer->memory;
 		uint32 *floor_source_pixels = (uint32 *)floor_texture->data;
 		uint32 *ceiling_source_pixels = (uint32 *)ceiling_texture->data;
-		
-		dest_pixels[screen_x + screen_y*buffer->width] =
+
+#if 0 //NOTE(chen): unoptimized, but very flexible
+		dest_pixels[slice_index + scan_y*buffer->width] =
 		    floor_source_pixels[texture_x + texture_y*floor_texture->width];
-		dest_pixels[screen_x + (buffer->height - screen_y)*buffer->width] =
+		dest_pixels[slice_index + (buffer->height - scan_y)*buffer->width] =
 		    ceiling_source_pixels[texture_x + texture_y*floor_texture->width];
+#else //NOTE(chen): optimized, but inflexible
+		dest_pixels[slice_index + pixel_offset_y] =
+		    floor_source_pixels[texture_x + (texture_y << 6)];
+		dest_pixels[slice_index + (bottom_pixel_offset_y - pixel_offset_y)] =
+		    ceiling_source_pixels[texture_x + (texture_y << 6)];
+
+		pixel_offset_y += buffer->width;
+#endif
 	    }
 	} 
     } 
@@ -256,6 +257,5 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 	    }
 	}
     }
-
     return currently_aimed_entity;
 }

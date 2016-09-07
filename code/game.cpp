@@ -182,7 +182,6 @@ player_update(Player *player, real32 dt)
 //
 //
 //Brain
-
 extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 {
     assert(sizeof(Game_State) <= memory->permanent_storage_size);
@@ -239,7 +238,6 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	
 	load_assets(game_state, memory->platform_load_image);
 	
-	//prepare renderer context
 	Render_Context *render_context = &game_state->render_context;
 	render_context->z_buffer = Push_Array(&game_state->permanent_allocator, buffer->width, real32);
 	render_context->floorcast_table_count = buffer->height/2;
@@ -255,7 +253,6 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     }
     game_state->transient_allocator.used = 0;
 
-    //get some pointers for convinience
     Player *player = &game_state->player;
     
     //
@@ -264,7 +261,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     
     if (player_handle_input(player, input, memory->platform_play_sound)) 
     {
-	if (game_state->currently_aimed_entity && game_state->currently_aimed_entity->hp)
+	if (game_state->currently_aimed_entity != 0 && game_state->currently_aimed_entity->hp != 0)
 	{
 	    --game_state->currently_aimed_entity->hp;
 	}
@@ -275,7 +272,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //
     
     player_update(player, input->dt_per_frame);
-
+    
     for (int32 i = 0; i < game_state->entity_list.count; ++i)
     {
 	Entity *entity = &game_state->entity_list.content[i];
