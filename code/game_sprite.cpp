@@ -12,7 +12,7 @@ compute_sprite_order(Sprite *sprite_list, int32 len, v2 relative_position)
 internal void
 add_sprite(Sprite_List *list, Sprite sprite)
 {
-    assert(list->count+1 < SPRITE_COUNT_MAX);
+    assert(list->count+1 < list->capacity);
     list->content[list->count++] = sprite;
 }
 

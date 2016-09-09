@@ -87,7 +87,7 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image)
 }
  
 inline void
-initialize_entities(Entity_List *entity_list)
+fill_entities(Entity_List *entity_list)
 {
     add_entity(entity_list, make_dynamic_entity(guard, {6.0f, 15.5f}));
     add_entity(entity_list, make_dynamic_entity(guard, {15.0f, 7.0f}));
@@ -234,7 +234,9 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
 	initialize_player(&game_state->player);
 
-	initialize_entities(&game_state->entity_list);
+	game_state->entity_list.capacity = 200;
+	game_state->entity_list.content = Push_Array(&game_state->permanent_allocator, game_state->entity_list.capacity, Entity);
+	fill_entities(&game_state->entity_list);
 	
 	load_assets(game_state, memory->platform_load_image);
 	
@@ -254,15 +256,17 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     game_state->transient_allocator.used = 0;
 
     Player *player = &game_state->player;
-    
-    if (player_handle_input(player, input, memory->platform_play_sound)) 
+
+    //if player fired
+    if (player_handle_input(player, input, memory->platform_play_sound))
     {
 	if (game_state->currently_aimed_entity != 0 && game_state->currently_aimed_entity->hp != 0)
 	{
 	    --game_state->currently_aimed_entity->hp;
 	}
     }
-    
+
+    //TODO(chen): add collision detection against entities and walls
     player_update(player, input->dt_per_frame);
     
     for (int32 i = 0; i < game_state->entity_list.count; ++i)
@@ -283,6 +287,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
     //draw 3d scene and sprites
     Sprite_List sprite_list = {};
+    sprite_list.capacity = 200;
+    sprite_list.content = Push_Array(&game_state->transient_allocator, sprite_list.capacity, Sprite);
     generate_sprite_list(game_state, &sprite_list, game_state->entity_list.content, game_state->entity_list.count);
     sort_sprites(sprite_list.content, sprite_list.count, game_state->player.position);
     game_state->currently_aimed_entity = render_3d_scene(buffer, &game_state->render_context,

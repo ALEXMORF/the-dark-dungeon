@@ -1,5 +1,6 @@
 #pragma once
 
+struct Entity;
 struct Sprite
 {
     Entity *owner;
@@ -13,7 +14,8 @@ struct Sprite
 
 struct Sprite_List
 {
-    Sprite content[SPRITE_COUNT_MAX];
+    Sprite *content;
     int32 count;
+    int32 capacity;
 };
 

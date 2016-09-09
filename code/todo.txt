@@ -1,5 +1,0 @@
-1. add sound API to play pistol fire sound every time.
-
-2. gun fire animation, pistol cool-down time.
-
-3. implement motion equation for smooth walking.

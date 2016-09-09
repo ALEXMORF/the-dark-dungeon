@@ -31,7 +31,8 @@ struct Entity
 
 struct Entity_List
 {
-    Entity content[ENTITY_COUNT_MAX];
+    Entity *content;
     int32 count;
+    int32 capacity;
 };
 

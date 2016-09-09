@@ -10,12 +10,13 @@
 #include "game_constraint.h"
 #include "game_math.h"
 #include "game_tiles.h"
-#include "game_entity.h"
 
 #include "game_asset.h"
 #include "game_render.h"
 #include "game_sprite.h"
 #include "game_raycaster.h"
+
+#include "game_entity.h"
 
 struct Linear_Allocator
 {

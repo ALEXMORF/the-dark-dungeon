@@ -3,7 +3,7 @@
 internal void
 add_entity(Entity_List *list, Entity entity)
 {
-    assert(list->count+1 < ENTITY_COUNT_MAX);
+    assert(list->count+1 < list->capacity);
     list->content[list->count++] = entity;
 }
 
