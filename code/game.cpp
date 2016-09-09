@@ -255,10 +255,6 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
     Player *player = &game_state->player;
     
-    //
-    //
-    //
-    
     if (player_handle_input(player, input, memory->platform_play_sound)) 
     {
 	if (game_state->currently_aimed_entity != 0 && game_state->currently_aimed_entity->hp != 0)
@@ -266,10 +262,6 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	    --game_state->currently_aimed_entity->hp;
 	}
     }
-
-    //
-    //
-    //
     
     player_update(player, input->dt_per_frame);
     
