@@ -35,6 +35,7 @@ sort_sprites(Sprite *sprite_list, int32 len, v2 relative_position)
     }
 }
 
+//TODO(chen): FIX THIS BULLSHIT! REWRITE ALL THE SPRITE GENERATION CODE, THIS IS UGLY AS FUUUUCK!!!
 inline int32
 get_current_playing_index(real32 timer, real32 period, int32 index_count)
 {
