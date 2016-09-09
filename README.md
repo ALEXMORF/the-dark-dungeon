@@ -9,6 +9,7 @@ existing features:
  3. supports multiple wall textures (8/31/2016)
  4. sprite sorting & rendering (9/3/2016)
  5. graphics-based bullet detection & basic entity system (9/3/2016)
+ 6. perspective-oriented sprite generation (9/9/2016)
 
 currently working on: enemy AI
 
