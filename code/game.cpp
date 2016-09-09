@@ -296,8 +296,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
     //draw first-person weapon
     {
-	real32 y_scale = 5;
-	real32 x_scale = 20;
+	real32 y_scale = (real32)buffer->height / 50;
+	real32 x_scale = (real32)buffer->width / 40;
 	player->pace += len(player->velocity);
 	int32 bob_x = (int32)(sinf(player->pace * 2.5f) * x_scale);
 	int32 bob_y = (int32)(cosf(player->pace * 5.0f) * y_scale) + (int32)y_scale;

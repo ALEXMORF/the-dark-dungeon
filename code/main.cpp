@@ -104,26 +104,11 @@ win32_display_offscreen_buffer(Win32_Offscreen_Buffer *buffer, HWND window)
     int32 window_width = client_rect.right - client_rect.left;
     int32 window_height = client_rect.bottom - client_rect.top;
 
-    if (window_width >= buffer->width*2 && window_height >= buffer->height*2)
-    {
-	StretchDIBits(device_context,
-		      0, 0, buffer->width*2, buffer->height*2,
-		      0, 0, buffer->width, buffer->height,
-		      buffer->memory, &buffer->info,
-		      DIB_RGB_COLORS, SRCCOPY);
-    }
-    else
-    {
-	StretchDIBits(device_context,
-		      0, 0, buffer->width, buffer->height,
-		      0, 0, buffer->width, buffer->height,
-		      buffer->memory, &buffer->info,
-		      DIB_RGB_COLORS, SRCCOPY);
-
-	//clear rest of screen
-	PatBlt(device_context, 0, buffer->height, buffer->width, buffer->height, BLACKNESS);
-	PatBlt(device_context, buffer->width, 0, buffer->width, buffer->height, BLACKNESS);    
-    }
+    StretchDIBits(device_context,
+		  0, 0, window_width, window_height,
+		  0, 0, buffer->width, buffer->height,
+		  buffer->memory, &buffer->info,
+		  DIB_RGB_COLORS, SRCCOPY);
     
     ReleaseDC(window, device_context);
 }
@@ -283,7 +268,7 @@ win32_main_window_callback(HWND window, UINT message, WPARAM w_param, LPARAM l_p
 }
 
 internal void
-play_sound(char *filename)
+win32_play_sound(char *filename)
 {
     PlaySound(filename, 0 , SND_FILENAME | SND_ASYNC);
 }
@@ -293,6 +278,8 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 {
     int32 window_width = 960;
     int32 window_height = 540;
+    int32 buffer_width = 960;
+    int32 buffer_height = 540;    
     uint32 permanent_game_memory_size = megabytes(64);
     uint32 transient_game_memory_size = megabytes(128);
     int32 target_frame_per_second = 60;
@@ -300,7 +287,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     
     HWND window = win32_create_window("Dark Dungeon", win32_main_window_callback,
 				      window_width, window_height);
-    Win32_Offscreen_Buffer win32_buffer = win32_create_offscreen_buffer(window_width, window_height);
+    Win32_Offscreen_Buffer win32_buffer = win32_create_offscreen_buffer(buffer_width, buffer_height);
     
     QueryPerformanceFrequency(&global_performance_frequency);
     timeBeginPeriod(1);
@@ -317,7 +304,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     game_memory.platform_load_image = stbi_load;
     game_memory.platform_free_image = stbi_image_free;
     game_memory.platform_allocate_memory = malloc;
-    game_memory.platform_play_sound = play_sound;
+    game_memory.platform_play_sound = win32_play_sound;
     assert(game_memory.platform_load_image);
     assert(game_memory.platform_free_image);
     assert(game_memory.platform_allocate_memory);
