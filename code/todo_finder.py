@@ -17,7 +17,7 @@ for file_name in file_list:
 
     for line_num, line in enumerate(file_handle):
         if "TODO" in line:
-            print("%s:%d " % (file_name,line_num+1), remove_leading_space(line))
+            print("%s:%d" % (file_name,line_num+1), remove_leading_space(line))
 
     file_handle.close()
     
