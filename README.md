@@ -41,8 +41,8 @@ It was because I had to constantly switch context while dealing with the same pi
  that costs me productivity. As soon as I decoupled all these processes, my code becomes much clearer and easier to reason 
  about and it soon became a pleasure to code again, inside this codebase. 
 
- I just got started programming,and I barely know about programming, but I hope this discovery is worth a note, 
- unless it is something similar to the  OOP delusion I had in my first year of programming. I simply put this 
+ I just got started programming, barely knows how to program, but I hope this discovery is worth a note, 
+ unless it is something similar to the OOP delusion I had in my early days. I simply put this 
  block of letters here, as a reminder on how to write "reasonable" code.
 
 #So, how to prevent this from happening next time?
