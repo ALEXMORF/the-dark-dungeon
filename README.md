@@ -34,9 +34,11 @@ context-switching. What is damaging my productivity is not the  way I program, n
 It was because I had to constantly switch context while dealing with the same piece of code. 
 
  I did many things in a hacky way; I played sound while processing input, I returned collision detection result 
- while rendering, and my animation code is somehow inside my simulation code. It is this constant context switching 
- that costs me productivity. As soon as I decoupled all these processes, it became crystal clear to me what my code 
- does and it soon became a pleasure to code again, inside this codebase. 
+ while rendering, and my animation code is somehow inside my simulation code. Therefore, whenver I try to reason about 
+ my code, I had to consider multiple things at once, and that usually feels like juggling; it was possible to reason about
+ my code, but it was also extremely exhausting, despiting its small size. It is this constant context switching 
+ that costs me productivity. As soon as I decoupled all these processes, my code becomes much clearer and easier to reason 
+ about and it soon became a pleasure to code again, inside this codebase. 
 
  I just got started programming,and I barely know about programming, but I hope this discovery is worth a note, 
  unless it is something similar to the  OOP delusion I had in my first year of programming. I simply put this 
