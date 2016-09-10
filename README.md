@@ -15,6 +15,11 @@ currently working on: enemy AI
 
 things on my mind: bilinear filtering???
 
+what I have found in this experience:
+
+# Mental Context Switching Cost is the worst enemy of productivity
+
+
  screenshot 1 (8/25/2016) 
 ![image](https://cloud.githubusercontent.com/assets/16845654/17989412/e3b28ef6-6ae1-11e6-8c19-44c8a2f1dd0e.png)
 
