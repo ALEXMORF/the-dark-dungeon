@@ -19,7 +19,7 @@ things on my mind: bilinear filtering???
 
  I like to program in a linear and straightforward fashion, because it allows me to inspect my program and 
 detect bugs in the smallest amount of time possible. However, whenever I try to write non-trivial programs, 
-I sort of gets depressed by the way I am doing stuff: it seemed like my way of programming is actually hindering 
+I sort of get depressed by the way I am doing stuff: it seemed like my way of programming is actually hindering 
 my productivity, and the OOP style is truly the salvation, which, let's be real, switch between headers 
 and source files is already enough context switching to induce suicidal thoughts. 
 
