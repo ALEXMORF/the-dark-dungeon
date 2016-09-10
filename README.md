@@ -46,9 +46,7 @@ not deluded. I simply put this block of letters here, as a reminder on how to wr
 
 #So, how to prevent this from happening next time?
  
- WARNING: do not do this at first, since it's impossible to sepculate what the code architecture will be before even implementing 
-it, so make sure the beginning code is easily changeable. After things fall into where they are, it's time to start separate 
-them.
+ NOTE: Doing this is the same as locking down your game's architecture. If anything is wrong with the way you put them together, it becomes very difficult to change around. Therefore, do not do this at first, since it's impossible to sepculate what the code architecture is and get it right on the first time, so make sure the beginning code is easily changeable. After things fall into where they are, it's time to start separate them.
  
  Separate your code if they do different things, make sure each portion have no bearing on another.
  
