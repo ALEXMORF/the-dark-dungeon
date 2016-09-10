@@ -59,6 +59,12 @@ the beginning to the end. Keep each subsystems separated if their functionalitie
 no portion of code has a bearing on another portion. By doing this, you minimalized the frequency of context switching and have
 your productivity maximized. 
  
+# My speculation on good programming
+
+ I dislike OOP because of the boilerplate code I have to write, and the fact that OOP-style progrmaming usually results in non-linear code, which is hard to follow. However, there is nothing wrong with objects or encapsulation; I think they help programmers to enforce the idea of decoupling subsystems and prevent one from having a bearing on another, and therefore helps reduce context-switching cost. On the other hand, programming in C style can be very fast, but it also blurs the boundaries between subsystems and tempt me to intermangle them to save time. The important thing is how to strike balance between these two different styles. 
+ 
+ My Speculation is: write the low-level code first, once the code accomplishes a task and has evolved to a state that's hard to manage (which, you should know when you see it), pull them out and put them in a class. The usage of class here is not for OOP, but rather semantic compression. I'd rather see player.update() than player_update(player), it makes the code easier to reason about and reads more like English.
+
 #screenshots
 
  screenshot 1 (8/25/2016) 
