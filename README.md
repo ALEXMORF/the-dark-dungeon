@@ -23,7 +23,20 @@ depressed by the way I am doing stuff: it seemed like my way of programming is a
 productivity, and the OOP style is truly the salvation, which is as depressing as it can get. 
 
  That is one of the reasons I am doing this project; to find out what is damaging my productivity when 
-working with large amount of code (1K lines and above). 
+working with large amount of code (1K lines and above). After gotten the basic 3D rendering engine done, 
+the same happened again. It became very difficult to reason about my code: and the worst part is, that is 
+not due to the size of my code. My rendering code in total is about 500 lines, and I am perfectly fine 
+with both reading it and maintaining it. On the other hand, my game code is only about 100 lines or less, 
+however it's extremely hard to reason about. Upon closer inspection, it seems like I have found the culprit:
+careless programming that leads to frequent context-switching. What is damaging my productivity is not the 
+way I program, nor the way I inline functions. It was because I had to constantly switch context while dealing 
+with the same piece of code. I did many things in a hacky way; I played sound while processing input, I returned
+collision detection result while rendering, and my animation code is somehow inside my simulation code. It is this
+constant context switching that costs me productivity. As soon as I decoupled all these processes, it became crystal clear 
+to me what my code does and it soon became a pleasure to code again, inside this codebase. I just got started programming,
+and I barely know about programming, but I hope this discovery is worth a note, unless it is something similar to the 
+OOP delusion I had in my first year of programming. I simply put this block of letters here, as a reminder on how 
+to write "reasonable" code.
 
 #screenshots
 
