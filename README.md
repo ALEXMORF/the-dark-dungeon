@@ -44,6 +44,11 @@ It was because I had to constantly switch context while dealing with the same pi
  unless it is something similar to the  OOP delusion I had in my first year of programming. I simply put this 
  block of letters here, as a reminder on how to write "reasonable" code.
 
+#So, how to prevent this from happening next time?
+
+ Consider what the code is doing first. Separate code that's doing different stuff into blocks, therefore preventing them
+ from intermangling and hard to decouple. Simply put: stop being f**king lazy about your code. 
+
 #screenshots
 
  screenshot 1 (8/25/2016) 
