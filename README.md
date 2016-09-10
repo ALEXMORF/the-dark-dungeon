@@ -35,7 +35,7 @@ On the other hand, my game code is only about 100 lines or less,  however it's e
 Upon closer inspection, it seems like I have found the culprit: boundary-less subsystems that leads to frequent 
 context-switching. What is damaging my productivity is not my 300-line long functions or not following C++ guidlines; 
 it was because I had to constantly switch context while dealing with the same piece of code. Since each subsystem has
-no boundary and pretty much has bearing on another, which also has a bearing on something else. The intermangled mass 
+no boundary and pretty much has bearing on another, which also has a bearing on something else. The intermangled mess 
 I get from having no clear boundary is the real cause of my productivity depression. 
 
  I did many things in a hacky way; I played sound while processing input, I returned collision detection result 
