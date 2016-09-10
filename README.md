@@ -45,7 +45,11 @@ It was because I had to constantly switch context while dealing with the same pi
 not deluded. I simply put this block of letters here, as a reminder on how to write "reasonable" code.
 
 #So, how to prevent this from happening next time?
-
+ 
+ WARNING: do not do this at first, since it's impossible to sepculate what the code architecture will be before even implementing 
+it, so make sure the beginning code is easily changeable. After things fall into where they are, it's time to start separate 
+them.
+ 
  Separate your code if they do different things, make sure each portion have no bearing on another.
  
  Think about yourself as an urban planner (or whatever it's called). Plan how you are going to transform your data from 
