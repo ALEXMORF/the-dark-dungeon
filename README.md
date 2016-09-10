@@ -65,7 +65,7 @@ your productivity maximized.
  
  My Speculation is: write the low-level code first, once the code accomplishes a task and has evolved to a state that's hard to manage (which, you should know when you see it), pull them out and put them in a class. Therefore, the process of speculating what functionalities or abstractions a class need wouldn't occur, because they are all presented by the low-level code that's already been written (and the good part is that the low-level code actually does something). However, the usage of class here is not for OOP, but rather semantic compression. I'd rather see player.update() than player_update(player), it makes the code easier to reason about and reads more like English.
  
- NOTE: however, use objects sparsely. Use class only for where seems fit. Trying to fit everything into an object will result in an disaster: data and procedure will be completely mixed together and the code no longer follows a linear pattern. 
+ NOTE: however, use objects sparsely. Use class only for where seems fit. Trying to fit everything into an object will result in a disaster: data and procedure will be completely mixed together and the code no longer follows a linear pattern. 
  
  don't be distracted by objects, either. Only focus on the actual data that you are actually transforming, and make your approaches oriented around the data and the problem, not the OOP practices.
  
