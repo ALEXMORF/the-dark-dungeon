@@ -16,7 +16,7 @@ currently working on: enemy AI
 things on my mind: bilinear filtering???
 
 #what I have found in this experience: The cost of context switching is the worst enemy of productivity
-
+Recently I feel completely lost about programming. 
 
 #screenshots
 
