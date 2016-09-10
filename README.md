@@ -16,6 +16,7 @@ currently working on: enemy AI
 things on my mind: bilinear filtering???
 
 #what I have found in this experience: The cost of context switching is the worst enemy of productivity
+
  I like doing stuff straightforward, because it allows me to inspect my program and detect bugs in the 
 smallest amount of time possible. However, whenever I try to write non-trivial programs, I sort of gets 
 depressed by the way I am doing stuff: it seemed like my way of programming is actually hindering my 
