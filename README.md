@@ -45,8 +45,7 @@ I get from having no clear boundary is the real cause of my productivity depress
  that costs me productivity. As soon as I decoupled all these processes, my code becomes much clearer and easier to reason 
  about and it soon became a pleasure to code again, inside this codebase. 
 
- I just got started programming, barely knows how to program, but I hope this discovery is worth a note and I am 
-not deluded. I simply put this block of letters here, as a reminder on how to write "reasonable" code.
+ I simply put this block of letters here, as a reminder on how to write "reasonable" code.
 
 #So, how to prevent this from happening next time?
  
@@ -67,7 +66,7 @@ your productivity maximized.
 
  I dislike OOP because of the boilerplate code I have to write; I find myself spending more time writing boilerplate and speculating what I need for the class than writing the actual code that actually does something. In addition, OOP-style progrmaming usually results in non-linear code, which is hard to follow. However, there is nothing wrong with objects or encapsulation; I think they help programmers to enforce the idea of decoupling subsystems and prevent one from having a bearing on another, and therefore helps reduce context-switching cost. On the other hand, programming in C style can be very fast, but it also blurs the boundaries between subsystems and tempt me to intermangle them to save time. The important thing is how to strike balance between these two different styles. 
  
- My Speculation is: write the low-level code first, once the code accomplishes a task and has evolved to a state that's hard to manage (which, you should know when you see it), pull them out and put them into different subsystems with clear boundaries (classes if you feel like it). Therefore, the process of speculating what functionalities or abstractions a subsystem (or class) need wouldn't occur, because they are all presented by the low-level code that's already been written (and the good part is that the low-level code actually does something). However, the usage of class here is not for OOP, but rather readability. I'd rather see player.update() than player_update(player), it makes the code easier to reason about and reads more like English.
+ My Speculation is: write the low-level code first, once the code accomplishes a task and has evolved to a state that's hard to manage (which, you should know when you see it), pull them out and put them into different subsystems with clear boundaries (classes if you feel like it). Therefore, the process of speculating what functionalities or abstractions a subsystem (or class) need wouldn't occur, because they are all presented by the low-level code that's already been written (and the good part is that the low-level code actually does something). However, the usage of class here is not for OOP: separation of subsystem and drawing clear boundaries between them can be done without classes just as easily. What I classes might provide is readability. I'd rather see player.update() than player_update(player), it makes the code easier to reason about and reads more like English.
  
  NOTE: however, use objects sparsely. Use class only for where seems fit. Trying to fit everything into an object will result in a disaster: data and procedure (or behavior, if you want to call it that) will be completely mixed together and the code no longer follows a linear pattern. 
  
