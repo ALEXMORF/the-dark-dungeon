@@ -46,6 +46,8 @@ not deluded. I simply put this block of letters here, as a reminder on how to wr
 
 #So, how to prevent this from happening next time?
  
+ Do not misplace the emphasis. The emphasis should always be on the problem-solving rather than the code, but when code is hindering your problem solving, then it's time to use this strategy.
+ 
  NOTE: Doing this is the same as locking down your game's architecture. If anything is wrong with the way you put them together, it becomes very difficult to change around. Therefore, makes sure separation of code is the last thing you do. Write the actual code that does stuff first. Do no fall into the big agenda like "one class does one thing" or "function can't exceed 25 lines". Make sure there are only sparse separations and do them only when the context-switching is constantly happening.
  
  When the context-switch cost becomes too big, what to do?
