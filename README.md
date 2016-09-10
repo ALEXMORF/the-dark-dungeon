@@ -32,9 +32,11 @@ not due to the size of my code.
 
  My rendering code in total is about 500 lines, and I am perfectly fine  with both reading it and maintaining it. 
 On the other hand, my game code is only about 100 lines or less,  however it's extremely hard to reason about. 
-Upon closer inspection, it seems like I have found the culprit: careless programming that leads to frequent 
+Upon closer inspection, it seems like I have found the culprit: boundary-less subsystems that leads to frequent 
 context-switching. What is damaging my productivity is not the  way I program, nor the way I inline functions. 
-It was because I had to constantly switch context while dealing with the same piece of code. 
+It was because I had to constantly switch context while dealing with the same piece of code, since each subsystem 
+pretty much has bearing on another, which also has a bearing on something else. The intermangled mass I get from 
+having no clear boundary is the real cause of my productivity depression. 
 
  I did many things in a hacky way; I played sound while processing input, I returned collision detection result 
  while rendering, and my animation code is somehow inside my simulation code. Therefore, whenver I try to reason about 
