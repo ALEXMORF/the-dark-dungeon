@@ -47,8 +47,10 @@ It was because I had to constantly switch context while dealing with the same pi
 
 #So, how to prevent this from happening next time?
 
- Consider what parts of the code is doing first. Separate code that's doing different stuff into blocks, therefore preventing them
- from intermangling and hard to decouple. Lastly, know your own limitation as a human being. 
+ Think about yourself as an urban planner (or whatever it's called). Plan how you are going to transform your data from 
+the beginning to the end. Keep transformations separated if their functionalities are different. Make it in such a way that
+no piece code has a bearing on another piece. By doing this, you minimalized the frequency of context switching and have
+your productivity maximized. 
  
 #screenshots
 
