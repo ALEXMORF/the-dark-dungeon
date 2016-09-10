@@ -20,7 +20,7 @@ things on my mind: bilinear filtering???
  I like doing stuff straightforward, because it allows me to inspect my program and detect bugs in the 
 smallest amount of time possible. However, whenever I try to write non-trivial programs, I sort of gets 
 depressed by the way I am doing stuff: it seemed like my way of programming is actually hindering my 
-productivity, and the OOP style is truly the salvation, which is as depressing as it can get. 
+productivity, and the OOP style is truly the salvation, which, I'd rather kill myself. 
 
  That is one of the reasons I am doing this project; to find out what is damaging my productivity when 
 working with large amount of code (1K lines and above). After gotten the basic 3D rendering engine done, 
