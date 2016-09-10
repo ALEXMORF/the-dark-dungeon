@@ -55,7 +55,7 @@ not deluded. I simply put this block of letters here, as a reminder on how to wr
  Separate your code if they do different things, make sure each portion have no bearing on another.
  
  Think about yourself as an urban planner (or whatever it's called). Plan how you are going to transform your data from 
-the beginning to the end. Keep transformations separated if their functionalities are different. Make it in such a way that
+the beginning to the end. Keep each subsystems separated if their functionalities are different. Make it in such a way that
 no portion of code has a bearing on another portion. By doing this, you minimalized the frequency of context switching and have
 your productivity maximized. 
  
