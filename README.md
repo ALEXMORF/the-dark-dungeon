@@ -67,6 +67,8 @@ your productivity maximized.
  
  NOTE: however, use objects sparsely. Use class only for where seems fit. Trying to fit everything into an object will result in an disaster: data and procedure will be completely mixed together and the code no longer follows a linear pattern. 
  
+ don't be distracted by objects, either. Only focus on the actual data that you are actually transforming, and make your approaches oriented around the data and the problem, not the OOP practices.
+ 
 #screenshots
 
  screenshot 1 (8/25/2016) 
