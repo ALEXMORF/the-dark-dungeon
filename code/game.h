@@ -17,6 +17,7 @@
 #include "game_raycaster.h"
 
 #include "game_entity.h"
+#include "game_simulate.h"
 
 struct Linear_Allocator
 {
@@ -37,6 +38,7 @@ struct Player
     v2 velocity;
     real32 pace;
     real32 angle;
+    bool32 has_fired;
     
     Weapon weapon;
     int32 weapon_animation_index;
@@ -70,4 +72,7 @@ struct Game_State
     
     //render
     Render_Context render_context;
+
+    //sound
+    bool32 need_to_play_pistol_sound;
 };

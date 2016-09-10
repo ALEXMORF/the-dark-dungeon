@@ -35,7 +35,6 @@ sort_sprites(Sprite *sprite_list, int32 len, v2 relative_position)
     }
 }
 
-//TODO(chen): FIX THIS BULLSHIT! REWRITE ALL THE SPRITE GENERATION CODE, THIS IS UGLY AS FUUUUCK!!!
 inline int32
 get_current_playing_index(real32 timer, real32 period, int32 index_count)
 {
@@ -50,6 +49,18 @@ get_current_playing_index(real32 timer, real32 period, int32 index_count)
     }
 
     return texture_index;
+}
+
+inline int32
+get_directional_index(int32 zero_dir_index, int32 dir_index_count, real32 entity_angle, real32 player_angle)
+{
+    real32 angle_diff_each_index = pi32*2.0f / (real32)dir_index_count;
+    real32 angle_diff = get_angle_diff(entity_angle, player_angle);
+    recanonicalize_angle(&angle_diff);
+    angle_diff += angle_diff_each_index/2.0f;
+    int32 dir_index = (zero_dir_index + (int32)(angle_diff / angle_diff_each_index)) % dir_index_count;
+
+    return dir_index;
 }
 
 internal Loaded_Image
@@ -81,7 +92,9 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 	    }
 	    else
 	    {
-		result = extract_image_from_sheet(&game_state->guard_texture_sheet, 0, 0);
+		int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
+		
+		result = extract_image_from_sheet(&game_state->guard_texture_sheet, dir_index, 0);
 	    }
 	} break;
 
@@ -97,7 +110,9 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 	    }
 	    else
 	    {
-		result = extract_image_from_sheet(&game_state->ss_texture_sheet, 0, 0);
+		int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
+		
+		result = extract_image_from_sheet(&game_state->ss_texture_sheet, dir_index, 0);
 	    }
 		
 	} break;
@@ -120,8 +135,6 @@ generate_sprite_list(Game_State *game_state, Sprite_List *list,
     
     for (int32 i = 0; i < entity_count; ++i)
     {
-	bool32 is_dead = (entity_list[i].hp == 0);
-	
 	Sprite temp = {};
 	temp.owner = &entity_list[i];
 	temp.size.x = 1.0f;

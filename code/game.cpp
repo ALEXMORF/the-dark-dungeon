@@ -2,12 +2,14 @@
 
 #include "game_math.cpp"
 #include "game_tiles.cpp"
-#include "game_entity.cpp"
 
 #include "game_asset.cpp"
 #include "game_render.cpp"
 #include "game_sprite.cpp"
 #include "game_raycaster.cpp"
+
+#include "game_entity.cpp"
+#include "game_simulate.cpp"
 
 #define Copy_Array(source, dest, count, type) copy_memory(source, dest, count*sizeof(type))
 inline void
@@ -110,74 +112,6 @@ initialize_player(Player *player)
     player->weapon_cd = 1.3f;
 }
 
-//NOTE(chen): returns whether or not the player fired 
-internal bool32
-player_handle_input(Player *player, Game_Input *input, Platform_Play_Sound *play_sound)
-{
-    real32 player_speed = 2.5f;
-    real32 lerp_constant = 0.2f;
-    real32 mouse_sensitivity = 0.7f;
-    char *gun_sound_file_name = "../data/pistol.wav";
-
-    bool32 player_fired = false;
-    
-    real32 forward = 0.0f;
-    real32 left = 0.0f;
-    if_do(input->keyboard.left, left = 1.0f);
-    if_do(input->keyboard.right, left = -1.0f);
-    if_do(input->keyboard.up, forward = 1.0f);
-    if_do(input->keyboard.down, forward = -1.0f);
-    
-    v2 player_d_velocity = {};
-    player_d_velocity.x += cosf(player->angle) *forward;    
-    player_d_velocity.y += sinf(player->angle) * forward;
-    player_d_velocity.x += cosf(player->angle + pi32/2.0f) * left;    
-    player_d_velocity.y += sinf(player->angle + pi32/2.0f) * left;
-    player_d_velocity = normalize(player_d_velocity);
-    
-    player_d_velocity *= player_speed * input->dt_per_frame;
-    player->velocity = lerp(player->velocity, player_d_velocity, lerp_constant);
-    
-    if (input->mouse.down && player->weapon_cd_counter == 0.0f)
-    {
-	play_sound(gun_sound_file_name);	    
-	player->weapon_cd_counter = player->weapon_cd;
-
-	player_fired = true;
-    }
-
-    real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity;
-    player->angle += player_delta_angle;
-    recanonicalize_angle(&player->angle);
-
-    return player_fired;
-}
-
-internal void
-player_update(Player *player, real32 dt)
-{
-    real32 animation_cycle = 0.78f;
-    real32 animation_index_count = 4.0f;
-    int32 animation_ending_index = 1;
-    
-    player->position += player->velocity;
-    
-    if (player->weapon_cd_counter)
-    {
-	real32 time_passed = player->weapon_cd - player->weapon_cd_counter;
-	if (time_passed < animation_cycle)
-	{
-	    real32 animation_index_interval = animation_cycle / animation_index_count;
-	    player->weapon_animation_index = (int32)(time_passed / animation_index_interval + (animation_ending_index + 1)) % ((int32)animation_index_count + 1);
-	}
-	else
-	{
-	    player->weapon_animation_index = animation_ending_index;
-	}
-	
-	player->weapon_cd_counter -= (dt < player->weapon_cd_counter? dt: player->weapon_cd_counter);
-    }
-}
 
 //
 //
@@ -255,40 +189,19 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     }
     game_state->transient_allocator.used = 0;
 
-    Player *player = &game_state->player;
-
-    //if player fired
-    if (player_handle_input(player, input, memory->platform_play_sound))
-    {
-	if (game_state->currently_aimed_entity != 0 && game_state->currently_aimed_entity->hp != 0)
-	{
-	    --game_state->currently_aimed_entity->hp;
-	}
-    }
-
-    //TODO(chen): add collision detection against entities and walls
-    player_update(player, input->dt_per_frame);
-    
-    for (int32 i = 0; i < game_state->entity_list.count; ++i)
-    {
-	Entity *entity = &game_state->entity_list.content[i];
-
-	if (entity->hp == 0)
-	{
-	    entity->death_timer += input->dt_per_frame;
-	}
-    }
+    simulate_world(game_state, input);
 
     //
     //
-    //
+    //Render game
     
     fill_buffer(buffer, 0);
 
-    //draw 3d scene and sprites
     Sprite_List sprite_list = {};
     sprite_list.capacity = 200;
     sprite_list.content = Push_Array(&game_state->transient_allocator, sprite_list.capacity, Sprite);
+
+    //draw 3d scene and sprites
     generate_sprite_list(game_state, &sprite_list, game_state->entity_list.content, game_state->entity_list.count);
     sort_sprites(sprite_list.content, sprite_list.count, game_state->player.position);
     game_state->currently_aimed_entity = render_3d_scene(buffer, &game_state->render_context,
@@ -300,13 +213,35 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 							 &game_state->wall_textures,
 							 sprite_list.content, sprite_list.count);
 
+    //animate first-person weapon
+    {
+	Player *player = &game_state->player;
+	
+	real32 animation_cycle = 0.78f;
+	real32 animation_index_count = 4.0f;
+	int32 animation_ending_index = 1;
+	if (player->weapon_cd_counter)
+	{
+	    real32 time_passed = player->weapon_cd - player->weapon_cd_counter;
+	    if (time_passed < animation_cycle)
+	    {
+		real32 animation_index_interval = animation_cycle / animation_index_count;
+		player->weapon_animation_index = (int32)(time_passed / animation_index_interval + (animation_ending_index + 1)) % ((int32)animation_index_count + 1);
+	    }
+	    else
+	    {
+		player->weapon_animation_index = animation_ending_index;
+	    }
+	}
+    }
+    
     //draw first-person weapon
     {
 	real32 y_scale = (real32)buffer->height / 50;
 	real32 x_scale = (real32)buffer->width / 40;
-	player->pace += len(player->velocity);
-	int32 bob_x = (int32)(sinf(player->pace * 2.5f) * x_scale);
-	int32 bob_y = (int32)(cosf(player->pace * 5.0f) * y_scale) + (int32)y_scale;
+	game_state->player.pace += len(game_state->player.velocity);
+	int32 bob_x = (int32)(sinf(game_state->player.pace * 2.5f) * x_scale);
+	int32 bob_y = (int32)(cosf(game_state->player.pace * 5.0f) * y_scale) + (int32)y_scale;
 	
 	v2 weapon_sprite_size = {(real32)buffer->height, (real32)buffer->height};
 	int32 weapon_upper_left = bob_x + (buffer->width - (int32)weapon_sprite_size.x) / 2;
@@ -324,5 +259,14 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 		       (int32)weapon_sprite_size.y, 0);
 	    texture_x += texture_mapper;
 	}
+    }
+
+    //
+    //
+    //Play sound
+    if (game_state->need_to_play_pistol_sound)
+    {
+	memory->platform_play_sound("../data/pistol.wav");
+	game_state->need_to_play_pistol_sound = false;
     }
 }
