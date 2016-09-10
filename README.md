@@ -24,8 +24,8 @@ my productivity, and the OOP style is truly the salvation, which, let's be real,
 and source files is already enough context switching to induce suicidal thoughts. 
 
  That is one of the reasons I am doing this project; to find out what is damaging my productivity when 
-working with large amount of code (1K lines and above). After gotten the basic 3D rendering engine done, 
-the same happened again. It became very difficult to reason about my code: and the worst part is, that is 
+working with large amount of code (1K lines and above). For this game, after gotten the basic 3D rendering engine 
+done, the same happened again: it became very difficult to reason about my code, and the worst part is, that is 
 not due to the size of my code. 
 
  My rendering code in total is about 500 lines, and I am perfectly fine  with both reading it and maintaining it. 
