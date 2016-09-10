@@ -21,7 +21,9 @@ things on my mind: bilinear filtering???
 detect bugs in the smallest amount of time possible. However, whenever I try to write non-trivial programs, 
 I sort of get depressed by the way I am doing stuff: it seemed like my way of programming is actually hindering 
 my productivity, and the OOP style is truly the salvation, which, let's be real, switch between headers 
-and source files is already enough context switching to induce suicidal thoughts. 
+and source files is already enough context switching to induce suicidal thoughts, not to mention how much speculations
+about code reuse and abstraction you put into designing the class ended up not being useful at all; just a huge 
+waste of time. 
 
  That is one of the reasons I am doing this project; to find out what is damaging my productivity when 
 working with large amount of code (1K lines and above). For this game, after gotten the basic 3D rendering engine 
