@@ -9,10 +9,47 @@ existing features:
  3. supports multiple wall textures (8/31/2016)
  4. sprite sorting & rendering (9/3/2016)
  5. graphics-based bullet detection & basic entity system (9/3/2016)
+ 6. perspective-oriented sprite generation (9/9/2016)
 
 currently working on: enemy AI
 
 things on my mind: bilinear filtering???
+
+#what I have found in this experience: The cost of context switching is the worst enemy of productivity
+
+ I like doing stuff straightforward, because it allows me to inspect my program and detect bugs in the 
+smallest amount of time possible. However, whenever I try to write non-trivial programs, I sort of gets 
+depressed by the way I am doing stuff: it seemed like my way of programming is actually hindering my 
+productivity, and the OOP style is truly the salvation, which, I'd rather kill myself. 
+
+ That is one of the reasons I am doing this project; to find out what is damaging my productivity when 
+working with large amount of code (1K lines and above). After gotten the basic 3D rendering engine done, 
+the same happened again. It became very difficult to reason about my code: and the worst part is, that is 
+not due to the size of my code. 
+
+ My rendering code in total is about 500 lines, and I am perfectly fine  with both reading it and maintaining it. 
+On the other hand, my game code is only about 100 lines or less,  however it's extremely hard to reason about. 
+Upon closer inspection, it seems like I have found the culprit: careless programming that leads to frequent 
+context-switching. What is damaging my productivity is not the  way I program, nor the way I inline functions. 
+It was because I had to constantly switch context while dealing with the same piece of code. 
+
+ I did many things in a hacky way; I played sound while processing input, I returned collision detection result 
+ while rendering, and my animation code is somehow inside my simulation code. Therefore, whenver I try to reason about 
+ my code, I had to consider multiple things at once, and that usually feels like juggling; it was possible to reason about
+ my code, but it was also extremely exhausting, despiting its small size. It is this constant context switching 
+ that costs me productivity. As soon as I decoupled all these processes, my code becomes much clearer and easier to reason 
+ about and it soon became a pleasure to code again, inside this codebase. 
+
+ I just got started programming,and I barely know about programming, but I hope this discovery is worth a note, 
+ unless it is something similar to the  OOP delusion I had in my first year of programming. I simply put this 
+ block of letters here, as a reminder on how to write "reasonable" code.
+
+#So, how to prevent this from happening next time?
+
+ Consider what parts of the code is doing first. Separate code that's doing different stuff into blocks, therefore preventing them
+ from intermangling and hard to decouple. Lastly, know your own limitation as a human being. 
+ 
+#screenshots
 
  screenshot 1 (8/25/2016) 
 ![image](https://cloud.githubusercontent.com/assets/16845654/17989412/e3b28ef6-6ae1-11e6-8c19-44c8a2f1dd0e.png)
