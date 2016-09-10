@@ -46,8 +46,8 @@ It was because I had to constantly switch context while dealing with the same pi
 
 #So, how to prevent this from happening next time?
 
- Consider what the code is doing first. Separate code that's doing different stuff into blocks, therefore preventing them
- from intermangling and hard to decouple. Simply put: stop being f**king lazy about your code. 
+ Consider what parts of the code is doing first. Separate code that's doing different stuff into blocks, therefore preventing them
+ from intermangling and hard to decouple. Simply put: know how small your brain is, and stop being f**king lazy about your code. 
 
 #screenshots
 
