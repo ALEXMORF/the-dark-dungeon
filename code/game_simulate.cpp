@@ -65,23 +65,24 @@ movement_search(Tile_Map *tile_map, v2 position, v2 desired_velocity, real32 rad
 	vital_points[6] += {-cosf(pi32/4.0f)*radius, -sinf(pi32/4.0f)*radius};
 	vital_points[7] += {cosf(pi32/4.0f)*radius, -sinf(pi32/4.0f)*radius};
     };
-
-    //horizontal checking
-    {
-	v2 new_position = position;
-	new_position.x += desired_velocity.x;
-	
-	generate_vital_points(new_position, radius);
-	
-	bool32 collides = false;
+    
+    auto vital_points_collided = [tile_map, &vital_points]() -> bool32 {
 	for (int i = 0; i < array_count(vital_points); ++i)
 	{
 	    if (get_tile_value(tile_map, (int32)vital_points[i].x, (int32)vital_points[i].y) != 0)
 	    {
-		collides = true;
+		return true;
 	    }
 	}
-	if (!collides)
+	return false;
+    };
+    
+    //horizontal checking
+    {
+	v2 new_position = position;
+	new_position.x += desired_velocity.x;
+	generate_vital_points(new_position, radius);
+	if (!vital_points_collided())
 	{
 	    result.x = desired_velocity.x;
 	    position.x += desired_velocity.x;
@@ -92,18 +93,8 @@ movement_search(Tile_Map *tile_map, v2 position, v2 desired_velocity, real32 rad
     {
 	v2 new_position = position;
 	new_position.y += desired_velocity.y;
-	
 	generate_vital_points(new_position, radius);
-	
-	bool32 collides = false;
-	for (int i = 0; i < array_count(vital_points); ++i)
-	{
-	    if (get_tile_value(tile_map, (int32)vital_points[i].x, (int32)vital_points[i].y) != 0)
-	    {
-		collides = true;
-	    }
-	}
-	if (!collides)
+	if (!vital_points_collided())
 	{
 	    result.y = desired_velocity.y;
 	}
