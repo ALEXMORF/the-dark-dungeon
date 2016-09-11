@@ -91,3 +91,6 @@ your productivity maximized.
  
  screenshot 6 (9/4/2016)
 ![image](https://cloud.githubusercontent.com/assets/16845654/18238928/53187fbe-72f6-11e6-820b-8b0a7e1b3a96.png)
+
+ screenshot 7 (9/10/2016)
+![image](https://cloud.githubusercontent.com/assets/16845654/18414551/8ea1fe62-7782-11e6-9fbd-174f868bc1f5.png)
