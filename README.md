@@ -10,7 +10,8 @@ existing features:
  4. sprite sorting & rendering (9/3/2016)
  5. graphics-based bullet detection & basic entity system (9/3/2016)
  6. perspective-oriented sprite generation (9/9/2016)
-
+ 7. collision checking against walls (simulate both body collision and shoulder collision) (9/11/2016)
+ 
 currently working on: enemy AI
 
 things on my mind: bilinear filtering???
