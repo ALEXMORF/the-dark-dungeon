@@ -87,7 +87,7 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image)
     game_state->ss_texture_sheet.image_width = 63;
     game_state->ss_texture_sheet.image_height = 63;
 }
- 
+
 inline void
 fill_entities(Entity_List *entity_list)
 {
@@ -109,9 +109,8 @@ initialize_player(Player *player)
     player->angle = 0.0f;
     player->weapon_animation_index = 1;
     player->weapon = pistol;
-    player->weapon_cd = 1.3f;
+    player->weapon_cd = 0.8f;
 }
-
 
 //
 //
@@ -261,6 +260,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	}
     }
 
+#if 0
     //
     //
     //Play sound
@@ -269,4 +269,5 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	memory->platform_play_sound("../data/pistol.wav");
 	game_state->need_to_play_pistol_sound = false;
     }
+#endif
 }

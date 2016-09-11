@@ -39,6 +39,83 @@ void Player::input_process(Game_Input *input)
     recanonicalize_angle(&this->angle);
 }
 
+internal v2
+movement_search(Tile_Map *tile_map, v2 position, v2 desired_velocity, real32 radius)
+{
+    v2 result = {};
+    v2 vital_points[8] = {};
+
+    auto generate_vital_points = [&vital_points](v2 position, real32 radius) {
+	int vital_points_count = array_count(vital_points);
+	
+	for (int i = 0; i < vital_points_count; ++i)
+	{
+	    vital_points[i] = position;
+	}
+
+	//orthogonals
+	vital_points[0].x -= radius;
+	vital_points[1].x += radius;
+	vital_points[2].y += radius;
+	vital_points[3].y -= radius;
+
+	//diaognals
+	vital_points[4] += {cosf(pi32/4.0f)*radius, sinf(pi32/4.0f)*radius};
+	vital_points[5] += {-cosf(pi32/4.0f)*radius, sinf(pi32/4.0f)*radius};
+	vital_points[6] += {-cosf(pi32/4.0f)*radius, -sinf(pi32/4.0f)*radius};
+	vital_points[7] += {cosf(pi32/4.0f)*radius, -sinf(pi32/4.0f)*radius};
+    };
+
+    //horizontal checking
+    {
+	v2 new_position = position;
+	new_position.x += desired_velocity.x;
+	
+	generate_vital_points(new_position, radius);
+	
+	bool32 collides = false;
+	for (int i = 0; i < array_count(vital_points); ++i)
+	{
+	    if (get_tile_value(tile_map, (int32)vital_points[i].x, (int32)vital_points[i].y) != 0)
+	    {
+		collides = true;
+	    }
+	}
+	if (!collides)
+	{
+	    result.x = desired_velocity.x;
+	    position.x += desired_velocity.x;
+	}
+    }
+    
+    //vertical checking
+    {
+	v2 new_position = position;
+	new_position.y += desired_velocity.y;
+	
+	generate_vital_points(new_position, radius);
+	
+	bool32 collides = false;
+	for (int i = 0; i < array_count(vital_points); ++i)
+	{
+	    if (get_tile_value(tile_map, (int32)vital_points[i].x, (int32)vital_points[i].y) != 0)
+	    {
+		collides = true;
+	    }
+	}
+	if (!collides)
+	{
+	    result.y = desired_velocity.y;
+	}
+    }
+
+    return result;
+}
+
+//
+//
+//
+
 internal void
 simulate_world(Game_State *game_state, Game_Input *input)
 {
@@ -51,8 +128,11 @@ simulate_world(Game_State *game_state, Game_Input *input)
     {
 	player->weapon_cd_counter -= (dt < player->weapon_cd_counter? dt: player->weapon_cd_counter);
     }
-    player->position += player->velocity;
 
+    real32 collision_radius = 0.3f;
+    player->velocity = movement_search(&game_state->tile_map, player->position, player->velocity, collision_radius);
+    player->position += player->velocity;
+    
     for (int32 i = 0; i < game_state->entity_list.count; ++i)
     {
 	Entity *entity = &game_state->entity_list.content[i];
