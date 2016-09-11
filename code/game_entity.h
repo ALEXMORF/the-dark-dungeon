@@ -9,15 +9,6 @@ enum Entity_Type
     entity_type_count
 };
 
-enum Weapon
-{
-    knife,
-    pistol,
-    rifle,
-    minigun,
-    weapon_count
-};
-
 struct Entity
 {
     Entity_Type type;

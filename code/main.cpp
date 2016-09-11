@@ -278,8 +278,8 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 {
     int32 window_width = 960;
     int32 window_height = 540;
-    int32 buffer_width = 960/2;
-    int32 buffer_height = 540/2;    
+    int32 buffer_width = 960;
+    int32 buffer_height = 540;    
     uint32 permanent_game_memory_size = megabytes(64);
     uint32 transient_game_memory_size = megabytes(128);
     int32 target_frame_per_second = 60;

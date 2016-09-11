@@ -32,6 +32,15 @@ struct Texture_List
     int32 count;
 };
 
+enum Weapon_Type
+{
+    knife,
+    pistol,
+    rifle,
+    minigun,
+    weapon_count
+};
+
 struct Player
 {
     v2 position;
@@ -40,10 +49,12 @@ struct Player
     real32 angle;
     bool32 has_fired;
     
-    Weapon weapon;
+    Weapon_Type weapon;
     int32 weapon_animation_index;
     real32 weapon_cd;
     real32 weapon_cd_counter;
+
+    void input_process(Game_Input *input);
 };
 
 struct Game_State

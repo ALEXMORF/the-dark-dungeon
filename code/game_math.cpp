@@ -135,6 +135,12 @@ recanonicalize_angle(real32 *angle)
 }
 
 inline real32
+get_angle(v2 a)
+{
+    return atan2f(a.y, a.x);
+}
+
+inline real32
 get_angle_diff(real32 a, real32 b)
 {
     real32 result = 0.0f;

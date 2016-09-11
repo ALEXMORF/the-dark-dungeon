@@ -92,12 +92,12 @@ inline void
 fill_entities(Entity_List *entity_list)
 {
     add_entity(entity_list, make_dynamic_entity(guard, {6.0f, 15.5f}));
-    add_entity(entity_list, make_dynamic_entity(guard, {15.0f, 7.0f}));
+    add_entity(entity_list, make_dynamic_entity(guard, {15.0f, 7.0f}, pi32));
     add_entity(entity_list, make_dynamic_entity(guard, {6.0f, 7.0f}));
-    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 6.0f}));
-    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 8.0f}));
+    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 6.0f}, pi32));
+    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 8.0f}, pi32));
     add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 9.0f}));
-    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 15.0f}));
+    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 15.0f}, pi32));
     add_entity(entity_list, make_dynamic_entity(ss, {14.0f, 15.0f}));
     add_entity(entity_list, make_dynamic_entity(ss, {16.0f, 15.0f}));
 }
@@ -168,7 +168,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
 	initialize_player(&game_state->player);
 
-	game_state->entity_list.capacity = 200;
+	game_state->entity_list.capacity = ENTITY_COUNT_LIMIT;
 	game_state->entity_list.content = Push_Array(&game_state->permanent_allocator, game_state->entity_list.capacity, Entity);
 	fill_entities(&game_state->entity_list);
 	
@@ -198,7 +198,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     fill_buffer(buffer, 0);
 
     Sprite_List sprite_list = {};
-    sprite_list.capacity = 200;
+    sprite_list.capacity = game_state->entity_list.capacity;
     sprite_list.content = Push_Array(&game_state->transient_allocator, sprite_list.capacity, Sprite);
 
     //draw 3d scene and sprites
@@ -209,7 +209,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 							 game_state->player.position,
 							 game_state->player.angle, 
 							 &game_state->floor_texture,
-							 &game_state->ceiling_texture,
+							 0, //&game_state->ceiling_texture,
 							 &game_state->wall_textures,
 							 sprite_list.content, sprite_list.count);
 

@@ -1,12 +1,10 @@
 #include "game_simulate.h"
 
-internal void
-player_handle_input(Player *player, Game_Input *input)
+void Player::input_process(Game_Input *input)
 {
     real32 player_speed = 2.5f;
     real32 lerp_constant = 0.2f;
     real32 mouse_sensitivity = 0.7f;
-    char *gun_sound_file_name = "../data/pistol.wav";
 
     real32 forward = 0.0f;
     real32 left = 0.0f;
@@ -16,49 +14,67 @@ player_handle_input(Player *player, Game_Input *input)
     if_do(input->keyboard.down, forward = -1.0f);
     
     v2 player_d_velocity = {};
-    player_d_velocity.x += cosf(player->angle) *forward;    
-    player_d_velocity.y += sinf(player->angle) * forward;
-    player_d_velocity.x += cosf(player->angle + pi32/2.0f) * left;    
-    player_d_velocity.y += sinf(player->angle + pi32/2.0f) * left;
+    player_d_velocity.x += cosf(this->angle) *forward;    
+    player_d_velocity.y += sinf(this->angle) * forward;
+    player_d_velocity.x += cosf(this->angle + pi32/2.0f) * left;    
+    player_d_velocity.y += sinf(this->angle + pi32/2.0f) * left;
     player_d_velocity = normalize(player_d_velocity);
     
     player_d_velocity *= player_speed * input->dt_per_frame;
-    player->velocity = lerp(player->velocity, player_d_velocity, lerp_constant);
+    this->velocity = lerp(this->velocity, player_d_velocity, lerp_constant);
     
-    if (input->mouse.down && player->weapon_cd_counter == 0.0f)
+    if (input->mouse.down && this->weapon_cd_counter == 0.0f)
     {
-	player->weapon_cd_counter = player->weapon_cd;
+	this->weapon_cd_counter = this->weapon_cd;
 
-	player->has_fired = true;
+	this->has_fired = true;
     }
     else
     {
-	player->has_fired = false;
+	this->has_fired = false;
     }
     
     real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity;
-    player->angle += player_delta_angle;
-    recanonicalize_angle(&player->angle);
-}
-
-internal void
-player_update(Player *player, real32 dt)
-{
-    if (player->weapon_cd_counter)
-    {
-	player->weapon_cd_counter -= (dt < player->weapon_cd_counter? dt: player->weapon_cd_counter);
-    }
-    
-    player->position += player->velocity;
+    this->angle += player_delta_angle;
+    recanonicalize_angle(&this->angle);
 }
 
 internal void
 simulate_world(Game_State *game_state, Game_Input *input)
 {
+    real32 dt = input->dt_per_frame;
     Player *player = &game_state->player;
-    
-    player_handle_input(player, input);
-    
+
+    player->input_process(input);
+
+    if (player->weapon_cd_counter != 0)
+    {
+	player->weapon_cd_counter -= (dt < player->weapon_cd_counter? dt: player->weapon_cd_counter);
+    }
+    player->position += player->velocity;
+
+    for (int32 i = 0; i < game_state->entity_list.count; ++i)
+    {
+	Entity *entity = &game_state->entity_list.content[i];
+
+	switch (entity->type)
+	{
+	    case guard:
+	    case ss:
+	    {
+		if (entity->hp)
+		{
+		    entity->angle += pi32 * dt;
+		    recanonicalize_angle(&entity->angle);
+		}
+		else
+		{
+		    entity->death_timer += input->dt_per_frame;
+		}
+	    } break;
+	}
+    }
+
     if (player->has_fired) 
     {
 	game_state->need_to_play_pistol_sound = true;
@@ -66,18 +82,6 @@ simulate_world(Game_State *game_state, Game_Input *input)
 	if (game_state->currently_aimed_entity != 0 && game_state->currently_aimed_entity->hp != 0)
 	{
 	    --game_state->currently_aimed_entity->hp;
-	}
-    }
-    
-    player_update(player, input->dt_per_frame);
-    
-    for (int32 i = 0; i < game_state->entity_list.count; ++i)
-    {
-	Entity *entity = &game_state->entity_list.content[i];
-	
-	if (entity->hp == 0)
-	{
-	    entity->death_timer += input->dt_per_frame;
 	}
     }
 }

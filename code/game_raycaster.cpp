@@ -98,7 +98,7 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
 internal Entity *
 render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 		Tile_Map *tile_map, v2 position, real32 view_angle,
-		Loaded_Image *ceiling_texture, Loaded_Image *floor_texture,
+		Loaded_Image *floor_texture, Loaded_Image *ceiling_texture,
 		Texture_List *wall_textures,
 		Sprite *sprites, int32 sprite_count)
 {
@@ -153,11 +153,8 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 	}
 
 	//floor casting routine
-	if (floor_texture && ceiling_texture)
+	if (floor_texture)
 	{
-	    int32 pixel_offset_y = (wall_top + wall_slice_height) * buffer->width;
-	    int32 bottom_pixel_offset_y = buffer->width * buffer->height;
-
 	    //TODO(chen):performance-critical code, doing per-pixel operation
 	    for (int32 scan_y = wall_top + wall_slice_height; scan_y < buffer->height; ++scan_y)
 	    {
@@ -176,27 +173,23 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
 		
 		uint32 *dest_pixels = (uint32 *)buffer->memory;
 		uint32 *floor_source_pixels = (uint32 *)floor_texture->data;
-		uint32 *ceiling_source_pixels = (uint32 *)ceiling_texture->data;
-
-#if 0 //NOTE(chen): unoptimized, but very flexible
+		
 		dest_pixels[slice_index + scan_y*buffer->width] =
 		    floor_source_pixels[texture_x + texture_y*floor_texture->width];
-		dest_pixels[slice_index + (buffer->height - scan_y)*buffer->width] =
-		    ceiling_source_pixels[texture_x + texture_y*floor_texture->width];
-#else //NOTE(chen): optimized, but inflexible
-		dest_pixels[slice_index + pixel_offset_y] =
-		    floor_source_pixels[texture_x + (texture_y << 6)];
-		dest_pixels[slice_index + (bottom_pixel_offset_y - pixel_offset_y)] =
-		    ceiling_source_pixels[texture_x + (texture_y << 6)];
 
-		pixel_offset_y += buffer->width;
-#endif
+		//optional ceiling drawing
+		if (ceiling_texture)
+		{
+		    uint32 *ceiling_source_pixels = (uint32 *)ceiling_texture->data;		    
+		    dest_pixels[slice_index + (buffer->height - scan_y)*buffer->width] =
+			ceiling_source_pixels[texture_x + texture_y*floor_texture->width];
+		}
 	    }
 	} 
     } 
 
+    //sprite rendering routine polishment
     for (int32 i = 0; i < sprite_count; ++i)
-	//sprite rendering routine polishment
     {
 	Loaded_Image sprite_image = sprites[i].texture;
 	real32 world_sprite_width = 1.0f;
