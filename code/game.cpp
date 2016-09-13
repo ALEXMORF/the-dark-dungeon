@@ -107,11 +107,26 @@ initialize_player(Player *player)
 {
     player->position = {3.0f, 3.0f};
     player->angle = 0.0f;
+    player->collision_radius = 0.3f;
     player->weapon_animation_index = 1;
     player->weapon = pistol;
     player->weapon_cd = 0.8f;
 }
 
+internal void
+animate_entities(Entity_List *entities, real32 dt)
+{
+    for (int i = 0; i < entities->count; ++i)
+    {
+	Entity *entity = &entities->content[i];
+
+	if (entity->hp == 0)
+	{
+	    entity->death_timer += dt;
+	}
+    }
+}
+		 
 //
 //
 //Brain
@@ -187,9 +202,10 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 	memory->is_initialized = true;
     }
     game_state->transient_allocator.used = 0;
-
+    
     simulate_world(game_state, input);
-
+    animate_entities(&game_state->entity_list, input->dt_per_frame);
+    
     //
     //
     //Render game
@@ -211,7 +227,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 							 0, //&game_state->ceiling_texture,
 							 &game_state->wall_textures,
 							 sprite_list.content, sprite_list.count);
-
+    
     //animate first-person weapon
     {
 	Player *player = &game_state->player;

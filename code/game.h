@@ -43,18 +43,21 @@ enum Weapon_Type
 
 struct Player
 {
+    //coordniate
     v2 position;
     v2 velocity;
-    real32 pace;
+    real32 collision_radius;
     real32 angle;
+    real32 pace;
+
+    //record
     bool32 has_fired;
     
+    //weapon handling
     Weapon_Type weapon;
     int32 weapon_animation_index;
     real32 weapon_cd;
     real32 weapon_cd_counter;
-
-    void input_process(Game_Input *input);
 };
 
 struct Game_State

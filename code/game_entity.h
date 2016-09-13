@@ -13,9 +13,11 @@ struct Entity
 {
     Entity_Type type;
 
+    //coordinate
     v2 position;
     real32 angle;
-    
+
+    //stat
     int32 hp;
     real32 death_timer;
 };

@@ -1,6 +1,7 @@
 #include "game_simulate.h"
 
-void Player::input_process(Game_Input *input)
+internal void
+player_input_process(Player *player, Game_Input *input)
 {
     real32 player_speed = 2.5f;
     real32 lerp_constant = 0.2f;
@@ -14,31 +15,32 @@ void Player::input_process(Game_Input *input)
     if_do(input->keyboard.down, forward = -1.0f);
     
     v2 player_d_velocity = {};
-    player_d_velocity.x += cosf(this->angle) *forward;    
-    player_d_velocity.y += sinf(this->angle) * forward;
-    player_d_velocity.x += cosf(this->angle + pi32/2.0f) * left;    
-    player_d_velocity.y += sinf(this->angle + pi32/2.0f) * left;
+    player_d_velocity.x += cosf(player->angle) *forward;    
+    player_d_velocity.y += sinf(player->angle) * forward;
+    player_d_velocity.x += cosf(player->angle + pi32/2.0f) * left;    
+    player_d_velocity.y += sinf(player->angle + pi32/2.0f) * left;
     player_d_velocity = normalize(player_d_velocity);
     
     player_d_velocity *= player_speed * input->dt_per_frame;
-    this->velocity = lerp(this->velocity, player_d_velocity, lerp_constant);
+    player->velocity = lerp(player->velocity, player_d_velocity, lerp_constant);
     
-    if (input->mouse.down && this->weapon_cd_counter == 0.0f)
+    if (input->mouse.down && player->weapon_cd_counter == 0.0f)
     {
-	this->weapon_cd_counter = this->weapon_cd;
+	player->weapon_cd_counter = player->weapon_cd;
 
-	this->has_fired = true;
+	player->has_fired = true;
     }
     else
     {
-	this->has_fired = false;
+	player->has_fired = false;
     }
     
     real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity;
-    this->angle += player_delta_angle;
-    recanonicalize_angle(&this->angle);
+    player->angle += player_delta_angle;
+    recanonicalize_angle(&player->angle);
 }
 
+#define Movement_Search(tile_map, entity) movement_search(tile_map, entity->position, entity->velocity, entity->collision_radius)
 internal v2
 movement_search(Tile_Map *tile_map, v2 position, v2 desired_velocity, real32 radius)
 {
@@ -103,9 +105,11 @@ movement_search(Tile_Map *tile_map, v2 position, v2 desired_velocity, real32 rad
     return result;
 }
 
+
 //
 //
 //
+
 
 internal void
 simulate_world(Game_State *game_state, Game_Input *input)
@@ -113,39 +117,31 @@ simulate_world(Game_State *game_state, Game_Input *input)
     real32 dt = input->dt_per_frame;
     Player *player = &game_state->player;
 
-    player->input_process(input);
+    player_input_process(player, input);
 
+    //update player
     if (player->weapon_cd_counter != 0)
     {
 	player->weapon_cd_counter -= (dt < player->weapon_cd_counter? dt: player->weapon_cd_counter);
     }
+    player->position += Movement_Search(&game_state->tile_map, player);
 
-    real32 collision_radius = 0.3f;
-    player->velocity = movement_search(&game_state->tile_map, player->position, player->velocity, collision_radius);
-    player->position += player->velocity;
-    
+    //update entities
     for (int32 i = 0; i < game_state->entity_list.count; ++i)
     {
 	Entity *entity = &game_state->entity_list.content[i];
-
+	
 	switch (entity->type)
 	{
 	    case guard:
 	    case ss:
 	    {
-		if (entity->hp)
-		{
-		    entity->angle += pi32 * dt;
-		    recanonicalize_angle(&entity->angle);
-		}
-		else
-		{
-		    entity->death_timer += input->dt_per_frame;
-		}
+		//TODO(chen): simulate entities
 	    } break;
 	}
     }
 
+    //handles aftermath
     if (player->has_fired) 
     {
 	game_state->need_to_play_pistol_sound = true;
