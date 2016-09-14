@@ -16,6 +16,13 @@ currently working on: enemy AI
 
 things on my mind: bilinear filtering???
 
+#Some of my bad habits
+ reference: http://kotaku.com/5975610/the-exceptional-beauty-of-doom-3s-source-code
+ 
+ 1. Wasting vertical space. I love to insert empty lines for no reason, just because I thought it'd result in clearer code, which                                really does the opposite.
+ 2. Not inlined brackets
+ 3. Excessive comments. 
+
 #what I have found in this experience: The cost of context switching is the worst enemy of productivity
 
  I like to program in a linear and straightforward fashion, because it allows me to reason about my code and 
