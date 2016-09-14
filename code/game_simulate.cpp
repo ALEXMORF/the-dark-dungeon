@@ -40,7 +40,7 @@ player_input_process(Player *player, Game_Input *input)
     recanonicalize_angle(&player->angle);
 }
 
-#define Movement_Search(tile_map, entity) movement_search(tile_map, entity->position, entity->velocity, entity->collision_radius)
+#define Movement_Search(tile_map, entity, velocity) movement_search(tile_map, entity->position, velocity, entity->collision_radius)
 internal v2
 movement_search(Tile_Map *tile_map, v2 position, v2 desired_velocity, real32 radius)
 {
@@ -117,20 +117,18 @@ simulate_world(Game_State *game_state, Game_Input *input)
     real32 dt = input->dt_per_frame;
     Player *player = &game_state->player;
 
-    player_input_process(player, input);
-
     //update player
+    player_input_process(player, input);    
     if (player->weapon_cd_counter != 0)
     {
 	player->weapon_cd_counter -= (dt < player->weapon_cd_counter? dt: player->weapon_cd_counter);
     }
-    player->position += Movement_Search(&game_state->tile_map, player);
+    player->position += Movement_Search(&game_state->tile_map, player, player->velocity);
 
     //update entities
     for (int32 i = 0; i < game_state->entity_list.count; ++i)
     {
 	Entity *entity = &game_state->entity_list.content[i];
-	
 	switch (entity->type)
 	{
 	    case guard:
