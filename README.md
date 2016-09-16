@@ -34,7 +34,7 @@ about code reuse and abstraction you put into designing the class ended up not b
 waste of time. 
 
  That is one of the reasons I am doing this project; to find out what is damaging my productivity when 
-working with large amount of code (1K lines and above). For this game, after gotten the basic 3D rendering engine 
+working with non-trivial amount of code (1K lines and above). For this game, after gotten the basic 3D rendering engine 
 done, the same happened again: it became very difficult to reason about my code, and the worst part is, that is 
 not due to the size of my code. 
 
