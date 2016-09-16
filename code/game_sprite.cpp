@@ -63,6 +63,15 @@ get_directional_index(int32 zero_dir_index, int32 dir_index_count, real32 entity
     return dir_index;
 }
 
+inline int32
+get_walk_index(int32 init_stride, int32 walk_index_count, real32 walk_cycle_period, real32 walk_timer)
+{
+    real32 walk_index_interval = walk_cycle_period / (real32)walk_index_count;
+    int32 walk_index = (int32)(walk_timer / walk_index_interval) % walk_index_count;
+
+    return (walk_index + init_stride);
+}
+
 internal Loaded_Image
 get_currently_playing_texture(Game_State *game_state, Entity *entity)
 {
@@ -92,10 +101,20 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 	    }
 	    else
 	    {
-		int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
+		real32 walk_cycle_period = 1.0f;
+		int32 walk_index_count = 4;
+		int32 walk_init_stride = 1;
 		
-		result = extract_image_from_sheet(&game_state->guard_texture_sheet, dir_index, 0);
+		int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
+		int32 walk_index = get_walk_index(walk_init_stride, walk_index_count, walk_cycle_period, entity->walk_timer);
+		if (!entity->walking)
+		{
+		    walk_index = 0;
+		}
+		
+		result = extract_image_from_sheet(&game_state->guard_texture_sheet, dir_index, walk_index);
 	    }
+	    
 	} break;
 
 	case ss:
@@ -108,13 +127,22 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 		int32 texture_index_x = get_current_playing_index(entity->death_timer, death_animation_period, death_animation_index_count);  
 		result = extract_image_from_sheet(&game_state->ss_texture_sheet, texture_index_x, 5);
 	    }
-	    else
+	    else 
 	    {
+		real32 walk_cycle_period = 1.0f;
+		int32 walk_index_count = 4;
+		int32 walk_init_stride = 1;
+		
 		int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
+		int32 walk_index = get_walk_index(walk_init_stride, walk_index_count, walk_cycle_period, entity->walk_timer);
+		if (!entity->walking)
+		{
+		    walk_index = 0;
+		}
 		
-		result = extract_image_from_sheet(&game_state->ss_texture_sheet, dir_index, 0);
+		result = extract_image_from_sheet(&game_state->ss_texture_sheet, dir_index, walk_index);
 	    }
-		
+	    
 	} break;
 	    
 	default:

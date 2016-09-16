@@ -16,10 +16,12 @@ struct Entity
     //coordinate
     v2 position;
     real32 angle;
-
+    bool32 walking;
+    
     //stat
     int32 hp;
     real32 death_timer;
+    real32 walk_timer;
 };
 
 struct Entity_List

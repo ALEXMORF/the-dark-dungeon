@@ -124,6 +124,14 @@ animate_entities(Entity_List *entities, real32 dt)
 	{
 	    entity->death_timer += dt;
 	}
+	else if (entity->walking)
+	{
+	    entity->walk_timer += dt;
+	}
+	else
+	{
+	    entity->walk_timer = 0;
+	}
     }
 }
 		 
