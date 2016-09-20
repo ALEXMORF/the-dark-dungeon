@@ -14,15 +14,14 @@ enum Entity_State
     walking_state,
     waiting_state,
     hurting_state,
-    aiming_state
+    aiming_state,
+    death_state,
+    entity_state_count
 };
 
 struct Entity_Clock
 {
-    real32 death_timer;
-    real32 walk_timer;
-    real32 wait_timer;
-    real32 hurt_timer;
+    real32 timer[entity_state_count];
 };
 
 struct Entity

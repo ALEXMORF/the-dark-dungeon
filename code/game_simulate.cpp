@@ -100,7 +100,7 @@ tick_entity_by_state(Entity *entity, real32 dt)
     }
     else
     {
-	clock->death_timer += dt;
+	clock->timer[death_state] += dt;
     }
 }
 
