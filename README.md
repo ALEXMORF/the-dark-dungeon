@@ -11,10 +11,13 @@ existing features:
  5. graphics-based bullet detection & basic entity system (9/3/2016)
  6. perspective-oriented sprite generation (9/9/2016)
  7. collision checking against walls (simulate both body collision and shoulder collision), gliding made possible (9/11/2016)
- 
+ 8. set up internal entity clock (9/20/2016, tentative)
 currently working on: enemy AI
 
 things on my mind: bilinear filtering???
+
+things to test out: global game event queue(?)
+                    FSM for dynamic entity behavior. 
 
 #Some of my bad habits
  reference: http://kotaku.com/5975610/the-exceptional-beauty-of-doom-3s-source-code
