@@ -16,6 +16,8 @@ currently working on: enemy AI
 
 things on my mind: bilinear filtering???
 
+things to test out: global game event queue? that sounds like fun. 
+
 #Some of my bad habits
  reference: http://kotaku.com/5975610/the-exceptional-beauty-of-doom-3s-source-code
  
