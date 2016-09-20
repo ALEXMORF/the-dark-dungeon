@@ -112,28 +112,6 @@ initialize_player(Player *player)
     player->weapon = pistol;
     player->weapon_cd = 0.8f;
 }
-
-internal void
-animate_entities(Entity_List *entities, real32 dt)
-{
-    for (int i = 0; i < entities->count; ++i)
-    {
-	Entity *entity = &entities->content[i];
-
-	if (entity->hp == 0)
-	{
-	    entity->death_timer += dt;
-	}
-	else if (entity->walking)
-	{
-	    entity->walk_timer += dt;
-	}
-	else
-	{
-	    entity->walk_timer = 0;
-	}
-    }
-}
 		 
 //
 //
@@ -212,7 +190,6 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     game_state->transient_allocator.used = 0;
     
     simulate_world(game_state, input);
-    animate_entities(&game_state->entity_list, input->dt_per_frame);
     
     //
     //

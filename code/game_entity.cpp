@@ -18,7 +18,7 @@ make_static_entity(Entity_Type type, v2 position)
 }
 
 inline Entity
-make_dynamic_entity(Entity_Type type, v2 position, real32 angle = 0.0f, int32 hp = 1)
+make_dynamic_entity(Entity_Type type, v2 position, real32 angle = 0.0f, int32 hp = 2)
 {
     Entity result = {};
     result.type = type;
@@ -28,4 +28,5 @@ make_dynamic_entity(Entity_Type type, v2 position, real32 angle = 0.0f, int32 hp
     
     return result;
 }
+
 

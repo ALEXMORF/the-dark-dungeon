@@ -4,6 +4,8 @@
 #include <intrin.h>
 #include <windows.h>
 #include <windowsx.h>
+#include <gl/gl.h>
+#include <gl/glu.h>
 
 #pragma warning(push)
 #pragma warning(disable: 4244)

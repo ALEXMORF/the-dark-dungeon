@@ -9,19 +9,36 @@ enum Entity_Type
     entity_type_count
 };
 
+enum Entity_State
+{
+    walking_state,
+    waiting_state,
+    hurting_state,
+    aiming_state
+};
+
+struct Entity_Clock
+{
+    real32 death_timer;
+    real32 walk_timer;
+    real32 wait_timer;
+    real32 hurt_timer;
+};
+
 struct Entity
 {
     Entity_Type type;
-
+    Entity_State state;
+    Entity_Clock clock;
+    
     //coordinate
     v2 position;
     real32 angle;
     bool32 walking;
     
-    //stat
+    //stats
     int32 hp;
-    real32 death_timer;
-    real32 walk_timer;
+    bool32 just_shot;
 };
 
 struct Entity_List

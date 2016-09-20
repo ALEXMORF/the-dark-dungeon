@@ -79,14 +79,10 @@ struct Game_State
     Loaded_Image barrel_texture;
     Loaded_Image pillar_texture;
     Loaded_Image light_texture;
-
     Loaded_Image_Sheet guard_texture_sheet;
     Loaded_Image_Sheet ss_texture_sheet;
     Loaded_Image_Sheet weapon_texture_sheet;
     
     //render
     Render_Context render_context;
-
-    //sound
-    bool32 need_to_play_pistol_sound;
 };
