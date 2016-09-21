@@ -99,6 +99,10 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 		int32 texture_index_x = get_current_playing_index(entity->clock.timer[death_state], death_animation_period, death_animation_index_count);  
 		result = extract_image_from_sheet(&game_state->guard_texture_sheet, texture_index_x, 5);
 	    }
+	    else if (entity->state == hurting_state)
+	    {
+		result = extract_image_from_sheet(&game_state->guard_texture_sheet, 7, 5);
+	    }
 	    else
 	    {
 		real32 walk_cycle_period = 1.0f;
@@ -126,6 +130,10 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 		    
 		int32 texture_index_x = get_current_playing_index(entity->clock.timer[death_state], death_animation_period, death_animation_index_count);  
 		result = extract_image_from_sheet(&game_state->ss_texture_sheet, texture_index_x, 5);
+	    }
+	    else if (entity->state == hurting_state)
+	    {
+		result = extract_image_from_sheet(&game_state->ss_texture_sheet, 7, 5);		
 	    }
 	    else 
 	    {

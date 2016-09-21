@@ -30,8 +30,9 @@ struct Entity
     Entity_State state;
     Entity_Clock clock;
     
-    //coordinate
     v2 position;
+    v2 velocity;
+    v2 destination;
     real32 angle;
     bool32 walking;
     

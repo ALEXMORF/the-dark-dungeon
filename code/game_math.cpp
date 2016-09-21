@@ -170,7 +170,6 @@ lerp(v2 start, v2 end, real32 t)
     return result;
 }
 
-
 inline real32
 approach(real32 start, real32 end, real32 t)
 {
@@ -201,4 +200,10 @@ get_distance_squared(v2 a, v2 b)
 {
     v2 dist = a - b;
     return (dist.x*dist.x + dist.y*dist.y);
+}
+
+inline real32
+reduce(real32 a, real32 da)
+{
+    return (a > da? (a - da): 0.0f);
 }

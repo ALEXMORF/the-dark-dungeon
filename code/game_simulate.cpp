@@ -90,18 +90,59 @@ movement_search_wall(Tile_Map *tile_map, v2 position, v2 desired_velocity, real3
 //
 
 internal void
-tick_entity_by_state(Entity *entity, real32 dt)
+tick_entity_by_state(Entity *entity, v2 damage_source_position, real32 dt)
 {
     Entity_Clock *clock = &entity->clock;
     
-    if (entity->hp)
+    if (entity->hp > 0)
     {
-	//TODO(chen): complete the ticker of the entity clock
+	//prestate processing stage
+	if (entity->just_shot)
+	{
+	    entity->state = hurting_state;
+	    clock->timer[hurting_state] = 0.3f;
+	}
+
+	//state processing stage
+	bool32 clock_ends = (clock->timer[entity->state] == 0.0f);
+	switch (entity->state)
+	{
+	    case hurting_state:
+	    {
+		if (clock_ends)
+		{
+		    entity->angle = get_angle(damage_source_position - entity->position);
+		    entity->state = waiting_state;
+		}
+	    } break;
+
+	    case walking_state:
+	    {
+		//scan for player, if found turn into aiming state
+		//if nothing then walk, if walks onto destination then go to waiting_state
+	    } break;
+
+	    case waiting_state:
+	    {
+		//scan for player, if found turn into aiming state
+		//if clock ends, turn back to walking_state
+	    } break;
+
+	    case aiming_state:
+	    {
+		//shoot player
+		//if player goes out of sight, set destination then go back to walking_state
+	    } break;
+	}
+
+	clock->timer[entity->state] = reduce(clock->timer[entity->state], dt);
     }
     else
     {
 	clock->timer[death_state] += dt;
     }
+
+    entity->just_shot = false;
 }
 
 //
@@ -129,7 +170,7 @@ simulate_world(Game_State *game_state, Game_Input *input)
 	    case guard:
 	    case ss:
 	    {
-		tick_entity_by_state(entity, dt);
+		tick_entity_by_state(entity, player->position, dt);
 	    } break;
 	}
     }
