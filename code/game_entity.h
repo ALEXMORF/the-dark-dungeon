@@ -11,8 +11,8 @@ enum Entity_Type
 
 enum Entity_State
 {
+    waiting_state,    
     walking_state,
-    waiting_state,
     hurting_state,
     aiming_state,
     death_state,
@@ -34,7 +34,6 @@ struct Entity
     v2 velocity;
     v2 destination;
     real32 angle;
-    bool32 walking;
     
     //stats
     int32 hp;

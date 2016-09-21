@@ -111,7 +111,7 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 		
 		int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
 		int32 walk_index = get_walk_index(walk_init_stride, walk_index_count, walk_cycle_period, entity->clock.timer[walking_state]);
-		if (!entity->walking)
+		if (entity->state != walking_state)
 		{
 		    walk_index = 0;
 		}
@@ -143,7 +143,7 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 		
 		int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
 		int32 walk_index = get_walk_index(walk_init_stride, walk_index_count, walk_cycle_period, entity->clock.timer[walking_state]);
-		if (!entity->walking)
+		if (entity->state != walking_state)
 		{
 		    walk_index = 0;
 		}
