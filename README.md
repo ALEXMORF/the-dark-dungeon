@@ -58,7 +58,7 @@ my_renderer.render_sprites(sprite_list);
 
 ...stuff...
 
-Before, if one subsystems changes, the other subsystem probably will change as well; because their communication was very barebone and direct. Some changes on one end will possibly mean there must be some changes on the other end as well, and it propogates like that to other subsystems. However, with a interface like "sprites", only the communication between entity system and sprite system are affected. You have prevented it from furthe propogation into other subsystems; you have effectively limited the changes inside one subsystem and one interface. 
+Before, if one subsystems changes, the other subsystem probably will change as well; because their communication was very barebone and direct. Some changes on one end will possibly mean there must be some changes on the other end as well, and it propogates like that to other subsystems. However, with a interface like "sprites", only the communication between entity system and sprite system are affected. You have prevented it from furthe propogation into other subsystems; you have effectively limited the changes inside one subsystem and one interface. The consequence is super beneficial: suddenly we only have to change only a small interface instead of a large system (or potentially, multiple large systems). 
 
 #what I have found in this experience: The cost of context switching is the worst enemy of productivity
 
