@@ -29,6 +29,7 @@ Can you pass your entities right into your renderer? absolutely, in fact, it is 
 for entities in entity system {
 
    entity.simulate(user.input);
+   
 }
 
 my_renderer.render_entity_list(entity_system.content);
@@ -48,6 +49,7 @@ Interfaces are the middle-grounds; they are what different subsystems use to tal
 for entities in entity system {
    
    entity.simulate(user.input);
+   
 }
 
 sprite_list = generate_sprites(entity_system.content);
