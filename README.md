@@ -19,14 +19,39 @@ things on my mind: bilinear filtering???
 things to test out: global game event queue(?)
                     FSM for dynamic entity behavior. 
 
-#Drawing clear boundaries between subsystems
+#Techniques for drawing clear boundaries between subsystems: interfaces between subsystems
 
-#Some of my bad habits
- reference: http://kotaku.com/5975610/the-exceptional-beauty-of-doom-3s-source-code
- 
- 1. Wasting vertical space. I love to insert empty lines for no reason, just because I thought it'd result in clearer code, which                                really does the opposite.
- 2. Not inlined brackets
- 3. Excessive comments. 
+Say if your game is composed of many small subsystems that work together. You would imagine a streamline that transforms your data: first user input is parsed, then that information is used to simulate entities, then you pass entities into your renderer to put some graphics on the screen, blah blah blah. Let's pick two particular subsystems to demonstrate my point: your entities and your renderer. 
+Can you pass your entities right into your renderer? absolutely, in fact, it is probably the most straight forward way to do sutff, such as:
+
+...stuff...
+
+for entities in entity system
+   entity.simulate(user.input);
+
+my_renderer.render_entity_list(entity_system.content);
+
+...stuff...
+
+Sweet, now we have a tight and robust chain of subsystems, right?  With some good intuition, you can probably spot the danger of this; they are too deeply coupled. This kind of code encourages further intermangling of your entity, in fact, they are already intermangled. 
+
+Say, you want to change some stuff inside your entities, and suddenly you have to change your renderer as well; since the entity system changed, there is a chance that your renderer must be adjusted accordingly. Hold on, I'm not done yet! This deep coupling effect will propogate; it probably is going to occur more than one layer; one subsystem fails after another due to domino effect. The larger your program is, the more frequent this kind of thing will happen. 
+
+Damn, that was really nasty! So what do we do? give up programming and become an artist? Don't worry, I came up with something called "interface" (which I named it myself).
+
+Interfaces are the middle-grounds; they are what different subsystems use to talk to each other. Let's revise the code we had before:
+
+...stuff...
+
+for entities in entity system
+   entity.simulate(user.input);
+
+sprite_list = generate_sprites(entity_system.content);
+my_renderer.render_sprites(sprite_list);
+
+...stuff...
+
+Before, if one subsystems changes, the other subsystem probably will change as well; because their communication was very barebone and direct. Some changes on one end will possibly mean there must be some changes on the other end as well, and it propogates like that to other subsystems. However, with a interface like "sprites", only the communication between entity system and sprite system are affected. You have prevented it from furthe propogation into other subsystems; you have effectively limited the changes inside one subsystem and one interface. 
 
 #what I have found in this experience: The cost of context switching is the worst enemy of productivity
 
