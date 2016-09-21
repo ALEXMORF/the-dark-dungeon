@@ -53,6 +53,7 @@ for entities in entity system {
 }
 
 sprite_list = generate_sprites(entity_system.content);
+
 my_renderer.render_sprites(sprite_list);
 
 ...stuff...
