@@ -85,22 +85,45 @@ movement_search_wall(Tile_Map *tile_map, v2 position, v2 desired_velocity, real3
     return result;
 }
 
+inline void
+enter_state(Entity *entity, Entity_State next_state, real32 timer)
+{
+    entity->state = next_state;
+    entity->clock.timer[entity->state] = timer;
+}
+
+inline bool32
+scan_player(Tile_Map *tile_map, Entity *entity, v2 player_position, real32 fov)
+{
+    real32 angle_player = get_angle(player_position - entity->position);
+    recanonicalize_angle(&angle_player);
+    real32 angle_diff = get_angle_diff(angle_player, entity->angle);
+    real32 player_to_entity_dist = len(player_position - entity->position);
+    real32 ray_length = cast_ray(tile_map, entity->position, angle_player).ray_length;
+		    
+    bool32 within_fov = (abs(angle_diff) <= fov/2.0f);
+    bool32 visible = ray_length > player_to_entity_dist;
+
+    return (within_fov && visible);
+}
 //
 //
 //
 
 internal void
-tick_entity_by_state(Entity *entity, v2 damage_source_position, real32 dt)
+tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_position, real32 dt)
 {
     Entity_Clock *clock = &entity->clock;
+    real32 hurting_state_interval = 0.3f;
+    real32 waiting_state_interval = 2.0f;
+    real32 fov = pi32 / 3.0f;
     
     if (entity->hp > 0)
     {
 	//prestate processing stage
 	if (entity->just_shot)
 	{
-	    entity->state = hurting_state;
-	    clock->timer[hurting_state] = 0.3f;
+	    enter_state(entity, hurting_state, hurting_state_interval);
 	}
 
 	//state processing stage
@@ -112,26 +135,65 @@ tick_entity_by_state(Entity *entity, v2 damage_source_position, real32 dt)
 		if (clock_ends)
 		{
 		    entity->angle = get_angle(damage_source_position - entity->position);
-		    entity->state = waiting_state;
+		    enter_state(entity, waiting_state, waiting_state_interval);
 		}
 	    } break;
 
 	    case walking_state:
 	    {
-		//scan for player, if found turn into aiming state
-		//if nothing then walk, if walks onto destination then go to waiting_state
+		bool32 not_initialized = clock->timer[entity->state] == 0.0f;
+		
+		if (scan_player(tile_map, entity, damage_source_position, fov))
+		{
+		    enter_state(entity, aiming_state, 0.0f);
+		}
+		
+		if (not_initialized)
+		{
+		    entity->angle += pi32 / 3.0f;
+		    
+		    v2 hit_point = cast_ray(tile_map, entity->position, entity->angle).hit_position;
+		    v2 direction = normalize(hit_point - entity->position);
+		    real32 magnitude = len(hit_point - entity->position) - entity->collision_radius;
+		    
+		    entity->destination = entity->position + (direction * magnitude);
+		}
+
+		real32 distance_left = len(entity->destination - entity->position);
+		real32 speed = clamp(entity->speed, 0.0f, distance_left);
+		entity->position += normalize(entity->destination - entity->position) *speed * dt;
+		if (speed != entity->speed)
+		{
+		    enter_state(entity, waiting_state, waiting_state_interval);
+		}
+
+		clock->timer[entity->state] += dt*2.0f;
 	    } break;
 
 	    case waiting_state:
 	    {
-		//scan for player, if found turn into aiming state
-		//if clock ends, turn back to walking_state
+		if (scan_player(tile_map, entity, damage_source_position, fov))
+		{
+		    enter_state(entity, aiming_state, 0.0f);
+		}
+		
+		if (clock_ends)
+		{
+		    enter_state(entity, walking_state, 0.0f);
+		}
 	    } break;
 
 	    case aiming_state:
 	    {
-		//shoot player
-		//if player goes out of sight, set destination then go back to walking_state
+		entity->angle = get_angle(damage_source_position - entity->position);
+		recanonicalize_angle(&entity->angle);
+		
+		if (!scan_player(tile_map, entity, damage_source_position, fov))
+		{
+		    enter_state(entity, walking_state, 0.0f);
+		}
+
+		clock->timer[entity->state] += 2.0f * dt;
 	    } break;
 	}
 
@@ -139,6 +201,7 @@ tick_entity_by_state(Entity *entity, v2 damage_source_position, real32 dt)
     }
     else
     {
+	entity->state = death_state;
 	clock->timer[death_state] += dt;
     }
 
@@ -170,7 +233,7 @@ simulate_world(Game_State *game_state, Game_Input *input)
 	    case guard:
 	    case ss:
 	    {
-		tick_entity_by_state(entity, player->position, dt);
+		tick_entity_by_state(entity, &game_state->tile_map, player->position, dt);
 	    } break;
 	}
     }

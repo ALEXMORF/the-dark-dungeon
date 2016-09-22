@@ -91,7 +91,7 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 
 	case guard:
 	{
-	    if (entity->hp == 0)
+	    if (entity->state == death_state)
 	    {
 		real32 death_animation_period = 0.5f;
 		int32 death_animation_index_count = 5;
@@ -102,6 +102,18 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 	    else if (entity->state == hurting_state)
 	    {
 		result = extract_image_from_sheet(&game_state->guard_texture_sheet, 7, 5);
+	    }
+	    else if (entity->state == aiming_state)
+	    {
+		real32 prepare_period = 0.3f;
+
+		int32 x_index = 1;
+		if (entity->clock.timer[entity->state] < prepare_period)
+		{
+		    x_index = 0;
+		}
+		
+		result = extract_image_from_sheet(&game_state->guard_texture_sheet, x_index, 6);
 	    }
 	    else
 	    {
@@ -123,7 +135,7 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 
 	case ss:
 	{
-	    if (entity->hp == 0)
+	    if (entity->state == death_state)
 	    {
 		real32 death_animation_period = 0.5f;
 		int32 death_animation_index_count = 5;
@@ -134,6 +146,19 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 	    else if (entity->state == hurting_state)
 	    {
 		result = extract_image_from_sheet(&game_state->ss_texture_sheet, 7, 5);		
+	    }
+	    else if (entity->state == aiming_state)
+	    {
+		real32 prepare_period = 0.2f;
+		
+		int32 x_index = 1;
+		
+		if (entity->clock.timer[entity->state] < prepare_period)
+		{
+		    x_index = 0;
+		}
+
+		result = extract_image_from_sheet(&game_state->ss_texture_sheet, x_index, 6);
 	    }
 	    else 
 	    {

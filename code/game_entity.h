@@ -31,9 +31,10 @@ struct Entity
     Entity_Clock clock;
     
     v2 position;
-    v2 velocity;
+    real32 speed;
     v2 destination;
     real32 angle;
+    real32 collision_radius;
     
     //stats
     int32 hp;

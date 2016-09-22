@@ -24,6 +24,8 @@ make_dynamic_entity(Entity_Type type, v2 position, real32 angle = 0.0f, int32 hp
     result.type = type;
     result.position = position;
     result.angle = angle;
+    result.collision_radius = 0.3f;
+    result.speed = 1.5f;
     result.hp = hp;
     
     return result;

@@ -207,3 +207,12 @@ reduce(real32 a, real32 da)
 {
     return (a > da? (a - da): 0.0f);
 }
+
+inline real32
+clamp(real32 value, real32 min, real32 max)
+{
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
+
