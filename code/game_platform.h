@@ -65,17 +65,17 @@ struct Game_Input
 {
     struct
     {
-	bool32 left;
-	bool32 right;
-	bool32 up;
-	bool32 down;
-	bool32 space;
+        bool32 left;
+        bool32 right;
+        bool32 up;
+        bool32 down;
+        bool32 space;
     } keyboard;
     struct
     {
-	real32 dx;
-	real32 dy;
-	bool32 down;
+        real32 dx;
+        real32 dy;
+        bool32 down;
     } mouse;
     real32 dt_per_frame;
 };

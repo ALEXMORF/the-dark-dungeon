@@ -18,8 +18,8 @@ load_image(Platform_Load_Image *platform_load_image, char *filename)
     uint8 *pixel_components = (uint8 *)result.data;    
     for (int32 i = 0; i < result.width * result.height; ++i)
     {
-	swap(pixel_components[0], pixel_components[2]);
-	pixel_components += bytes_per_pixel;
+        swap(pixel_components[0], pixel_components[2]);
+        pixel_components += bytes_per_pixel;
     }
     
     return result;
@@ -43,8 +43,8 @@ load_image_sheet(Platform_Load_Image *platform_load_image, char *filename)
     uint8 *pixel_components = (uint8 *)result.data;    
     for (int32 i = 0; i < result.width * result.height; ++i)
     {
-	swap(pixel_components[0], pixel_components[2]);
-	pixel_components += bytes_per_pixel;
+        swap(pixel_components[0], pixel_components[2]);
+        pixel_components += bytes_per_pixel;
     }
 
     return result;
@@ -77,6 +77,6 @@ extract_image_from_sheet(Loaded_Image_Sheet *sheet, int32 image_x, int32 image_y
     result.height = sheet->image_height;
     result.bytes_per_pixel = sheet->bytes_per_pixel;
     result.pitch = sheet->pitch;
-	
+        
     return result;
 }

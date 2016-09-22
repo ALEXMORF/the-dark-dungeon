@@ -5,7 +5,7 @@ compute_sprite_order(Sprite *sprite_list, int32 len, v2 relative_position)
 {
     for (int32 i = 0; i < len; ++i)
     {
-	sprite_list[i].distance_squared = get_distance_squared(sprite_list[i].position, relative_position);
+        sprite_list[i].distance_squared = get_distance_squared(sprite_list[i].position, relative_position);
     }
 }
 
@@ -23,15 +23,15 @@ sort_sprites(Sprite *sprite_list, int32 len, v2 relative_position)
     
     for (int32 i = len-1; i > 0; --i)
     {
-	for (int32 j = len - 1; j > 0; --j)
-	{
-	    if (sprite_list[j-1].distance_squared < sprite_list[j].distance_squared)
-	    {
-		Sprite temp = sprite_list[j-1];
-		sprite_list[j-1] = sprite_list[j];
-		sprite_list[j] = temp;
-	    }
-	}
+        for (int32 j = len - 1; j > 0; --j)
+        {
+            if (sprite_list[j-1].distance_squared < sprite_list[j].distance_squared)
+            {
+                Sprite temp = sprite_list[j-1];
+                sprite_list[j-1] = sprite_list[j];
+                sprite_list[j] = temp;
+            }
+        }
     }
 }
 
@@ -41,11 +41,11 @@ get_current_playing_index(real32 timer, real32 period, int32 index_count)
     int32 texture_index;  
     if (timer <= period)
     {
-	texture_index = (int32)(timer / (period / index_count));
+        texture_index = (int32)(timer / (period / index_count));
     }
     else
     {
-	texture_index = index_count-1;
+        texture_index = index_count-1;
     }
 
     return texture_index;
@@ -79,109 +79,109 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 
     switch (entity->type)
     {
-	case barrel:
-	{
-	    result = game_state->barrel_texture;
-	} break;
+        case barrel:
+        {
+            result = game_state->barrel_texture;
+        } break;
 
-	case pillar:
-	{
-	    result = game_state->pillar_texture;
-	} break;
+        case pillar:
+        {
+            result = game_state->pillar_texture;
+        } break;
 
-	case guard:
-	{
-	    if (entity->state == death_state)
-	    {
-		real32 death_animation_period = 0.5f;
-		int32 death_animation_index_count = 5;
-		
-		int32 texture_index_x = get_current_playing_index(entity->clock.timer[death_state], death_animation_period, death_animation_index_count);  
-		result = extract_image_from_sheet(&game_state->guard_texture_sheet, texture_index_x, 5);
-	    }
-	    else if (entity->state == hurting_state)
-	    {
-		result = extract_image_from_sheet(&game_state->guard_texture_sheet, 7, 5);
-	    }
-	    else if (entity->state == aiming_state)
-	    {
-		real32 prepare_period = 0.3f;
+        case guard:
+        {
+            if (entity->state == death_state)
+            {
+                real32 death_animation_period = 0.5f;
+                int32 death_animation_index_count = 5;
+                
+                int32 texture_index_x = get_current_playing_index(entity->clock.timer[death_state], death_animation_period, death_animation_index_count);  
+                result = extract_image_from_sheet(&game_state->guard_texture_sheet, texture_index_x, 5);
+            }
+            else if (entity->state == hurting_state)
+            {
+                result = extract_image_from_sheet(&game_state->guard_texture_sheet, 7, 5);
+            }
+            else if (entity->state == aiming_state)
+            {
+                real32 prepare_period = 0.3f;
 
-		int32 x_index = 1;
-		if (entity->clock.timer[entity->state] < prepare_period)
-		{
-		    x_index = 0;
-		}
-		
-		result = extract_image_from_sheet(&game_state->guard_texture_sheet, x_index, 6);
-	    }
-	    else
-	    {
-		real32 walk_cycle_period = 1.0f;
-		int32 walk_index_count = 4;
-		int32 walk_init_stride = 1;
-		
-		int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
-		int32 walk_index = get_walk_index(walk_init_stride, walk_index_count, walk_cycle_period, entity->clock.timer[walking_state]);
-		if (entity->state != walking_state)
-		{
-		    walk_index = 0;
-		}
-		
-		result = extract_image_from_sheet(&game_state->guard_texture_sheet, dir_index, walk_index);
-	    }
-	    
-	} break;
+                int32 x_index = 1;
+                if (entity->clock.timer[entity->state] < prepare_period)
+                {
+                    x_index = 0;
+                }
+                
+                result = extract_image_from_sheet(&game_state->guard_texture_sheet, x_index, 6);
+            }
+            else
+            {
+                real32 walk_cycle_period = 1.0f;
+                int32 walk_index_count = 4;
+                int32 walk_init_stride = 1;
+                
+                int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
+                int32 walk_index = get_walk_index(walk_init_stride, walk_index_count, walk_cycle_period, entity->clock.timer[walking_state]);
+                if (entity->state != walking_state)
+                {
+                    walk_index = 0;
+                }
+                
+                result = extract_image_from_sheet(&game_state->guard_texture_sheet, dir_index, walk_index);
+            }
+            
+        } break;
 
-	case ss:
-	{
-	    if (entity->state == death_state)
-	    {
-		real32 death_animation_period = 0.5f;
-		int32 death_animation_index_count = 5;
-		    
-		int32 texture_index_x = get_current_playing_index(entity->clock.timer[death_state], death_animation_period, death_animation_index_count);  
-		result = extract_image_from_sheet(&game_state->ss_texture_sheet, texture_index_x, 5);
-	    }
-	    else if (entity->state == hurting_state)
-	    {
-		result = extract_image_from_sheet(&game_state->ss_texture_sheet, 7, 5);		
-	    }
-	    else if (entity->state == aiming_state)
-	    {
-		real32 prepare_period = 0.2f;
-		
-		int32 x_index = 1;
-		
-		if (entity->clock.timer[entity->state] < prepare_period)
-		{
-		    x_index = 0;
-		}
+        case ss:
+        {
+            if (entity->state == death_state)
+            {
+                real32 death_animation_period = 0.5f;
+                int32 death_animation_index_count = 5;
+                    
+                int32 texture_index_x = get_current_playing_index(entity->clock.timer[death_state], death_animation_period, death_animation_index_count);  
+                result = extract_image_from_sheet(&game_state->ss_texture_sheet, texture_index_x, 5);
+            }
+            else if (entity->state == hurting_state)
+            {
+                result = extract_image_from_sheet(&game_state->ss_texture_sheet, 7, 5);         
+            }
+            else if (entity->state == aiming_state)
+            {
+                real32 prepare_period = 0.2f;
+                
+                int32 x_index = 1;
+                
+                if (entity->clock.timer[entity->state] < prepare_period)
+                {
+                    x_index = 0;
+                }
 
-		result = extract_image_from_sheet(&game_state->ss_texture_sheet, x_index, 6);
-	    }
-	    else 
-	    {
-		real32 walk_cycle_period = 1.0f;
-		int32 walk_index_count = 4;
-		int32 walk_init_stride = 1;
-		
-		int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
-		int32 walk_index = get_walk_index(walk_init_stride, walk_index_count, walk_cycle_period, entity->clock.timer[walking_state]);
-		if (entity->state != walking_state)
-		{
-		    walk_index = 0;
-		}
-		
-		result = extract_image_from_sheet(&game_state->ss_texture_sheet, dir_index, walk_index);
-	    }
-	    
-	} break;
-	    
-	default:
-	{
-	    assert(!"unknown entity type");
-	};
+                result = extract_image_from_sheet(&game_state->ss_texture_sheet, x_index, 6);
+            }
+            else 
+            {
+                real32 walk_cycle_period = 1.0f;
+                int32 walk_index_count = 4;
+                int32 walk_init_stride = 1;
+                
+                int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
+                int32 walk_index = get_walk_index(walk_init_stride, walk_index_count, walk_cycle_period, entity->clock.timer[walking_state]);
+                if (entity->state != walking_state)
+                {
+                    walk_index = 0;
+                }
+                
+                result = extract_image_from_sheet(&game_state->ss_texture_sheet, dir_index, walk_index);
+            }
+            
+        } break;
+            
+        default:
+        {
+            assert(!"unknown entity type");
+        };
     }
 
     return result;
@@ -189,20 +189,20 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 
 internal void
 generate_sprite_list(Game_State *game_state, Sprite_List *list,
-		     Entity *entity_list, int32 entity_count)
+                     Entity *entity_list, int32 entity_count)
 {
     //reset
     list->count = 0;
     
     for (int32 i = 0; i < entity_count; ++i)
     {
-	Sprite temp = {};
-	temp.owner = &entity_list[i];
-	temp.size.x = 1.0f;
-	temp.size.y = 1.0f;
-	temp.position = entity_list[i].position;
-	temp.texture = get_currently_playing_texture(game_state, &entity_list[i]);
-	add_sprite(list, temp);
+        Sprite temp = {};
+        temp.owner = &entity_list[i];
+        temp.size.x = 1.0f;
+        temp.size.y = 1.0f;
+        temp.position = entity_list[i].position;
+        temp.texture = get_currently_playing_texture(game_state, &entity_list[i]);
+        add_sprite(list, temp);
     }
 
 }

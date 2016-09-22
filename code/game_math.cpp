@@ -7,11 +7,11 @@ normalize(v2 a)
 
     if (a.x)
     {
-	a.x /= length;
+        a.x /= length;
     }
     if (a.y)
     {
-	a.y /= length;
+        a.y /= length;
     }
     return a;
 }
@@ -126,11 +126,11 @@ recanonicalize_angle(real32 *angle)
 {
     while (*angle >= pi32*2.0f)
     {
-	*angle -= pi32*2.0f;
+        *angle -= pi32*2.0f;
     }
     while (*angle < 0.0f)
     {
-	*angle += pi32*2.0f;
+        *angle += pi32*2.0f;
     }
 }
 
@@ -176,9 +176,9 @@ approach(real32 start, real32 end, real32 t)
     real32 diff = end - start;
 
     if (diff > t)
-	return start + t;
+        return start + t;
     if (diff < -t)
-	return start - t;
+        return start - t;
 
     return end;
 }
