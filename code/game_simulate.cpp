@@ -115,7 +115,7 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
 {
     Entity_Clock *clock = &entity->clock;
     real32 hurting_state_interval = 0.3f;
-    real32 waiting_state_interval = 2.0f;
+    real32 waiting_state_interval = 1.5f;
     real32 fov = pi32 / 3.0f;
     
     if (entity->hp > 0)
@@ -161,8 +161,9 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
 
 		real32 distance_left = len(entity->destination - entity->position);
 		real32 speed = clamp(entity->speed, 0.0f, distance_left);
-		entity->position += normalize(entity->destination - entity->position) *speed * dt;
-		if (speed != entity->speed)
+		v2 velocity = Movement_Search_Wall(tile_map, entity, normalize(entity->destination - entity->position) *speed * dt);
+		entity->position += velocity;
+		if (speed < entity->speed || len(velocity)/dt < speed)
 		{
 		    enter_state(entity, waiting_state, waiting_state_interval);
 		}
