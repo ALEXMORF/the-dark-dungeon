@@ -50,7 +50,6 @@ struct Game_Memory
     Platform_Load_Image *platform_load_image;
     Platform_Free_Image *platform_free_image;
     Platform_Allocate_Memory *platform_allocate_memory;
-    Platform_Play_Sound *platform_play_sound;
 };
 
 struct Game_Offscreen_Buffer

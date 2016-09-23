@@ -1,10 +1,9 @@
 /*
  *TODOLIST:
 
- Integrate SDL to get hardare-acceleration on blitting and v-sync
- Implement a sound buffer with SDL
- Procedure map generation
- clean up old sound code
+1. Integrate SDL to get hardare-acceleration on blitting and v-sync
+2. Implement a sound buffer with SDL
+3. Procedure map generation
  
  */
 
@@ -270,15 +269,4 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             texture_x += texture_mapper;
         }
     }
-
-#if 0
-    //
-    //
-    //Play sound
-    if (game_state->need_to_play_pistol_sound)
-    {
-        memory->platform_play_sound("../data/pistol.wav");
-        game_state->need_to_play_pistol_sound = false;
-    }
-#endif
 }

@@ -4,8 +4,7 @@
 #include <intrin.h>
 #include <windows.h>
 #include <windowsx.h>
-#include <gl/gl.h>
-#include <gl/glu.h>
+#include <SDL.h>
 
 #pragma warning(push)
 #pragma warning(disable: 4244)
@@ -269,12 +268,6 @@ win32_main_window_callback(HWND window, UINT message, WPARAM w_param, LPARAM l_p
     return result;
 }
 
-internal void
-win32_play_sound(char *filename)
-{
-    PlaySound(filename, 0 , SND_FILENAME | SND_ASYNC);
-}
-
 int CALLBACK
 WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd_show)
 {
@@ -286,7 +279,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     uint32 transient_game_memory_size = megabytes(128);
     int32 target_frame_per_second = 60;
     bool32 frame_rate_lock = true;
-    
+
     HWND window = win32_create_window("Dark Dungeon", win32_main_window_callback,
                                       window_width, window_height);
     Win32_Offscreen_Buffer win32_buffer = win32_create_offscreen_buffer(buffer_width, buffer_height);
@@ -306,11 +299,9 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     game_memory.platform_load_image = stbi_load;
     game_memory.platform_free_image = stbi_image_free;
     game_memory.platform_allocate_memory = malloc;
-    game_memory.platform_play_sound = win32_play_sound;
     assert(game_memory.platform_load_image);
     assert(game_memory.platform_free_image);
     assert(game_memory.platform_allocate_memory);
-    assert(game_memory.platform_play_sound);
     
     Game_Input game_input = {};
     Game_Offscreen_Buffer game_buffer = {};
@@ -411,7 +402,6 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         
         game_code.game_update_and_render(&game_memory, &game_input, &game_buffer);
         win32_display_offscreen_buffer(&win32_buffer, window);
-
         LARGE_INTEGER current_counter = win32_get_wallclock();
         real32 elapsed_ms = win32_get_elapsed_ms(last_counter, current_counter);
         real32 target_ms = 1000.0f / (real32)target_frame_per_second;
