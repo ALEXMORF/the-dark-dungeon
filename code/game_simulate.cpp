@@ -150,17 +150,17 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
 
                 if (not_initialized)
                 {
-                    entity->angle += pi32 / ((real32)(quick_rand() % 10) + 1.0f);
+                    entity->angle += pi32 / 3.0f;
                     recanonicalize_angle(&entity->angle);
-
                     entity->destination = cast_ray(tile_map, entity->position, entity->angle).hit_position;
                 }
 
                 real32 distance_left = len(entity->destination - entity->position);
                 real32 speed = clamp(entity->speed, 0.0f, distance_left);
-                v2 velocity = Movement_Search_Wall(tile_map, entity, normalize(entity->destination - entity->position) * speed * dt);
-                entity->position += velocity;
-                if (speed < entity->speed || len(velocity)/dt < speed)
+                v2 displacement = normalize(entity->destination - entity->position) * speed * dt;
+                displacement = Movement_Search_Wall(tile_map, entity, displacement);
+                entity->position += displacement;
+                if (speed < entity->speed || len(displacement)/dt < speed)
                 {
                     enter_state(entity, waiting_state, waiting_state_interval);
                 }

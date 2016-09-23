@@ -110,7 +110,7 @@ initialize_player(Player *player)
     player->collision_radius = 0.3f;
     player->weapon_animation_index = 1;
     player->weapon = pistol;
-    player->weapon_cd = 0.8f;
+    player->weapon_cd = 0.5f;
 }
                  
 //
@@ -217,7 +217,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     {
         Player *player = &game_state->player;
         
-        real32 animation_cycle = 0.78f;
+        real32 animation_cycle = player->weapon_cd - 0.02f;
         real32 animation_index_count = 4.0f;
         int32 animation_ending_index = 1;
         if (player->weapon_cd_counter)
