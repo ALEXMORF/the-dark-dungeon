@@ -7,6 +7,7 @@
 #define if_do(condition, action) do { if (condition) action; } while (0)
 #define array_count(array) (sizeof(array)/sizeof(array[0]))
 
+#include "game_random.h"
 #include "game_constraint.h"
 #include "game_math.h"
 #include "game_tiles.h"

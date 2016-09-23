@@ -96,9 +96,9 @@ inline bool32
 scan_player(Tile_Map *tile_map, Entity *entity, v2 player_position, real32 fov)
 {
     real32 angle_player = get_angle(player_position - entity->position);
-    recanonicalize_angle(&angle_player);
     real32 angle_diff = get_angle_diff(angle_player, entity->angle);
     real32 player_to_entity_dist = len(player_position - entity->position);
+    recanonicalize_angle(&angle_player);
     real32 ray_length = cast_ray(tile_map, entity->position, angle_player).ray_length;
                     
     bool32 within_fov = (abs(angle_diff) <= fov/2.0f);
@@ -147,21 +147,18 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
                 {
                     enter_state(entity, aiming_state, 0.0f);
                 }
-                
+
                 if (not_initialized)
                 {
-                    entity->angle += pi32 / 3.0f;
-                    
-                    v2 hit_point = cast_ray(tile_map, entity->position, entity->angle).hit_position;
-                    v2 direction = normalize(hit_point - entity->position);
-                    real32 magnitude = len(hit_point - entity->position) - entity->collision_radius;
-                    
-                    entity->destination = entity->position + (direction * magnitude);
+                    entity->angle += pi32 / ((real32)(quick_rand() % 10) + 1.0f);
+                    recanonicalize_angle(&entity->angle);
+
+                    entity->destination = cast_ray(tile_map, entity->position, entity->angle).hit_position;
                 }
 
                 real32 distance_left = len(entity->destination - entity->position);
                 real32 speed = clamp(entity->speed, 0.0f, distance_left);
-                v2 velocity = Movement_Search_Wall(tile_map, entity, normalize(entity->destination - entity->position) *speed * dt);
+                v2 velocity = Movement_Search_Wall(tile_map, entity, normalize(entity->destination - entity->position) * speed * dt);
                 entity->position += velocity;
                 if (speed < entity->speed || len(velocity)/dt < speed)
                 {
