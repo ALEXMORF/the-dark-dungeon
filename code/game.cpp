@@ -1,3 +1,13 @@
+/*
+ *TODOLIST:
+
+ Integrate SDL to get hardare-acceleration on blitting and v-sync
+ Implement a sound buffer with SDL
+ Procedure map generation
+ clean up old sound code
+ 
+ */
+
 #include "game.h"
 
 #include "game_math.cpp"
