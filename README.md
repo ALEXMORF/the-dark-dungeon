@@ -3,7 +3,7 @@ a game with the application of raycasting.
 
 All the game code and render code is coded by hand with only one library. The render code is written without any external libraries, but the asset loading uses stb_image, because it's boring stuff and I don't feel like doing from scratch. 
 
-existing features:
+things I implemented:
  1. texture mapping for wall rendering. 
  2. floor & ceiling casting along with texture mapping.
  3. supports multiple wall textures (8/31/2016)
