@@ -3,7 +3,7 @@ a game with the application of raycasting.
 
 All the game code and render code is coded by hand with only one library. The render code is written without any external libraries, but the asset loading uses stb_image, because it's boring stuff and I don't feel like doing from scratch. 
 
-existing features:
+things I implemented:
  1. texture mapping for wall rendering. 
  2. floor & ceiling casting along with texture mapping.
  3. supports multiple wall textures (8/31/2016)
@@ -11,13 +11,16 @@ existing features:
  5. graphics-based bullet detection & basic entity system (9/3/2016)
  6. perspective-oriented sprite generation (9/9/2016)
  7. collision checking against walls (simulate both body collision and shoulder collision), gliding made possible (9/11/2016)
- 8. set up internal entity clock (9/20/2016, tentative)
-currently working on: enemy AI
+ 8. set up internal entity clock (9/20/2016)
+ 9. basic AI (9/21/2016)
+ 10. Faster platform layer with SDL (9/23/2016)
 
-things on my mind: bilinear filtering???
+TODO List: 
+ 1. asynchronous sound playback
+ 2. a very robust asset loading routine
+ 3. procedurally generated map
 
 things to test out: global game event queue(?)
-                    FSM for dynamic entity behavior. 
 
 #Techniques for drawing clear boundaries between subsystems: interfaces between subsystems
 
