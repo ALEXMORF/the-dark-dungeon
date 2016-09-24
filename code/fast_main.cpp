@@ -1,5 +1,4 @@
 /*
-//TODO(chen): enable fullscreen support
 //TODO(chen): make sound engine
  */
 
@@ -159,7 +158,8 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         
     LARGE_INTEGER last_counter = win32_get_wallclock();
     real32 ms_per_frame = 0.0f;
-    
+
+    bool32 is_fullscreen = false;
     global_running = true;
     while (global_running)
     {
@@ -198,6 +198,19 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                     if (key_code == SDLK_ESCAPE)
                     {
                         global_running = false;
+                    }
+                    if (key_code == SDLK_F11 && sdl_event.key.state == SDL_PRESSED)
+                    {
+                        if (is_fullscreen)
+                        {
+                            SDL_SetWindowFullscreen(sdl_window, 0);
+                            is_fullscreen = false;
+                        }
+                        else
+                        {
+                            SDL_SetWindowFullscreen(sdl_window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                            is_fullscreen = true;
+                        }
                     }
                 } break;
                 
