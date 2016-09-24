@@ -15,7 +15,9 @@ things I implemented:
  9. basic AI (9/21/2016)
  10. Faster platform layer with SDL (9/23/2016)
 
-things on my mind: bilinear filtering???
+TODO List: 
+ 1. asynchronous sound playback
+ 2. a very robust asset loading routine
 
 things to test out: global game event queue(?)
 
