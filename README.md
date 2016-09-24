@@ -18,6 +18,7 @@ things I implemented:
 TODO List: 
  1. asynchronous sound playback
  2. a very robust asset loading routine
+ 3. procedurally generated map
 
 things to test out: global game event queue(?)
 
