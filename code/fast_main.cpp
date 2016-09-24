@@ -159,6 +159,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     LARGE_INTEGER last_counter = win32_get_wallclock();
     real32 ms_per_frame = 0.0f;
 
+    bool32 window_is_active = true;
     bool32 is_fullscreen = false;
     global_running = true;
     while (global_running)
@@ -214,7 +215,6 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                     }
                 } break;
                 
-                //TODO(chen): map mouse to game_input
                 case SDL_MOUSEBUTTONUP:
                 case SDL_MOUSEBUTTONDOWN:
                 {
@@ -226,14 +226,35 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                     mouse_dx = (real32)sdl_event.motion.x - window_width/2;
                     mouse_dy = (real32)sdl_event.motion.y - window_height/2;
                 } break;
+
+                case SDL_WINDOWEVENT:
+                {
+                    switch (sdl_event.window.event)
+                    {
+                        case SDL_WINDOWEVENT_ENTER:
+                        case SDL_WINDOWEVENT_FOCUS_GAINED:
+                        {
+                            window_is_active = true;
+                        } break;
+
+                        case SDL_WINDOWEVENT_LEAVE:
+                        case SDL_WINDOWEVENT_FOCUS_LOST:
+                        {
+                            window_is_active = false;
+                        } break;
+                    }
+                } break;
             }
         }
         game_input.mouse.dx = mouse_dx;
         game_input.mouse.dy = mouse_dy;
         game_input.dt_per_frame = ms_per_frame / 1000.0f;
-        SDL_WarpMouseInWindow(sdl_window, window_width/2, window_height/2);
         
-        game_code.game_update_and_render(&game_memory, &game_input, &game_buffer);
+        if (window_is_active)
+        {
+            SDL_WarpMouseInWindow(sdl_window, window_width/2, window_height/2);
+            game_code.game_update_and_render(&game_memory, &game_input, &game_buffer);
+        }
 
         SDL_UpdateTexture(sdl_offscreen_texture, 0, (uint32 *)game_buffer.memory, game_buffer.pitch);
         SDL_RenderClear(sdl_renderer);
@@ -244,11 +265,11 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         real32 elapsed_ms = win32_get_elapsed_ms(last_counter, current_counter);
         real32 target_ms = 1000.0f / (real32)target_frame_per_second;
         real32 ms_took_to_process = elapsed_ms;
-
+        
         uint64 current_tsc = __rdtsc();
         uint64 mtsc = (current_tsc - last_tsc) / 1024*1024;
         last_tsc = __rdtsc();
-
+        
         if (frame_rate_lock)
         {
             if (target_ms > elapsed_ms)
