@@ -1,9 +1,8 @@
 /*
  *TODOLIST:
-
-1. Integrate SDL to get hardare-acceleration on blitting and v-sync
-2. Implement a sound buffer with SDL
-3. Procedure map generation
+ 
+ 1. Procedure map generation
+ 2. Robust asset loading routine
  
  */
 

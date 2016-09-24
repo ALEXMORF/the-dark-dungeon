@@ -1,5 +1,5 @@
 /*
-//TODO(chen): make sound engine
+//TODO(chen): async sound playback
  */
 
 #include "game_platform.h"
