@@ -21,6 +21,7 @@ TODO List:
  3. procedurally generated map
  4. expanded entity types (enemies, decoratives, ammo, health packs, tc)
  5. multithreaded renderer 
+ 
 things to test out: global game event queue(?)
 
 #Techniques for drawing clear boundaries between subsystems: interfaces between subsystems
