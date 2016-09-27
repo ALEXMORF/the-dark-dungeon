@@ -19,7 +19,9 @@ TODO List:
  1. asynchronous sound playback
  2. a very robust asset loading routine
  3. procedurally generated map
-
+ 4. expanded entity types (enemies, decoratives, ammo, health packs, tc)
+ 5. multithreaded renderer 
+ 
 things to test out: global game event queue(?)
 
 #Techniques for drawing clear boundaries between subsystems: interfaces between subsystems
@@ -43,7 +45,7 @@ Sweet, now we have a tight and robust chain of subsystems, right?  With some goo
 
 Say, you want to change some stuff inside your entities, and suddenly you have to change your renderer as well; since the entity system changed, there is a chance that your renderer must be adjusted accordingly. Hold on, I'm not done yet! This deep coupling effect will propogate; it probably is going to occur more than one layer; one subsystem fails after another due to domino effect. The larger your program is, the more frequent this kind of thing will happen. 
 
-Damn, that was really nasty! So what do we do? give up programming and become an artist? Don't worry, I came up with something called "interface" (which I named it myself).
+Damn, that was really nasty! So what do we do? give up programming and become an artist? Don't worry, I can try to put interfaces in between subsystems. 
 
 Interfaces are the middle-grounds; they are what different subsystems use to talk to each other. Let's revise the code we had before:
 
