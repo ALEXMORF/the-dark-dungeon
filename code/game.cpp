@@ -1,13 +1,13 @@
 /*
- *TODOLIST:
+ *TODO LIST:
  
  1. Procedure map generation
  2. Robust asset loading routine
+ 3. Async sound playback API with platform layer
  
  */
-
 #include "game.h"
-
+ 
 #include "game_math.cpp"
 #include "game_tiles.cpp"
 
@@ -188,7 +188,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         render_context->floorcast_table = Push_Array(&game_state->permanent_allocator, render_context->floorcast_table_count, real32);
         for (int32 i = 0; i < render_context->floorcast_table_count; ++i)
         {
-            real32 inverse_aspect_ratio = (real32)buffer->width / buffer->height;
+            real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
             real32 real_scan_y = ((real32)buffer->height/2 + (real32)i / inverse_aspect_ratio);
             render_context->floorcast_table[i] = (real32)buffer->height / (2*real_scan_y - buffer->height);
         }
@@ -217,7 +217,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                                                          game_state->player.position,
                                                          game_state->player.angle, 
                                                          &game_state->floor_texture,
-                                                         0, //&game_state->ceiling_texture,
+                                                         0, 
                                                          &game_state->wall_textures,
                                                          sprite_list.content, sprite_list.count);
     
@@ -267,5 +267,28 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                        (int32)weapon_sprite_size.y, 0);
             texture_x += texture_mapper;
         }
+    }
+}
+
+extern "C" GAME_PROCESS_SOUND(game_process_sound)
+{
+    int32 sample_per_second = 48000;
+    int16 tone_hz = 256;
+    int16 tone_volume = 500;
+
+    uint32 sine_wave_period = sample_per_second / tone_hz;
+
+    int16 *sample_out = (int16 *)buffer->memory;
+    for (int i = 0; i < buffer->sample_count; ++i)
+    {
+        real32 sine_percentage = (real32)buffer->running_sample_index++ / (real32)sine_wave_period;
+        if (buffer->running_sample_index > sine_wave_period)
+        {
+            buffer->running_sample_index -= sine_wave_period;
+        }
+        
+        int16 sample_value = (int16)(sinf(sine_percentage * pi32 * 2) * tone_volume);
+        *sample_out++ = sample_value;
+        *sample_out++ = sample_value;
     }
 }

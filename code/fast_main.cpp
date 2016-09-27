@@ -1,10 +1,13 @@
 /*
-//TODO(chen): async sound playback
+  TODO LIST:
+  
+  1. async sound playback
+  
  */
-
 #include "game_platform.h"
 
 #include <stdio.h>
+#include <math.h>
 #include <intrin.h>
 #include <windows.h>
 #include <windowsx.h>
@@ -20,12 +23,13 @@
 
 #define show_error(message) MessageBoxA(0, message, "ERROR", MB_OK|MB_ICONERROR)
 
-global_variable bool32 global_running;
+#define pi32 3.1415926f
 global_variable LARGE_INTEGER global_performance_frequency;
 
 struct Game_Code
 {
     Game_Update_And_Render *game_update_and_render;
+    Game_Process_Sound *game_process_sound;
 
     HMODULE library;
     FILETIME last_write_time;
@@ -58,6 +62,8 @@ win32_load_game_code(Game_Code *game_code)
     {
         game_code->game_update_and_render = (Game_Update_And_Render *)
             GetProcAddress(library, "game_update_and_render");
+        game_code->game_process_sound = (Game_Process_Sound *)
+            GetProcAddress(library, "game_process_sound");
         game_code->library = library;
 
         game_code->is_valid = true;
@@ -92,6 +98,18 @@ win32_get_elapsed_ms(LARGE_INTEGER start, LARGE_INTEGER end)
     return elapsed_ms;
 }
 
+internal void
+sdl_initialize_audio(int32 samples_per_second, uint16 buffer_size)
+{
+    SDL_AudioSpec sdl_audio_spec = {};
+    sdl_audio_spec.freq = samples_per_second;
+    sdl_audio_spec.format = AUDIO_S16LSB;
+    sdl_audio_spec.channels = 2;
+    sdl_audio_spec.samples = buffer_size;
+    
+    SDL_OpenAudio(&sdl_audio_spec, 0);
+}
+
 int CALLBACK
 WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd_show)
 {
@@ -103,7 +121,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     uint32 transient_game_memory_size = megabytes(128);
     int32 target_frame_per_second = 60;
     bool32 frame_rate_lock = true;
-
+    
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_Window *sdl_window = SDL_CreateWindow("The Dark Dungeon",
                                           SDL_WINDOWPOS_CENTERED,
@@ -115,7 +133,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                                                            SDL_PIXELFORMAT_ARGB8888,
                                                            SDL_TEXTUREACCESS_STREAMING,
                                                            buffer_width, buffer_height);
-        
+    
     QueryPerformanceFrequency(&global_performance_frequency);
     timeBeginPeriod(1);
     
@@ -123,11 +141,8 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     game_memory.permanent_storage_size = permanent_game_memory_size;
     game_memory.transient_storage_size = transient_game_memory_size;
     uint32 total_game_memory_size = permanent_game_memory_size + transient_game_memory_size;
-    game_memory.permanent_storage = VirtualAlloc(0, total_game_memory_size,
-                                                 MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
-    game_memory.transient_storage = ((uint8 *)game_memory.permanent_storage +
-                                     permanent_game_memory_size);
-    
+    game_memory.permanent_storage = VirtualAlloc(0, total_game_memory_size, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+    game_memory.transient_storage = ((uint8 *)game_memory.permanent_storage + permanent_game_memory_size);
     game_memory.platform_load_image = stbi_load;
     game_memory.platform_free_image = stbi_image_free;
     game_memory.platform_allocate_memory = malloc;
@@ -136,18 +151,16 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     assert(game_memory.platform_allocate_memory);
     
     Game_Input game_input = {};
-    
+
     Game_Offscreen_Buffer game_buffer = {};
     uint32 bytes_per_pixel = 4;
     game_buffer.width = buffer_width;
     game_buffer.height = buffer_height;
     game_buffer.pitch = buffer_width * bytes_per_pixel;
-    game_buffer.memory = VirtualAlloc(0, game_buffer.width * game_buffer.height * bytes_per_pixel,
-                                      MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+    game_buffer.memory = VirtualAlloc(0, game_buffer.width * game_buffer.height * bytes_per_pixel, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
     
     Game_Code game_code = {};
     win32_load_game_code(&game_code);
-
     if (!game_code.is_valid)
     {
         show_error("game code loading failure");
@@ -161,8 +174,8 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 
     bool32 window_is_active = true;
     bool32 is_fullscreen = false;
-    global_running = true;
-    while (global_running)
+    bool32 game_running = true;
+    while (game_running)
     {
         //NOTE(chen):check for latest DLL and load that thing
         FILETIME dll_last_write_time = win32_get_file_last_write_time("../build/game.dll");
@@ -181,7 +194,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
             {
                 case SDL_QUIT:
                 {
-                    global_running = false;
+                    game_running = false;
                 } break;
 
                 case SDL_KEYDOWN:
@@ -190,7 +203,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                     auto key_code = sdl_event.key.keysym.sym;
                     auto *keyboard = &game_input.keyboard;
                     
-#define bind_key(sdl_key, game_key) if (key_code == sdl_key) game_key = sdl_event.key.state == SDL_PRESSED;
+                    #define bind_key(sdl_key, game_key) if (key_code == sdl_key) game_key = sdl_event.key.state == SDL_PRESSED;
                     bind_key(SDLK_a, keyboard->left);
                     bind_key(SDLK_d, keyboard->right);
                     bind_key(SDLK_w, keyboard->up);
@@ -198,7 +211,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                     
                     if (key_code == SDLK_ESCAPE)
                     {
-                        global_running = false;
+                        game_running = false;
                     }
                     if (key_code == SDLK_F11 && sdl_event.key.state == SDL_PRESSED)
                     {
@@ -223,8 +236,8 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 
                 case SDL_MOUSEMOTION:
                 {
-                    mouse_dx = (real32)sdl_event.motion.x - window_width/2;
-                    mouse_dy = (real32)sdl_event.motion.y - window_height/2;
+                    mouse_dx = (real32)sdl_event.motion.x - (real32)window_width/2;
+                    mouse_dy = (real32)sdl_event.motion.y - (real32)window_height/2;
                 } break;
 
                 case SDL_WINDOWEVENT:
@@ -260,7 +273,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         SDL_RenderClear(sdl_renderer);
         SDL_RenderCopy(sdl_renderer, sdl_offscreen_texture, 0, 0);
         SDL_RenderPresent(sdl_renderer);
-        
+
         LARGE_INTEGER current_counter = win32_get_wallclock();
         real32 elapsed_ms = win32_get_elapsed_ms(last_counter, current_counter);
         real32 target_ms = 1000.0f / (real32)target_frame_per_second;
@@ -269,7 +282,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         uint64 current_tsc = __rdtsc();
         uint64 mtsc = (current_tsc - last_tsc) / 1024*1024;
         last_tsc = __rdtsc();
-        
+
         if (frame_rate_lock)
         {
             if (target_ms > elapsed_ms)

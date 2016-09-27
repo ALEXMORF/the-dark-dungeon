@@ -33,8 +33,7 @@ player_input_process(Player *player, Game_Input *input)
     recanonicalize_angle(&player->angle);
 }
                        
-#define Movement_Search_Wall(tile_map, entity, velocity)                \
-    movement_search_wall(tile_map, entity->position, velocity, entity->collision_radius)
+#define Movement_Search_Wall(tile_map, entity, velocity) movement_search_wall(tile_map, entity->position, velocity, entity->collision_radius)
 internal v2
 movement_search_wall(Tile_Map *tile_map, v2 position, v2 desired_velocity, real32 radius)
 {
@@ -93,7 +92,7 @@ enter_state(Entity *entity, Entity_State next_state, real32 timer)
 }
 
 inline bool32
-scan_player(Tile_Map *tile_map, Entity *entity, v2 player_position, real32 fov)
+search_player(Tile_Map *tile_map, Entity *entity, v2 player_position, real32 fov)
 {
     real32 angle_player = get_angle(player_position - entity->position);
     real32 angle_diff = get_angle_diff(angle_player, entity->angle);
@@ -143,7 +142,7 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
             {
                 bool32 not_initialized = clock->timer[entity->state] == 0.0f;
                 
-                if (scan_player(tile_map, entity, damage_source_position, fov))
+                if (search_player(tile_map, entity, damage_source_position, fov))
                 {
                     enter_state(entity, aiming_state, 0.0f);
                 }
@@ -170,7 +169,7 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
 
             case waiting_state:
             {
-                if (scan_player(tile_map, entity, damage_source_position, fov))
+                if (search_player(tile_map, entity, damage_source_position, fov))
                 {
                     enter_state(entity, aiming_state, 0.0f);
                 }
@@ -186,7 +185,7 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
                 entity->angle = get_angle(damage_source_position - entity->position);
                 recanonicalize_angle(&entity->angle);
                 
-                if (!scan_player(tile_map, entity, damage_source_position, fov))
+                if (!search_player(tile_map, entity, damage_source_position, fov))
                 {
                     enter_state(entity, walking_state, 0.0f);
                 }

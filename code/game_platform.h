@@ -60,6 +60,13 @@ struct Game_Offscreen_Buffer
     void *memory;
 };
 
+struct Game_Sound_Buffer
+{
+    void *memory;
+    uint32 running_sample_index;
+    uint16 sample_count;
+};
+
 struct Game_Input
 {
     struct
@@ -81,3 +88,5 @@ struct Game_Input
 
 #define GAME_UPDATE_AND_RENDER(name) void name(Game_Memory *memory, Game_Input *input, Game_Offscreen_Buffer *buffer)
 typedef GAME_UPDATE_AND_RENDER(Game_Update_And_Render);
+#define GAME_PROCESS_SOUND(name) void name(Game_Memory *memory, Game_Sound_Buffer *buffer)
+typedef GAME_PROCESS_SOUND(Game_Process_Sound);
