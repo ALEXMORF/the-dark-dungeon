@@ -23,6 +23,7 @@ typedef double real64;
 #define megabytes(Value) (kilobytes(Value)*1024LL)
 #define gigabytes(Value) (megabytes(Value)*1024LL)
 #define terabytes(Value) (gigabytes(Value)*1024LL)
+#define pi32 3.1415926f
 
 #define assert(value) do {if(!(value)) *(int*)0 = 0;} while (0)
 

@@ -4,7 +4,7 @@ internal void
 player_input_process(Player *player, Game_Input *input)
 {
     real32 player_speed = 2.5f;
-    real32 lerp_constant = 0.2f;
+    real32 lerp_constant = 0.15f;
     real32 mouse_sensitivity = 0.7f;
 
     real32 forward = 0.0f;
@@ -21,10 +21,13 @@ player_input_process(Player *player, Game_Input *input)
     player_d_velocity *= player_speed * input->dt_per_frame;
     player->velocity = lerp(player->velocity, player_d_velocity, lerp_constant);
     
-    if (input->mouse.down && player->weapon_cd_counter == 0.0f) {
+    if (input->mouse.down && player->weapon_cd_counter == 0.0f)
+    {
         player->weapon_cd_counter = player->weapon_cd;
         player->has_fired = true;
-    } else {
+    }
+    else
+    {
         player->has_fired = false;
     }
     
