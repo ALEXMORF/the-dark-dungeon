@@ -31,3 +31,10 @@ struct Loaded_Image_Sheet
     int32 image_width;
     int32 image_height;
 };
+
+struct Texture_List
+{
+    Loaded_Image *E;
+    int32 count;
+};
+

@@ -65,7 +65,7 @@ struct Game_Sound_Buffer
 {
     void *memory;
     uint32 running_sample_index;
-    uint16 sample_count;
+    int32 sample_count;
 };
 
 struct Game_Input

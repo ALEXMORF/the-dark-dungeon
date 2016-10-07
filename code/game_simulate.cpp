@@ -149,7 +149,6 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
                 {
                     enter_state(entity, aiming_state, 0.0f);
                 }
-
                 if (not_initialized)
                 {
                     entity->angle += pi32 / 3.0f;
@@ -176,7 +175,6 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
                 {
                     enter_state(entity, aiming_state, 0.0f);
                 }
-                
                 if (clock_ends)
                 {
                     enter_state(entity, walking_state, 0.0f);
@@ -187,7 +185,6 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
             {
                 entity->angle = get_angle(damage_source_position - entity->position);
                 recanonicalize_angle(&entity->angle);
-                
                 if (!search_player(tile_map, entity, damage_source_position, fov))
                 {
                     enter_state(entity, walking_state, 0.0f);

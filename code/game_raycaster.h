@@ -32,3 +32,20 @@ struct Render_Context
     real32 *z_buffer;
 };
 
+//NOTE(chen): structure for parallel rendering
+struct Render_Data
+{
+    Game_Offscreen_Buffer *buffer;
+    Render_Context *render_context;
+    Tile_Map *tile_map;
+    v2 position;
+    real32 view_angle;
+    Loaded_Image *floor_texture;
+    Loaded_Image *ceiling_texture;
+    Texture_List *wall_textures;
+    Projection_Spec *projection_spec;
+    World_Spec *world_spec;
+
+    int current_thread_index;
+    int thread_count;
+};

@@ -27,12 +27,6 @@ struct Linear_Allocator
     uint32 used;
 };
 
-struct Texture_List
-{
-    Loaded_Image *E;
-    int32 count;
-};
-
 enum Weapon_Type
 {
     knife,

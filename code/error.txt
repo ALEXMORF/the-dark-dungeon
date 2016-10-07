@@ -1,2 +1,0 @@
-game.cpp
-   Creating library game.lib and object game.exp

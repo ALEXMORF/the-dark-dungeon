@@ -116,7 +116,8 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     int32 window_width = 960;
     int32 window_height = 540;
     int32 buffer_width = 960;
-    int32 buffer_height = 540;    
+    int32 buffer_height = 540;
+    int32 audio_sample_frequency = 48000;
     uint32 permanent_game_memory_size = megabytes(64);
     uint32 transient_game_memory_size = megabytes(128);
     int32 target_frame_per_second = 60;
@@ -133,7 +134,19 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                                                            SDL_PIXELFORMAT_ARGB8888,
                                                            SDL_TEXTUREACCESS_STREAMING,
                                                            buffer_width, buffer_height);
+
+    SDL_Thread *threads[8] = {};
+    //TODO(chen): complete the parallel infrustructure
+    {
+        
+    }
     
+#if 0
+    int32 sample_count_per_frame = sample_frequency / target_frame_per_second;
+    bool32 sound_is_playing = false;
+    sdl_initialize_audio(audio_sample_frequency, sample_count_per_frame);
+#endif
+ 
     QueryPerformanceFrequency(&global_performance_frequency);
     timeBeginPeriod(1);
     
@@ -272,17 +285,18 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         SDL_UpdateTexture(sdl_offscreen_texture, 0, (uint32 *)game_buffer.memory, game_buffer.pitch);
         SDL_RenderClear(sdl_renderer);
         SDL_RenderCopy(sdl_renderer, sdl_offscreen_texture, 0, 0);
-        SDL_RenderPresent(sdl_renderer);
 
-        LARGE_INTEGER current_counter = win32_get_wallclock();
-        real32 elapsed_ms = win32_get_elapsed_ms(last_counter, current_counter);
-        real32 target_ms = 1000.0f / (real32)target_frame_per_second;
-        real32 ms_took_to_process = elapsed_ms;
+        real32 ms_took_to_process = win32_get_elapsed_ms(last_counter, win32_get_wallclock());
         
+        SDL_RenderPresent(sdl_renderer);
+        
+        real32 elapsed_ms = win32_get_elapsed_ms(last_counter, win32_get_wallclock());
+        real32 target_ms = 1000.0f / (real32)target_frame_per_second;
+
         uint64 current_tsc = __rdtsc();
         uint64 mtsc = (current_tsc - last_tsc) / 1024*1024;
         last_tsc = __rdtsc();
-
+        
         if (frame_rate_lock)
         {
             if (target_ms > elapsed_ms)
@@ -310,6 +324,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 #endif
     }
 
+    SDL_CloseAudio();
     SDL_DestroyWindow(sdl_window);
     SDL_DestroyRenderer(sdl_renderer);
     SDL_DestroyTexture(sdl_offscreen_texture);

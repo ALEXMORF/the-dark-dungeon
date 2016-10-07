@@ -94,6 +94,105 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
     return result;
 }
 
+internal void
+render_screen_partial(void *data)
+{
+    //unpacking data
+    Render_Data *render_data = (Render_Data *)data;
+    Game_Offscreen_Buffer *buffer = render_data->buffer;
+    Render_Context *render_context = render_data->render_context;
+    Tile_Map *tile_map = render_data->tile_map;
+    v2 position = render_data->position;
+    real32 view_angle = render_data->view_angle;
+    Loaded_Image *floor_texture = render_data->floor_texture;
+    Loaded_Image *ceiling_texture = render_data->ceiling_texture;
+    Texture_List *wall_textures = render_data->wall_textures;
+    Projection_Spec *projection_spec = render_data->projection_spec;
+    World_Spec *world_spec = render_data->world_spec;
+    
+    int current_thread_index = render_data->current_thread_index;
+    int thread_count = render_data->thread_count;
+        
+    real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
+    
+    int ray_count = buffer->width / thread_count;
+    int starting_ray = ray_count * current_thread_index;
+    int end_ray = starting_ray + ray_count;
+        
+    real32 left_most_angle = view_angle + projection_spec->fov/2.0f;;
+    real32 delta_angle = projection_spec->fov / (real32)buffer->width;
+    
+    for (int32 slice_index = starting_ray; slice_index < end_ray; ++slice_index)
+    {
+        real32 angle = left_most_angle - delta_angle*slice_index;
+        recanonicalize_angle(&angle);
+        Reflection_Sample reflection = cast_ray(tile_map, position, angle);
+
+        //NOTE(chen): fix fisheye
+        reflection.ray_length *= cosf(angle - view_angle);
+
+        //this is the z-buffer for sprite-rendering
+        render_context->z_buffer[slice_index] = reflection.ray_length;
+            
+        real32 projected_wall_height = (world_spec->wall_height / reflection.ray_length *
+                                        inverse_aspect_ratio);
+        int32 wall_slice_height = (int32)(projected_wall_height * buffer->height);
+        int32 wall_top = (int32)(buffer->height - wall_slice_height) / 2;
+
+        //wall rendering routine
+        {
+            int32 tile_value = get_tile_value(tile_map, reflection.tile_x, reflection.tile_y);
+            assert(tile_value >= 1 && tile_value < wall_textures->count);
+            Loaded_Image *wall_texture = &wall_textures->E[tile_value-1];
+
+            real32 tile_size = 1.0f;
+            real32 texture_x_percentage = (reflection.x_side_faced?
+                                           modff(reflection.hit_position.x, &tile_size):
+                                           modff(reflection.hit_position.y, &tile_size));
+            int32 texture_x = (int32)(texture_x_percentage * (wall_texture->width - 1));
+
+            Shader_Fn *shader = (reflection.x_side_faced? 0: darken);
+            copy_slice(buffer, wall_texture, texture_x, slice_index,
+                       wall_top, wall_slice_height, shader);
+        }
+
+        //floor casting routine
+        if (floor_texture)
+        {
+            //NOTE(chen):performance-critical code, doing per-pixel operation
+            for (int32 scan_y = wall_top + wall_slice_height; scan_y < buffer->height; ++scan_y)
+            {
+                real32 current_dist = render_context->floorcast_table[scan_y - buffer->height/2];
+                    
+                real32 interpolent = (current_dist / reflection.ray_length);
+                v2 hit_position = reflection.hit_position;
+
+                //inlined lerp
+                v2 floor_position = {};
+                floor_position.x = (position.x * (1.0f - interpolent) + hit_position.x * interpolent);
+                floor_position.y =  (position.y * (1.0f - interpolent) + hit_position.y * interpolent);
+
+                int32 texture_x = ((int32)(floor_position.x*floor_texture->width) % floor_texture->width);
+                int32 texture_y = ((int32)(floor_position.y*floor_texture->height) % floor_texture->height);
+                
+                uint32 *dest_pixels = (uint32 *)buffer->memory;
+                uint32 *floor_source_pixels = (uint32 *)floor_texture->data;
+                
+                dest_pixels[slice_index + scan_y*buffer->width] =
+                    floor_source_pixels[texture_x + texture_y*floor_texture->width];
+
+                //optional ceiling drawing
+                if (ceiling_texture)
+                {
+                    uint32 *ceiling_source_pixels = (uint32 *)ceiling_texture->data;                
+                    dest_pixels[slice_index + (buffer->height - scan_y)*buffer->width] =
+                        ceiling_source_pixels[texture_x + texture_y*floor_texture->width];
+                }
+            }
+        } 
+    } 
+}
+
 //NOTE(chen): precondition: have the sprite list sorted 
 internal Entity *
 render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
@@ -117,7 +216,34 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
     int32 ray_count = buffer->width;
     real32 left_most_angle = view_angle + projection_spec.fov/2.0f;
     real32 delta_angle = projection_spec.fov / (real32)ray_count;
+    
+    //TODO(chen): testing parallel rendering
+#if 1
+    Render_Data render_datas[8] = {};
+    render_datas[0].buffer = buffer;
+    render_datas[0].render_context = render_context;
+    render_datas[0].tile_map = tile_map;
+    render_datas[0].position = position;
+    render_datas[0].view_angle = view_angle;
+    render_datas[0].floor_texture = floor_texture;
+    render_datas[0].ceiling_texture = ceiling_texture;
+    render_datas[0].wall_textures = wall_textures;
+    render_datas[0].projection_spec = &projection_spec;
+    render_datas[0].world_spec = &world_spec;
+    for (int i = 1; i < 8; ++i)
+    {
+        render_datas[i] = render_datas[0];
+        render_datas[i].current_thread_index = i;
         
+    }
+    
+    int total_thread_count = 8;
+    for (int i = 0; i < total_thread_count; ++i)
+    {
+        render_datas[i].thread_count = total_thread_count;
+        render_screen_partial((void *)&render_datas[i]);
+    }
+#else
     for (int32 slice_index = 0; slice_index < ray_count; ++slice_index)
     {
         real32 angle = left_most_angle - delta_angle*slice_index;
@@ -155,7 +281,7 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
         //floor casting routine
         if (floor_texture)
         {
-            //TODO(chen):performance-critical code, doing per-pixel operation
+            //NOTE(chen):performance-critical code, doing per-pixel operation
             for (int32 scan_y = wall_top + wall_slice_height; scan_y < buffer->height; ++scan_y)
             {
                 real32 current_dist = render_context->floorcast_table[scan_y - buffer->height/2];
@@ -187,7 +313,8 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
             }
         } 
     } 
-
+#endif
+    
     //sprite rendering routine polishment
     for (int32 i = 0; i < sprite_count; ++i)
     {
