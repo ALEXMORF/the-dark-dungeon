@@ -94,7 +94,7 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
     return result;
 }
 
-internal void
+internal int
 render_screen_partial(void *data)
 {
     //unpacking data
@@ -190,7 +190,9 @@ render_screen_partial(void *data)
                 }
             }
         } 
-    } 
+    }
+
+    return 0;
 }
 
 //NOTE(chen): precondition: have the sprite list sorted 
@@ -199,7 +201,8 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
                 Tile_Map *tile_map, v2 position, real32 view_angle,
                 Loaded_Image *floor_texture, Loaded_Image *ceiling_texture,
                 Texture_List *wall_textures,
-                Sprite *sprites, int32 sprite_count)
+                Sprite *sprites, int32 sprite_count,
+                Platform_Eight_Async_Proc *platform_eight_async_proc)
 {
     Entity *currently_aimed_entity = 0;
     real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
@@ -219,6 +222,9 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
     
     //TODO(chen): testing parallel rendering
 #if 1
+    int total_thread_count = 8;
+    void *render_data_voids[8] = {};
+    
     Render_Data render_datas[8] = {};
     render_datas[0].buffer = buffer;
     render_datas[0].render_context = render_context;
@@ -230,18 +236,20 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
     render_datas[0].wall_textures = wall_textures;
     render_datas[0].projection_spec = &projection_spec;
     render_datas[0].world_spec = &world_spec;
-    for (int i = 1; i < 8; ++i)
+    render_datas[0].thread_count = total_thread_count;
+    for (int i = 0; i < 8; ++i)
     {
-        render_datas[i] = render_datas[0];
+        if (i != 0)
+        {
+            render_datas[i] = render_datas[0];
+        }
         render_datas[i].current_thread_index = i;
-        
+        render_data_voids[i] = &render_datas[i];
     }
-    
-    int total_thread_count = 8;
+
     for (int i = 0; i < total_thread_count; ++i)
     {
-        render_datas[i].thread_count = total_thread_count;
-        render_screen_partial((void *)&render_datas[i]);
+        render_screen_partial(render_data_voids[i]);
     }
 #else
     for (int32 slice_index = 0; slice_index < ray_count; ++slice_index)

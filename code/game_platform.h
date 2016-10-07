@@ -39,6 +39,8 @@ typedef PLATFORM_ALLOCATE_MEMORY(Platform_Allocate_Memory);
 #define PLATFORM_PLAY_SOUND(name) void name(char *filename)
 typedef PLATFORM_PLAY_SOUND(Platform_Play_Sound);
 
+typedef int platform_thread_fn(void *data);
+typedef void Platform_Eight_Async_Proc(platform_thread_fn *fn, void *data[8]);
 struct Game_Memory
 {
     void *permanent_storage;
@@ -51,6 +53,7 @@ struct Game_Memory
     Platform_Load_Image *platform_load_image;
     Platform_Free_Image *platform_free_image;
     Platform_Allocate_Memory *platform_allocate_memory;
+    Platform_Eight_Async_Proc *platform_eight_async_proc;
 };
 
 struct Game_Offscreen_Buffer

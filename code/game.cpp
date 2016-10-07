@@ -219,7 +219,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                                                          &game_state->floor_texture,
                                                          0, 
                                                          &game_state->wall_textures,
-                                                         sprite_list.content, sprite_list.count);
+                                                         sprite_list.content, sprite_list.count,
+                                                         memory->platform_eight_async_proc);
     
     //animate first-person weapon
     {

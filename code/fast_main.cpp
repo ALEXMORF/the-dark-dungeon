@@ -25,6 +25,7 @@
 
 #define pi32 3.1415926f
 global_variable LARGE_INTEGER global_performance_frequency;
+global_variable SDL_Thread *global_threads[8];
 
 struct Game_Code
 {
@@ -110,6 +111,23 @@ sdl_initialize_audio(int32 samples_per_second, uint16 buffer_size)
     SDL_OpenAudio(&sdl_audio_spec, 0);
 }
 
+void eight_async_proc(platform_thread_fn *fn, void *data[8])
+{
+    global_threads[0] = SDL_CreateThread(fn, "thread_0", data[0]);
+    global_threads[1] = SDL_CreateThread(fn, "thread_1", data[1]);
+    global_threads[2] = SDL_CreateThread(fn, "thread_2", data[2]);
+    global_threads[3] = SDL_CreateThread(fn, "thread_3", data[3]);
+    global_threads[4] = SDL_CreateThread(fn, "thread_4", data[4]);
+    global_threads[5] = SDL_CreateThread(fn, "thread_5", data[5]);
+    global_threads[6] = SDL_CreateThread(fn, "thread_6", data[6]);
+    global_threads[7] = SDL_CreateThread(fn, "thread_7", data[7]);
+    for (int i = 0; i < 8; ++i)
+    {
+        SDL_WaitThread(global_threads[i], 0);
+        global_threads[i] = 0;
+    }
+}
+
 int CALLBACK
 WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd_show)
 {
@@ -134,12 +152,6 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                                                            SDL_PIXELFORMAT_ARGB8888,
                                                            SDL_TEXTUREACCESS_STREAMING,
                                                            buffer_width, buffer_height);
-
-    SDL_Thread *threads[8] = {};
-    //TODO(chen): complete the parallel infrustructure
-    {
-        
-    }
     
 #if 0
     int32 sample_count_per_frame = sample_frequency / target_frame_per_second;
@@ -159,9 +171,11 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     game_memory.platform_load_image = stbi_load;
     game_memory.platform_free_image = stbi_image_free;
     game_memory.platform_allocate_memory = malloc;
+    game_memory.platform_eight_async_proc = eight_async_proc;
     assert(game_memory.platform_load_image);
     assert(game_memory.platform_free_image);
     assert(game_memory.platform_allocate_memory);
+    assert(game_memory.platform_eight_async_proc);
     
     Game_Input game_input = {};
 
