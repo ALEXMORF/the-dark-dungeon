@@ -221,7 +221,8 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
     real32 delta_angle = projection_spec.fov / (real32)ray_count;
     
     //TODO(chen): testing parallel rendering
-#if 1
+#if 0
+    
     int total_thread_count = 8;
     void *render_data_voids[8] = {};
     
@@ -246,11 +247,11 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
         render_datas[i].current_thread_index = i;
         render_data_voids[i] = &render_datas[i];
     }
-
     for (int i = 0; i < total_thread_count; ++i)
     {
         render_screen_partial(render_data_voids[i]);
     }
+    
 #else
     for (int32 slice_index = 0; slice_index < ray_count; ++slice_index)
     {

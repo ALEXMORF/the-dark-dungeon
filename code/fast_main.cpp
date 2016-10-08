@@ -23,7 +23,6 @@
 
 #define show_error(message) MessageBoxA(0, message, "ERROR", MB_OK|MB_ICONERROR)
 
-#define pi32 3.1415926f
 global_variable LARGE_INTEGER global_performance_frequency;
 global_variable SDL_Thread *global_threads[8];
 
@@ -152,12 +151,10 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                                                            SDL_PIXELFORMAT_ARGB8888,
                                                            SDL_TEXTUREACCESS_STREAMING,
                                                            buffer_width, buffer_height);
-    
-#if 0
-    int32 sample_count_per_frame = sample_frequency / target_frame_per_second;
+
+    int32 sample_count_per_frame = audio_sample_frequency / target_frame_per_second;
     bool32 sound_is_playing = false;
-    sdl_initialize_audio(audio_sample_frequency, sample_count_per_frame);
-#endif
+    sdl_initialize_audio(audio_sample_frequency, (uint16)sample_count_per_frame);
  
     QueryPerformanceFrequency(&global_performance_frequency);
     timeBeginPeriod(1);
@@ -185,6 +182,11 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     game_buffer.height = buffer_height;
     game_buffer.pitch = buffer_width * bytes_per_pixel;
     game_buffer.memory = VirtualAlloc(0, game_buffer.width * game_buffer.height * bytes_per_pixel, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+
+    Game_Sound_Buffer game_sound_buffer = {};
+    game_sound_buffer.sample_count = sample_count_per_frame;
+    game_sound_buffer.byte_per_sample = 16 / 8;
+    game_sound_buffer.memory = VirtualAlloc(0, game_sound_buffer.sample_count * game_sound_buffer.byte_per_sample, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
     
     Game_Code game_code = {};
     win32_load_game_code(&game_code);
@@ -230,7 +232,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                     auto key_code = sdl_event.key.keysym.sym;
                     auto *keyboard = &game_input.keyboard;
                     
-                    #define bind_key(sdl_key, game_key) if (key_code == sdl_key) game_key = sdl_event.key.state == SDL_PRESSED;
+#define bind_key(sdl_key, game_key) if (key_code == sdl_key) game_key = sdl_event.key.state == SDL_PRESSED;
                     bind_key(SDLK_a, keyboard->left);
                     bind_key(SDLK_d, keyboard->right);
                     bind_key(SDLK_w, keyboard->up);
@@ -290,10 +292,30 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         game_input.mouse.dy = mouse_dy;
         game_input.dt_per_frame = ms_per_frame / 1000.0f;
         
+        uint32 bytes_to_write = game_sound_buffer.sample_count * 2 * game_sound_buffer.byte_per_sample;
+        
+        //NOTE(chen): determine if skip current frame's sound to clear the latency
+        bool skip_current_sound_frame = false;
+        if (SDL_GetQueuedAudioSize(1) > bytes_to_write)
+        {
+            skip_current_sound_frame = true;
+        }
+        
         if (window_is_active)
         {
             SDL_WarpMouseInWindow(sdl_window, window_width/2, window_height/2);
             game_code.game_update_and_render(&game_memory, &game_input, &game_buffer);
+
+            if (!skip_current_sound_frame)
+            {
+                game_code.game_process_sound(&game_memory, &game_sound_buffer);
+                SDL_QueueAudio(1, game_sound_buffer.memory, bytes_to_write);
+                if (!sound_is_playing)
+                {
+                    SDL_PauseAudio(0);
+                    sound_is_playing = true;
+                }
+            }
         }
 
         SDL_UpdateTexture(sdl_offscreen_texture, 0, (uint32 *)game_buffer.memory, game_buffer.pitch);

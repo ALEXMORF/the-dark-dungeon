@@ -273,9 +273,11 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
 extern "C" GAME_PROCESS_SOUND(game_process_sound)
 {
+    Game_State *game_state = (Game_State *)memory->permanent_storage;
+    
     int32 sample_per_second = 48000;
     int16 tone_hz = 256;
-    int16 tone_volume = 500;
+    int16 tone_volume = 1000;
 
     uint32 sine_wave_period = sample_per_second / tone_hz;
 
