@@ -55,6 +55,23 @@ struct Player
     real32 weapon_cd_counter;
 };
 
+struct Audio_Task
+{
+    Loaded_Audio *loaded_audio;
+    int32 current_position;
+    bool is_finished;
+};
+
+#define AUDIO_TASK_MAX 20
+struct Audio_Task_List
+{
+    Audio_Task content[AUDIO_TASK_MAX];
+    int32 length;
+
+    void add_task(Loaded_Audio *audio);
+    void remove_task(int index);
+};
+
 struct Game_State
 {
     //memory
@@ -67,7 +84,7 @@ struct Game_State
     Entity_List entity_list;
     Entity *currently_aimed_entity;
     
-    //asset
+    //bitmap asset
     Texture_List wall_textures;
     Loaded_Image floor_texture;
     Loaded_Image ceiling_texture;
@@ -77,7 +94,13 @@ struct Game_State
     Loaded_Image_Sheet guard_texture_sheet;
     Loaded_Image_Sheet ss_texture_sheet;
     Loaded_Image_Sheet weapon_texture_sheet;
+
+    //audio asset
+    Loaded_Audio pistol_sound;
     
     //render
     Render_Context render_context;
+
+    //sound
+    Audio_Task_List audio_task_list;
 };

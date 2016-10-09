@@ -38,3 +38,10 @@ struct Texture_List
     int32 count;
 };
 
+struct Loaded_Audio
+{
+    void *memory;
+    int32 channels;
+    int32 byte_per_sample;
+    uint32 byte_size;
+};

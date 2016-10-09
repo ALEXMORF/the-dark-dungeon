@@ -54,7 +54,8 @@ linear_allocate(Linear_Allocator *allocator, uint32 wanted_size)
 //Game Code
 
 inline void
-load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image)
+load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
+            Platform_Load_Audio *platform_load_audio)
 {
 #define Load_Wall_Tex(index, filename)                                  \
     game_state->wall_textures.E[index] = load_image(platform_load_image, filename)
@@ -94,6 +95,8 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image)
     game_state->ss_texture_sheet.stride_offset = 1;
     game_state->ss_texture_sheet.image_width = 63;
     game_state->ss_texture_sheet.image_height = 63;
+
+    game_state->pistol_sound = load_audio(platform_load_audio, "../data/pistol.wav");
 }
 
 inline void
@@ -180,7 +183,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         game_state->entity_list.content = Push_Array(&game_state->permanent_allocator, game_state->entity_list.capacity, Entity);
         fill_entities(&game_state->entity_list);
         
-        load_assets(game_state, memory->platform_load_image);
+        load_assets(game_state, memory->platform_load_image, memory->platform_load_audio);
         
         Render_Context *render_context = &game_state->render_context;
         render_context->z_buffer = Push_Array(&game_state->permanent_allocator, buffer->width, real32);
@@ -198,6 +201,12 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     game_state->transient_allocator.used = 0;
     
     simulate_world(game_state, input);
+
+    //output sound
+    if (game_state->player.has_fired)
+    {
+        game_state->audio_task_list.add_task(&game_state->pistol_sound);
+    }
     
     //
     //
@@ -271,10 +280,87 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     }
 }
 
+//////////////////////////////////////////////////
+// Sound stuff
+//////////////////////////////////////////////////
+void Audio_Task_List::add_task(Loaded_Audio *loaded_audio)
+{
+    assert(length < AUDIO_TASK_MAX);
+    
+    content[length].loaded_audio = loaded_audio;
+    content[length].current_position = 0;
+    content[length].is_finished = false;
+    ++length;
+}
+
+void Audio_Task_List::remove_task(int index)
+{
+    assert(index >= 0 && index < AUDIO_TASK_MAX);
+    assert(length > 0);
+    
+    content[index] = content[--length];
+}
+
 extern "C" GAME_PROCESS_SOUND(game_process_sound)
 {
     Game_State *game_state = (Game_State *)memory->permanent_storage;
+    Audio_Task_List *audio_task_list = &game_state->audio_task_list;
+    real32 audio_volume = 0.5f;
+        
+    //clear buffer
+    {
+        int16 *sample_out = (int16 *)buffer->memory;
+            for (int i = 0; i < buffer->sample_count; ++i)
+        {
+            *sample_out++ = 0;
+            *sample_out++ = 0;
+        }
+    }
     
+    for (int i = 0; i < audio_task_list->length; ++i)
+    {
+        //grab stuff
+        Audio_Task *current_task = &audio_task_list->content[i];
+        Loaded_Audio *current_audio = current_task->loaded_audio;
+        
+        //safety check output format
+        assert(current_audio->channels == 2);
+        assert(current_audio->byte_per_sample == 2);
+        
+        //advance current task cursor and calculate amount of samples to write
+        int16 *audio_samples = ((int16 *)current_audio->memory +
+                                (current_task->current_position*current_audio->channels));
+        int32 samples_to_write = buffer->sample_count;
+        int32 sample_count = current_audio->byte_size / current_audio->byte_per_sample / 2;
+        int32 samples_left = sample_count - current_task->current_position;
+        if (samples_left < samples_to_write)
+        {
+            samples_to_write = samples_left;
+            current_task->is_finished = true;
+        }
+        current_task->current_position += samples_to_write;
+        
+        //TODO(chen):clip/interpolate the sound when it exceeds 16 bit
+        int16 *sample_out = (int16 *)buffer->memory;
+        for (int sample_index = 0; sample_index < samples_to_write; ++sample_index)
+        {
+            *sample_out++ += (int16)(*audio_samples++ * audio_volume);
+            *sample_out++ += (int16)(*audio_samples++ * audio_volume);
+        }
+    }
+
+    //remove finished tasks
+    for (int i = 0; i < audio_task_list->length; ++i)
+    {
+        if (audio_task_list->content[i].is_finished)
+        {
+            audio_task_list->remove_task(i);
+            --i;
+        }
+    }
+    
+    //sine wave generation
+#if 0    
     int32 sample_per_second = 48000;
     int16 tone_hz = 256;
     int16 tone_volume = 1000;
@@ -294,4 +380,5 @@ extern "C" GAME_PROCESS_SOUND(game_process_sound)
         *sample_out++ = sample_value;
         *sample_out++ = sample_value;
     }
+#endif
 }

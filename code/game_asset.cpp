@@ -80,3 +80,11 @@ extract_image_from_sheet(Loaded_Image_Sheet *sheet, int32 image_x, int32 image_y
         
     return result;
 }
+
+inline Loaded_Audio
+load_audio(Platform_Load_Audio *platform_load_audio, char *filename)
+{
+    Loaded_Audio result = {};
+    result.memory = platform_load_audio(filename, &result.channels, &result.byte_per_sample, &result.byte_size);
+    return result;
+}

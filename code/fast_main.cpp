@@ -110,6 +110,44 @@ sdl_initialize_audio(int32 samples_per_second, uint16 buffer_size)
     SDL_OpenAudio(&sdl_audio_spec, 0);
 }
 
+internal void *
+sdl_load_audio(char *filename, int *channels, int *byte_per_sample, uint32 *byte_size)
+{
+    uint8 *audio_memory = 0;  
+    SDL_AudioSpec sdl_audio_spec = {};
+    SDL_LoadWAV(filename, &sdl_audio_spec, &audio_memory, byte_size);
+
+    *channels = sdl_audio_spec.channels;
+    switch (sdl_audio_spec.format)
+    {
+        case AUDIO_S8:
+        case AUDIO_U8:
+        {
+            *byte_per_sample = 1;
+        } break;
+        case AUDIO_S16LSB:
+        case AUDIO_S16MSB:
+        case AUDIO_U16LSB:
+        case AUDIO_U16MSB:
+        {
+            *byte_per_sample = 2;
+        } break;
+        case AUDIO_S32LSB:
+        case AUDIO_S32MSB:
+        case AUDIO_F32LSB:
+        case AUDIO_F32MSB:
+        {
+            *byte_per_sample = 4;
+        } break;
+        default:
+        {
+            assert(!"unknown audio format");
+        };
+    }
+        
+    return audio_memory;
+}
+
 void eight_async_proc(platform_thread_fn *fn, void *data[8])
 {
     global_threads[0] = SDL_CreateThread(fn, "thread_0", data[0]);
@@ -139,7 +177,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     uint32 transient_game_memory_size = megabytes(128);
     int32 target_frame_per_second = 60;
     bool32 frame_rate_lock = true;
-    
+
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_Window *sdl_window = SDL_CreateWindow("The Dark Dungeon",
                                           SDL_WINDOWPOS_CENTERED,
@@ -151,11 +189,11 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                                                            SDL_PIXELFORMAT_ARGB8888,
                                                            SDL_TEXTUREACCESS_STREAMING,
                                                            buffer_width, buffer_height);
-
+    
     int32 sample_count_per_frame = audio_sample_frequency / target_frame_per_second;
     bool32 sound_is_playing = false;
     sdl_initialize_audio(audio_sample_frequency, (uint16)sample_count_per_frame);
- 
+    
     QueryPerformanceFrequency(&global_performance_frequency);
     timeBeginPeriod(1);
     
@@ -167,10 +205,12 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     game_memory.transient_storage = ((uint8 *)game_memory.permanent_storage + permanent_game_memory_size);
     game_memory.platform_load_image = stbi_load;
     game_memory.platform_free_image = stbi_image_free;
+    game_memory.platform_load_audio = sdl_load_audio;
     game_memory.platform_allocate_memory = malloc;
     game_memory.platform_eight_async_proc = eight_async_proc;
     assert(game_memory.platform_load_image);
     assert(game_memory.platform_free_image);
+    assert(game_memory.platform_load_audio);
     assert(game_memory.platform_allocate_memory);
     assert(game_memory.platform_eight_async_proc);
     
