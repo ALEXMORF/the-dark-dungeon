@@ -14,9 +14,9 @@ things I implemented:
  8. set up internal entity clock (9/20/2016)
  9. basic AI (9/21/2016)
  10. Faster platform layer with SDL (9/23/2016)
-
+ 11. Asnychronous sound playback with task-based system (10/8/2016)
+ 
 TODO List: 
- 1. asynchronous sound playback
  2. a very robust asset loading routine
  3. procedurally generated map
  4. expanded entity types (enemies, decoratives, ammo, health packs, tc)
