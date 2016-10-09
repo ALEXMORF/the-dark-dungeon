@@ -16,6 +16,7 @@
 #include "game_render.h"
 #include "game_sprite.h"
 #include "game_raycaster.h"
+#include "game_audio.h"
 
 #include "game_entity.h"
 #include "game_simulate.h"
@@ -55,24 +56,6 @@ struct Player
     real32 weapon_cd_counter;
 };
 
-struct Audio_Task
-{
-    Loaded_Audio *loaded_audio;
-    int32 current_position;
-    bool is_finished;
-    bool is_looping;
-};
-
-#define AUDIO_TASK_MAX 20
-struct Audio_Task_List
-{
-    Audio_Task content[AUDIO_TASK_MAX];
-    int32 length;
-
-    void add_task(Loaded_Audio *audio);
-    void remove_task(int index);
-};
-
 struct Game_State
 {
     //memory
@@ -104,6 +87,6 @@ struct Game_State
     //render
     Render_Context render_context;
 
-    //sound
+    //audio system
     Audio_Task_List audio_task_list;
 };

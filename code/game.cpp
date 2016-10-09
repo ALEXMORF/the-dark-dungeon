@@ -14,6 +14,7 @@
 #include "game_render.cpp"
 #include "game_sprite.cpp"
 #include "game_raycaster.cpp"
+#include "game_audio.cpp"
 
 #include "game_entity.cpp"
 #include "game_simulate.cpp"
@@ -122,7 +123,7 @@ initialize_player(Player *player)
     player->collision_radius = 0.3f;
     player->weapon_animation_index = 1;
     player->weapon = pistol;
-    player->weapon_cd = 0.5f;
+    player->weapon_cd = 0.3f;
 }
                  
 //
@@ -197,12 +198,9 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             render_context->floorcast_table[i] = (real32)buffer->height / (2*real_scan_y - buffer->height);
         }
 
-#if 1  
-        //NOTE(chen): loop background music
         Audio_Task_List *audio_task_list = &game_state->audio_task_list;
-        audio_task_list->add_task(&game_state->background_music);
-        audio_task_list->content[audio_task_list->length-1].is_looping = true;
-#endif
+        audio_task_list->push_task_looped(&game_state->background_music);
+
         memory->is_initialized = true;
     }
     game_state->transient_allocator.used = 0;
@@ -212,7 +210,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //output sound
     if (game_state->player.has_fired)
     {
-        game_state->audio_task_list.add_task(&game_state->pistol2_sound);
+        game_state->audio_task_list.push_task(&game_state->pistol2_sound);
     }
     
     //
@@ -290,23 +288,6 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 //////////////////////////////////////////////////
 // Sound stuff
 //////////////////////////////////////////////////
-void Audio_Task_List::add_task(Loaded_Audio *loaded_audio)
-{
-    assert(length < AUDIO_TASK_MAX);
-    
-    content[length].loaded_audio = loaded_audio;
-    content[length].current_position = 0;
-    content[length].is_finished = false;
-    ++length;
-}
-
-void Audio_Task_List::remove_task(int index)
-{
-    assert(index >= 0 && index < AUDIO_TASK_MAX);
-    assert(length > 0);
-    
-    content[index] = content[--length];
-}
 
 extern "C" GAME_PROCESS_SOUND(game_process_sound)
 {
@@ -316,10 +297,9 @@ extern "C" GAME_PROCESS_SOUND(game_process_sound)
         
     //clear buffer
     {
-        int16 *sample_out = (int16 *)buffer->memory;
-            for (int i = 0; i < buffer->sample_count; ++i)
+        int32 *sample_out = (int32 *)buffer->memory;
+        for (int i = 0; i < buffer->sample_count; ++i)
         {
-            *sample_out++ = 0;
             *sample_out++ = 0;
         }
     }
@@ -329,23 +309,25 @@ extern "C" GAME_PROCESS_SOUND(game_process_sound)
         //grab stuff
         Audio_Task *current_task = &audio_task_list->content[i];
         Loaded_Audio *current_audio = current_task->loaded_audio;
-        
+        int16 *audio_samples = ((int16 *)current_audio->memory +
+                                (current_task->current_position*current_audio->channels));
+
         //safety check output format
         assert(current_audio->channels == 2 || current_audio->channels == 1);
         assert(current_audio->byte_per_sample == 2);
         
         //advance current task cursor and calculate amount of samples to write
-        int16 *audio_samples = ((int16 *)current_audio->memory +
-                                (current_task->current_position*current_audio->channels));
         int32 samples_to_write = buffer->sample_count;
-        int32 sample_count = current_audio->byte_size / current_audio->byte_per_sample / 2;
-        int32 samples_left = sample_count - current_task->current_position;
-        if (samples_left < samples_to_write)
         {
-            samples_to_write = samples_left;
-            current_task->is_finished = true;
+            int32 sample_count = current_audio->byte_size / current_audio->byte_per_sample / 2;
+            int32 samples_left = sample_count - current_task->current_position;
+            if (samples_left < samples_to_write)
+            {
+                samples_to_write = samples_left;
+                current_task->is_finished = true;
+            }
+            current_task->current_position += samples_to_write;
         }
-        current_task->current_position += samples_to_write;
         
         //TODO(chen):clip/interpolate the sound when it exceeds 16 bit
         //TODO(chen):interploate for audio clips that are lower than 44.1k sample frequency
