@@ -1,9 +1,3 @@
-/*
-  TODO LIST:
-  
-  1. async sound playback
-  
- */
 #include "game_platform.h"
 
 #include <stdio.h>

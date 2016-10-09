@@ -60,6 +60,7 @@ struct Audio_Task
     Loaded_Audio *loaded_audio;
     int32 current_position;
     bool is_finished;
+    bool is_looping;
 };
 
 #define AUDIO_TASK_MAX 20
@@ -97,6 +98,8 @@ struct Game_State
 
     //audio asset
     Loaded_Audio pistol_sound;
+    Loaded_Audio pistol2_sound;
+    Loaded_Audio background_music;
     
     //render
     Render_Context render_context;

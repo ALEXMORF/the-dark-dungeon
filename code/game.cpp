@@ -3,7 +3,6 @@
  
  1. Procedure map generation
  2. Robust asset loading routine
- 3. Async sound playback API with platform layer
  
  */
 #include "game.h"
@@ -97,6 +96,8 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
     game_state->ss_texture_sheet.image_height = 63;
 
     game_state->pistol_sound = load_audio(platform_load_audio, "../data/pistol.wav");
+    game_state->pistol2_sound = load_audio(platform_load_audio, "../data/pistol2.wav");
+    game_state->background_music = load_audio(platform_load_audio, "../data/background1.wav");
 }
 
 inline void
@@ -195,7 +196,13 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             real32 real_scan_y = ((real32)buffer->height/2 + (real32)i / inverse_aspect_ratio);
             render_context->floorcast_table[i] = (real32)buffer->height / (2*real_scan_y - buffer->height);
         }
-        
+
+        //NOTE(chen): loop background music
+#if 0
+        Audio_Task_List *audio_task_list = &game_state->audio_task_list;
+        audio_task_list->add_task(&game_state->background_music);
+        audio_task_list->content[audio_task_list->length-1].is_looping = true;
+#endif        
         memory->is_initialized = true;
     }
     game_state->transient_allocator.used = 0;
@@ -205,7 +212,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //output sound
     if (game_state->player.has_fired)
     {
-        game_state->audio_task_list.add_task(&game_state->pistol_sound);
+        game_state->audio_task_list.add_task(&game_state->pistol2_sound);
     }
     
     //
@@ -324,7 +331,7 @@ extern "C" GAME_PROCESS_SOUND(game_process_sound)
         Loaded_Audio *current_audio = current_task->loaded_audio;
         
         //safety check output format
-        assert(current_audio->channels == 2);
+        assert(current_audio->channels == 2 || current_audio->channels == 1);
         assert(current_audio->byte_per_sample == 2);
         
         //advance current task cursor and calculate amount of samples to write
@@ -341,44 +348,46 @@ extern "C" GAME_PROCESS_SOUND(game_process_sound)
         current_task->current_position += samples_to_write;
         
         //TODO(chen):clip/interpolate the sound when it exceeds 16 bit
+        //TODO(chen):interploate for audio clips that are lower than 44.1k sample frequency
         int16 *sample_out = (int16 *)buffer->memory;
         for (int sample_index = 0; sample_index < samples_to_write; ++sample_index)
         {
-            *sample_out++ += (int16)(*audio_samples++ * audio_volume);
-            *sample_out++ += (int16)(*audio_samples++ * audio_volume);
+            if (current_audio->channels == 2)
+            {
+                *sample_out++ += (int16)(*audio_samples++ * audio_volume);
+                *sample_out++ += (int16)(*audio_samples++ * audio_volume);
+            }
+            else if (current_audio->channels == 1)
+            {
+                *sample_out++ += (int16)(*audio_samples * audio_volume);
+                *sample_out++ += (int16)(*audio_samples * audio_volume);
+                ++audio_samples;
+            }
+            else
+            {
+                assert(!"unexpected channel count");
+            }
         }
     }
 
     //remove finished tasks
     for (int i = 0; i < audio_task_list->length; ++i)
     {
-        if (audio_task_list->content[i].is_finished)
+        Audio_Task *current_task = &audio_task_list->content[i];
+        if (current_task->is_finished)
         {
-            audio_task_list->remove_task(i);
-            --i;
+            if (current_task->is_looping) //if looping, reset the task to beginning
+            {
+                current_task->is_finished = false;
+                current_task->current_position = 0;
+            }
+            else //else, discard task
+            {
+                audio_task_list->remove_task(i);
+                --i;
+            }
         }
     }
-    
-    //sine wave generation
-#if 0    
-    int32 sample_per_second = 48000;
-    int16 tone_hz = 256;
-    int16 tone_volume = 1000;
 
-    uint32 sine_wave_period = sample_per_second / tone_hz;
-
-    int16 *sample_out = (int16 *)buffer->memory;
-    for (int i = 0; i < buffer->sample_count; ++i)
-    {
-        real32 sine_percentage = (real32)buffer->running_sample_index++ / (real32)sine_wave_period;
-        if (buffer->running_sample_index > sine_wave_period)
-        {
-            buffer->running_sample_index -= sine_wave_period;
-        }
-        
-        int16 sample_value = (int16)(sinf(sine_percentage * pi32 * 2) * tone_volume);
-        *sample_out++ = sample_value;
-        *sample_out++ = sample_value;
-    }
-#endif
+    ++buffer->running_sample_index;
 }
