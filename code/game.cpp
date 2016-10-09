@@ -197,12 +197,12 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             render_context->floorcast_table[i] = (real32)buffer->height / (2*real_scan_y - buffer->height);
         }
 
+#if 1  
         //NOTE(chen): loop background music
-#if 0
         Audio_Task_List *audio_task_list = &game_state->audio_task_list;
         audio_task_list->add_task(&game_state->background_music);
         audio_task_list->content[audio_task_list->length-1].is_looping = true;
-#endif        
+#endif
         memory->is_initialized = true;
     }
     game_state->transient_allocator.used = 0;
