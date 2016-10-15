@@ -17,10 +17,12 @@ things I implemented:
  11. Asnychronous sound playback with task-based system (10/8/2016)
  
 TODO List: 
- 2. a very robust asset loading routine
- 3. procedurally generated map
- 4. expanded entity types (enemies, decoratives, ammo, health packs, tc)
- 5. multithreaded renderer 
+ 1. apply effects like shadow, fog, etc. 
+ 2. destructable obstacles. 
+ 3. refine the sound engine 
+ 4. a very robust asset loading routine
+ 5. procedurally generated map
+ 6. expanded entity types (enemies, decoratives, ammo, health packs, tc)
  
 things to test out: global game event queue(?)
 
