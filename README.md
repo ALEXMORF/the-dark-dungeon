@@ -20,7 +20,7 @@ TODO List:
  1. apply effects like shadow, fog, etc. 
  2. destructable obstacles. 
  3. refine the sound engine 
- 4. a very robust asset loading routine
+ 4. canonicalize asset loading routine
  5. procedurally generated map
  6. expanded entity types (enemies, decoratives, ammo, health packs, tc)
  
