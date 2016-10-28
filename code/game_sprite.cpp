@@ -107,13 +107,22 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
             {
                 real32 prepare_period = 0.3f;
 
-                int32 x_index = 1;
-                if (entity->clock.timer[entity->state] < prepare_period)
+                //get variant
+                Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
+
+                if (aiming_state->firing_animation_cd > 0)
                 {
-                    x_index = 0;
+                    result = extract_image_from_sheet(&game_state->guard_texture_sheet, 2, 6);
                 }
-                
-                result = extract_image_from_sheet(&game_state->guard_texture_sheet, x_index, 6);
+                else
+                {
+                    int32 x_index = 1;
+                    if (entity->clock.timer[entity->state] < prepare_period)
+                    {
+                        x_index = 0;
+                    }
+                    result = extract_image_from_sheet(&game_state->guard_texture_sheet, x_index, 6);
+                }
             }
             else
             {
@@ -151,14 +160,21 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
             {
                 real32 prepare_period = 0.2f;
                 
-                int32 x_index = 1;
-                
-                if (entity->clock.timer[entity->state] < prepare_period)
-                {
-                    x_index = 0;
-                }
+                Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
 
-                result = extract_image_from_sheet(&game_state->ss_texture_sheet, x_index, 6);
+                if (aiming_state->firing_animation_cd > 0)
+                {
+                    result = extract_image_from_sheet(&game_state->ss_texture_sheet, 2, 6);
+                }
+                else
+                {
+                    int32 x_index = 1;
+                    if (entity->clock.timer[entity->state] < prepare_period)
+                    {
+                        x_index = 0;
+                    }
+                    result = extract_image_from_sheet(&game_state->ss_texture_sheet, x_index, 6);
+                }
             }
             else 
             {

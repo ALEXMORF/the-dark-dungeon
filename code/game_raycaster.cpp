@@ -220,39 +220,6 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
     real32 left_most_angle = view_angle + projection_spec.fov/2.0f;
     real32 delta_angle = projection_spec.fov / (real32)ray_count;
     
-    //TODO(chen): testing parallel rendering
-#if 0
-    
-    int total_thread_count = 8;
-    void *render_data_voids[8] = {};
-    
-    Render_Data render_datas[8] = {};
-    render_datas[0].buffer = buffer;
-    render_datas[0].render_context = render_context;
-    render_datas[0].tile_map = tile_map;
-    render_datas[0].position = position;
-    render_datas[0].view_angle = view_angle;
-    render_datas[0].floor_texture = floor_texture;
-    render_datas[0].ceiling_texture = ceiling_texture;
-    render_datas[0].wall_textures = wall_textures;
-    render_datas[0].projection_spec = &projection_spec;
-    render_datas[0].world_spec = &world_spec;
-    render_datas[0].thread_count = total_thread_count;
-    for (int i = 0; i < 8; ++i)
-    {
-        if (i != 0)
-        {
-            render_datas[i] = render_datas[0];
-        }
-        render_datas[i].current_thread_index = i;
-        render_data_voids[i] = &render_datas[i];
-    }
-    for (int i = 0; i < total_thread_count; ++i)
-    {
-        render_screen_partial(render_data_voids[i]);
-    }
-    
-#else
     for (int32 slice_index = 0; slice_index < ray_count; ++slice_index)
     {
         real32 angle = left_most_angle - delta_angle*slice_index;
@@ -281,7 +248,7 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
                                            modff(reflection.hit_position.x, &tile_size):
                                            modff(reflection.hit_position.y, &tile_size));
             int32 texture_x = (int32)(texture_x_percentage * (wall_texture->width - 1));
-
+            
             Shader_Fn *shader = (reflection.x_side_faced? 0: darken);
             copy_slice(buffer, wall_texture, texture_x, slice_index,
                        wall_top, wall_slice_height, shader);
@@ -322,7 +289,6 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
             }
         } 
     } 
-#endif
     
     //sprite rendering routine polishment
     for (int32 i = 0; i < sprite_count; ++i)

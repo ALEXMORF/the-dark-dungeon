@@ -15,6 +15,7 @@ enum Entity_State
     walking_state,
     hurting_state,
     aiming_state,
+    shooting_state,
     death_state,
     entity_state_count
 };
@@ -36,9 +37,11 @@ struct Entity
     real32 angle;
     real32 collision_radius;
     
-    //stats
     int32 hp;
-    bool32 just_shot;
+    bool32 just_got_shot;
+
+    bool variant_block_is_initialized;
+    Memory variant_block;
 };
 
 struct Entity_List
@@ -48,3 +51,12 @@ struct Entity_List
     int32 capacity;
 };
 
+//states
+struct Aiming_State
+{
+    real32 allowed_firing_interval;
+    real32 firing_timer;
+    real32 allowed_firing_animation_cd;
+    real32 firing_animation_cd;
+    bool just_fired;
+};

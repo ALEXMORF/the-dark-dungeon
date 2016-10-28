@@ -92,6 +92,7 @@ enter_state(Entity *entity, Entity_State next_state, real32 timer)
 {
     entity->state = next_state;
     entity->clock.timer[entity->state] = timer;
+    entity->variant_block_is_initialized = false;
 }
 
 inline bool32
@@ -113,39 +114,44 @@ search_player(Tile_Map *tile_map, Entity *entity, v2 player_position, real32 fov
 //
 
 internal void
-tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_position, real32 dt)
+tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 player_position, real32 dt)
 {
     Entity_Clock *clock = &entity->clock;
-    real32 hurting_state_interval = 0.3f;
+    real32 hurting_state_interval = 0.1f;
     real32 waiting_state_interval = 1.5f;
+    real32 firing_state_interval = 0.3f;
+    real32 fire_preparing_interval = 0.22f;
     real32 fov = pi32 / 3.0f;
     
     if (entity->hp > 0)
     {
         //prestate processing stage
-        if (entity->just_shot)
+        if (entity->just_got_shot)
         {
             enter_state(entity, hurting_state, hurting_state_interval);
         }
 
         //state processing stage
         bool32 clock_ends = (clock->timer[entity->state] == 0.0f);
+        bool32 clock_ticks_forward = false;
         switch (entity->state)
         {
             case hurting_state:
             {
                 if (clock_ends)
                 {
-                    entity->angle = get_angle(damage_source_position - entity->position);
+                    entity->angle = get_angle(player_position - entity->position);
                     enter_state(entity, waiting_state, waiting_state_interval);
                 }
             } break;
-
+            
             case walking_state:
             {
+                clock_ticks_forward = true;
+                
                 bool32 not_initialized = clock->timer[entity->state] == 0.0f;
                 
-                if (search_player(tile_map, entity, damage_source_position, fov))
+                if (search_player(tile_map, entity, player_position, fov))
                 {
                     enter_state(entity, aiming_state, 0.0f);
                 }
@@ -165,13 +171,11 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
                 {
                     enter_state(entity, waiting_state, waiting_state_interval);
                 }
-
-                clock->timer[entity->state] += dt*2.0f;
             } break;
-
+            
             case waiting_state:
             {
-                if (search_player(tile_map, entity, damage_source_position, fov))
+                if (search_player(tile_map, entity, player_position, fov))
                 {
                     enter_state(entity, aiming_state, 0.0f);
                 }
@@ -183,18 +187,68 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
 
             case aiming_state:
             {
-                entity->angle = get_angle(damage_source_position - entity->position);
+                clock_ticks_forward = true;
+                
+                assert(sizeof(Aiming_State) <= entity->variant_block.size);
+                Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
+                if (!entity->variant_block_is_initialized)
+                {
+                    //startup code
+                    switch (entity->type)
+                    {
+                        case guard:
+                        {
+                            aiming_state->allowed_firing_interval = 1.5f;
+                        } break;
+
+                        case ss:
+                        {
+                            aiming_state->allowed_firing_interval = 1.0f;
+                        } break;
+                    }
+                    aiming_state->allowed_firing_animation_cd = 0.2f;
+                    aiming_state->firing_animation_cd = 0.0f;
+                    aiming_state->firing_timer = 0.0f;
+
+                    entity->variant_block_is_initialized = true;
+                }
+
+                //scan for player
+                entity->angle = get_angle(player_position - entity->position);
                 recanonicalize_angle(&entity->angle);
-                if (!search_player(tile_map, entity, damage_source_position, fov))
+                if (!search_player(tile_map, entity, player_position, fov))
                 {
                     enter_state(entity, walking_state, 0.0f);
                 }
-
-                clock->timer[entity->state] += 2.0f * dt;
+                
+                //firing system
+                aiming_state->firing_timer += dt;
+                if (aiming_state->firing_timer > aiming_state->allowed_firing_interval)
+                {
+                    aiming_state->firing_timer -= aiming_state->allowed_firing_interval;
+                    aiming_state->just_fired = true;
+                    aiming_state->firing_animation_cd = aiming_state->allowed_firing_animation_cd;
+                }
+                else
+                {
+                    aiming_state->just_fired = false;
+                    if (aiming_state->firing_animation_cd > 0)
+                    {
+                        aiming_state->firing_animation_cd =
+                            reduce(aiming_state->firing_animation_cd, dt);
+                    }
+                }
             } break;
         }
 
-        clock->timer[entity->state] = reduce(clock->timer[entity->state], dt);
+        if (clock_ticks_forward)
+        {
+            clock->timer[entity->state] += dt;
+        }
+        else
+        {
+            clock->timer[entity->state] = reduce(clock->timer[entity->state], dt);
+        }
     }
     else
     {
@@ -202,7 +256,7 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 damage_source_positi
         clock->timer[death_state] += dt;
     }
 
-    entity->just_shot = false;
+    entity->just_got_shot = false;
 }
 
 //
@@ -241,7 +295,7 @@ simulate_world(Game_State *game_state, Game_Input *input)
         {
             Entity *entity_shot = game_state->currently_aimed_entity;
             --entity_shot->hp;
-            entity_shot->just_shot = true;
+            entity_shot->just_got_shot = true;
         }
     }
 }

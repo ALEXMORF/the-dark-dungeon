@@ -1,18 +1,19 @@
 #include "game_audio.h"
 
-void Audio_Task_List::push_task(Loaded_Audio *loaded_audio)
+void Audio_Task_List::push_task(Loaded_Audio *loaded_audio, real32 volume)
 {
     assert(length < AUDIO_TASK_MAX);
     
     content[length].loaded_audio = loaded_audio;
     content[length].current_position = 0;
+    content[length].volume = volume;
     content[length].is_finished = false;
     ++length;
 }
 
-void Audio_Task_List::push_task_looped(Loaded_Audio *loaded_audio)
+void Audio_Task_List::push_task_looped(Loaded_Audio *loaded_audio, real32 volume)
 {
-    push_task(loaded_audio);
+    push_task(loaded_audio, volume);
     content[length-1].is_looping = true;
 }
 

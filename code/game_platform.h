@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <string.h>
 #include <math.h>
 typedef uint8_t uint8;
 typedef uint16_t uint16;
@@ -44,12 +45,17 @@ typedef PLATFORM_PLAY_SOUND(Platform_Play_Sound);
 
 typedef int platform_thread_fn(void *data);
 typedef void Platform_Eight_Async_Proc(platform_thread_fn *fn, void *data[8]);
+
+struct Memory
+{
+    void *storage;
+    uint32 size;
+};
+
 struct Game_Memory
 {
-    void *permanent_storage;
-    uint32 permanent_storage_size;
-    void *transient_storage;
-    uint32 transient_storage_size;
+    Memory permanent_memory;
+    Memory transient_memory;
 
     bool32 is_initialized;
 

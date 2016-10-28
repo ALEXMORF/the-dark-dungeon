@@ -3,7 +3,25 @@
 inline uint32
 darken(uint32 original)
 {
-    return ((original >> 1) & 0x7F7F7F);
+    return (original >> 1) & 8355711;
+}
+
+inline uint32
+pixel_shift(uint32 original, real32 ratio)
+{
+    uint32 result;
+    
+    uint8 red = (uint8)((original & 0x00FF0000) >> 16);
+    uint8 green = (uint8)((original & 0x0000FF00) >> 8);
+    uint8 blue = (uint8)(original & 0x000000FF);
+    uint8 alpha = (uint8)((original & 0xFF000000) >> 24);
+    red = (uint8)(red * ratio);
+    green = (uint8)(green * ratio);
+    blue = (uint8)(blue * ratio);
+
+    result = (alpha << 24) | (red << 16) | (green << 8) | blue;
+    
+    return result;
 }
 
 internal void
@@ -88,7 +106,7 @@ draw_rectangle(Game_Offscreen_Buffer *buffer,
 internal void
 copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
            int32 source_x, int32 dest_x, int32 dest_y, int32 dest_height,
-           Shader_Fn *shader = 0)
+           Shader_Fn *shader = 0, real32 shader_ratio = 0.5f, real32 pixel_shifter = 1.0f)
 {
     
     if (dest_x >= 0 && dest_x < buffer->width)
@@ -128,11 +146,11 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
             {
                 if (shader)
                 {
-                    *dest_pixel = shader(source_value);
+                    *dest_pixel = shader(pixel_shift(source_value, pixel_shifter));
                 }
                 else
                 {
-                    *dest_pixel = source_value;
+                    *dest_pixel = pixel_shift(source_value, pixel_shifter);
                 }
             }
             source_y += mapper;

@@ -1,14 +1,19 @@
 /*
  *TODO LIST:
- 
- 1. Procedure map generation
- 2. Robust asset loading routine
+
+ 1. Add audio to enemy's shooting
+ 2. Fix the audio engine's clipping issue
+ 3. Fix the audio engine's temporal issue (place it on a separate thread)
+ 4. Fix the sprite generation duplicate code 
+ 5. Procedure map generation
+ 6. Robust asset loading routine
  
  */
 #include "game.h"
  
 #include "game_math.cpp"
 #include "game_tiles.cpp"
+#include "game_memory.cpp"
 
 #include "game_asset.cpp"
 #include "game_render.cpp"
@@ -18,36 +23,6 @@
 
 #include "game_entity.cpp"
 #include "game_simulate.cpp"
-
-#define Copy_Array(source, dest, count, type) copy_memory(source, dest, count*sizeof(type))
-inline void
-copy_memory(void *source_in, void *dest_in, uint32 size)
-{
-    uint8 *source = (uint8 *)source_in;
-    uint8 *dest = (uint8 *)dest_in;
-    for (uint32 i = 0; i < size; ++i)
-    {
-        dest[i] = source[i];
-    }
-}
-
-inline void
-initialize_linear_allocator(Linear_Allocator *allocator, void *base_ptr, uint32 size)
-{
-    allocator->base_ptr = (uint8 *)base_ptr;
-    allocator->size = size;
-    allocator->used = 0;
-}
-
-#define Push_Array(allocator, array_length, type) (type *)linear_allocate(allocator, array_length*sizeof(type))
-inline void *
-linear_allocate(Linear_Allocator *allocator, uint32 wanted_size)
-{
-    assert(allocator->used + wanted_size <= allocator->size);
-    void *result = (uint8 *)allocator->base_ptr + allocator->used;
-    allocator->used += wanted_size;
-    return result;
-}
 
 //
 //
@@ -102,17 +77,17 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
 }
 
 inline void
-fill_entities(Entity_List *entity_list)
+fill_entities(Linear_Allocator *allocator, Entity_List *entity_list)
 {
-    add_entity(entity_list, make_dynamic_entity(guard, {6.0f, 15.5f}));
-    add_entity(entity_list, make_dynamic_entity(guard, {15.0f, 7.0f}, pi32));
-    add_entity(entity_list, make_dynamic_entity(guard, {6.0f, 7.0f}));
-    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 6.0f}, pi32));
-    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 8.0f}, pi32));
-    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 9.0f}));
-    add_entity(entity_list, make_dynamic_entity(ss, {15.0f, 15.0f}, pi32));
-    add_entity(entity_list, make_dynamic_entity(ss, {14.0f, 15.0f}));
-    add_entity(entity_list, make_dynamic_entity(ss, {16.0f, 15.0f}));
+    add_entity(entity_list, make_dynamic_entity(allocator, guard, {6.0f, 15.5f}));
+    add_entity(entity_list, make_dynamic_entity(allocator, guard, {15.0f, 7.0f}, pi32));
+    add_entity(entity_list, make_dynamic_entity(allocator, guard, {6.0f, 7.0f}));
+    add_entity(entity_list, make_dynamic_entity(allocator, ss, {15.0f, 6.0f}, pi32));
+    add_entity(entity_list, make_dynamic_entity(allocator, ss, {15.0f, 8.0f}, pi32));
+    add_entity(entity_list, make_dynamic_entity(allocator, ss, {15.0f, 9.0f}));
+    add_entity(entity_list, make_dynamic_entity(allocator, ss, {15.0f, 15.0f}, pi32));
+    add_entity(entity_list, make_dynamic_entity(allocator, ss, {14.0f, 15.0f}));
+    add_entity(entity_list, make_dynamic_entity(allocator, ss, {16.0f, 15.0f}));
 }
 
 internal void
@@ -122,33 +97,28 @@ initialize_player(Player *player)
     player->angle = 0.0f;
     player->collision_radius = 0.3f;
     player->weapon_animation_index = 1;
-    player->weapon = pistol;
+    player->weapon_type = pistol;
     player->weapon_cd = 0.3f;
 }
-                 
-//
-//
-//Brain
+
 extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 {
-    assert(sizeof(Game_State) <= memory->permanent_storage_size);
-    Game_State *game_state = (Game_State *)memory->permanent_storage;
+    assert(sizeof(Game_State) <= memory->permanent_memory.size);
+    Game_State *game_state = (Game_State *)memory->permanent_memory.storage;
     
     if (!memory->is_initialized)
     {
-        //prepare memory allocators
         initialize_linear_allocator(&game_state->permanent_allocator,
-                                    (uint8 *)memory->permanent_storage + sizeof(Game_State),
-                                    memory->permanent_storage_size - sizeof(Game_State));
+                                    (uint8 *)memory->permanent_memory.storage + sizeof(Game_State),
+                                    memory->permanent_memory.size - sizeof(Game_State));
         initialize_linear_allocator(&game_state->transient_allocator,
-                                    (uint8 *)memory->transient_storage,
-                                    memory->transient_storage_size);
+                                    (uint8 *)memory->transient_memory.storage,
+                                    memory->transient_memory.size);
         
-        //game
 //TODO(chen): this is some improv tile-map init code, replace this with procedural generation later
 #define map_width 20
 #define map_height 20
-        uint32 tiles[map_width*map_height] =
+        uint32 temp_tiles[map_width*map_height] =
             {
                 3, 3, 3, 3, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1,
                 3, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
@@ -177,13 +147,13 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         tile_map->exception_tile_value = 1;
         int32 tile_count = tile_map->tile_count_x * tile_map->tile_count_y;
         tile_map->tiles = Push_Array(&game_state->permanent_allocator, tile_count, uint32);
-        Copy_Array(tiles, tile_map->tiles, tile_count, uint32);
+        Copy_Array(temp_tiles, tile_map->tiles, tile_count, uint32);
 
         initialize_player(&game_state->player);
 
         game_state->entity_list.capacity = ENTITY_COUNT_LIMIT;
         game_state->entity_list.content = Push_Array(&game_state->permanent_allocator, game_state->entity_list.capacity, Entity);
-        fill_entities(&game_state->entity_list);
+        fill_entities(&game_state->permanent_allocator, &game_state->entity_list);
         
         load_assets(game_state, memory->platform_load_image, memory->platform_load_audio);
         
@@ -216,9 +186,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //
     //
     //Render game
-    
     fill_buffer(buffer, 0);
-
+    
     Sprite_List sprite_list = {};
     sprite_list.capacity = game_state->entity_list.capacity;
     sprite_list.content = Push_Array(&game_state->transient_allocator, sprite_list.capacity, Sprite);
@@ -231,7 +200,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                                                          game_state->player.position,
                                                          game_state->player.angle, 
                                                          &game_state->floor_texture,
-                                                         0, 
+                                                         &game_state->ceiling_texture,
                                                          &game_state->wall_textures,
                                                          sprite_list.content, sprite_list.count,
                                                          memory->platform_eight_async_proc);
@@ -239,7 +208,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //animate first-person weapon
     {
         Player *player = &game_state->player;
-        
+ 
         real32 animation_cycle = player->weapon_cd - 0.02f;
         real32 animation_index_count = 4.0f;
         int32 animation_ending_index = 1;
@@ -270,10 +239,10 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         int32 weapon_upper_left = bob_x + (buffer->width - (int32)weapon_sprite_size.x) / 2;
         int32 weapon_upper_top = 0 + bob_y;
         int32 weapon_lower_right = weapon_upper_left + (int32)weapon_sprite_size.x;
-
+        
         Loaded_Image weapon_image = extract_image_from_sheet(&game_state->weapon_texture_sheet,
                                                              game_state->player.weapon_animation_index,
-                                                             game_state->player.weapon);
+                                                             game_state->player.weapon_type);
         real32 texture_x = 0.0f;
         real32 texture_mapper = (real32)weapon_image.width / weapon_sprite_size.x;
         for (int32 dest_x = weapon_upper_left; dest_x < weapon_lower_right; ++dest_x)
@@ -285,15 +254,11 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     }
 }
 
-//////////////////////////////////////////////////
-// Sound stuff
-//////////////////////////////////////////////////
-
 extern "C" GAME_PROCESS_SOUND(game_process_sound)
 {
-    Game_State *game_state = (Game_State *)memory->permanent_storage;
+    Game_State *game_state = (Game_State *)memory->permanent_memory.storage;
     Audio_Task_List *audio_task_list = &game_state->audio_task_list;
-    real32 audio_volume = 0.5f;
+    real32 master_audio_volume = 0.5f;
         
     //clear buffer
     {
@@ -332,18 +297,19 @@ extern "C" GAME_PROCESS_SOUND(game_process_sound)
         //TODO(chen):clip/interpolate the sound when it exceeds 16 bit
         //TODO(chen):interploate for audio clips that are lower than 44.1k sample frequency
         int16 *sample_out = (int16 *)buffer->memory;
+        real32 volume = master_audio_volume * current_task->volume;
         for (int sample_index = 0; sample_index < samples_to_write; ++sample_index)
         {
+            *sample_out++ += (int16)(*audio_samples * volume);
+            *sample_out++ += (int16)(*audio_samples * volume);
+
             if (current_audio->channels == 2)
             {
-                *sample_out++ += (int16)(*audio_samples++ * audio_volume);
-                *sample_out++ += (int16)(*audio_samples++ * audio_volume);
+                audio_samples += 2;
             }
             else if (current_audio->channels == 1)
             {
-                *sample_out++ += (int16)(*audio_samples * audio_volume);
-                *sample_out++ += (int16)(*audio_samples * audio_volume);
-                ++audio_samples;
+                audio_samples += 1;
             }
             else
             {
@@ -358,12 +324,12 @@ extern "C" GAME_PROCESS_SOUND(game_process_sound)
         Audio_Task *current_task = &audio_task_list->content[i];
         if (current_task->is_finished)
         {
-            if (current_task->is_looping) //if looping, reset the task to beginning
+            if (current_task->is_looping) 
             {
                 current_task->is_finished = false;
                 current_task->current_position = 0;
             }
-            else //else, discard task
+            else 
             {
                 audio_task_list->remove_task(i);
                 --i;

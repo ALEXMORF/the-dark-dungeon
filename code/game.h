@@ -11,6 +11,7 @@
 #include "game_constraint.h"
 #include "game_math.h"
 #include "game_tiles.h"
+#include "game_memory.h"
 
 #include "game_asset.h"
 #include "game_render.h"
@@ -20,13 +21,6 @@
 
 #include "game_entity.h"
 #include "game_simulate.h"
-
-struct Linear_Allocator
-{
-    uint8 *base_ptr;
-    uint32 size;
-    uint32 used;
-};
 
 enum Weapon_Type
 {
@@ -50,7 +44,7 @@ struct Player
     bool32 has_fired;
     
     //weapon handling
-    Weapon_Type weapon;
+    Weapon_Type weapon_type;
     int32 weapon_animation_index;
     real32 weapon_cd;
     real32 weapon_cd_counter;

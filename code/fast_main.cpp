@@ -170,6 +170,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     uint32 permanent_game_memory_size = megabytes(64);
     uint32 transient_game_memory_size = megabytes(128);
     int32 target_frame_per_second = 60;
+    real32 audio_latency_ms = (1000.0f / target_frame_per_second); //in ms
     bool32 frame_rate_lock = true;
 
     SDL_Init(SDL_INIT_EVERYTHING);
@@ -184,7 +185,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                                                            SDL_TEXTUREACCESS_STREAMING,
                                                            buffer_width, buffer_height);
     
-    int32 sample_count_per_frame = audio_sample_frequency / target_frame_per_second;
+    int32 sample_count_per_frame = (int32)(audio_sample_frequency * (audio_latency_ms / 1000.0f));
     bool32 sound_is_playing = false;
     sdl_initialize_audio(audio_sample_frequency, (uint16)sample_count_per_frame);
     
@@ -192,11 +193,11 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     timeBeginPeriod(1);
     
     Game_Memory game_memory = {};
-    game_memory.permanent_storage_size = permanent_game_memory_size;
-    game_memory.transient_storage_size = transient_game_memory_size;
+    game_memory.permanent_memory.size = permanent_game_memory_size;
+    game_memory.transient_memory.size = transient_game_memory_size;
     uint32 total_game_memory_size = permanent_game_memory_size + transient_game_memory_size;
-    game_memory.permanent_storage = VirtualAlloc(0, total_game_memory_size, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
-    game_memory.transient_storage = ((uint8 *)game_memory.permanent_storage + permanent_game_memory_size);
+    game_memory.permanent_memory.storage = VirtualAlloc(0, total_game_memory_size, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+    game_memory.transient_memory.storage = ((uint8 *)game_memory.permanent_memory.storage + permanent_game_memory_size);
     game_memory.platform_load_image = stbi_load;
     game_memory.platform_free_image = stbi_image_free;
     game_memory.platform_load_audio = sdl_load_audio;
@@ -220,7 +221,8 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     Game_Sound_Buffer game_sound_buffer = {};
     game_sound_buffer.sample_count = sample_count_per_frame;
     game_sound_buffer.byte_per_sample = 16 / 8;
-    game_sound_buffer.memory = VirtualAlloc(0, game_sound_buffer.sample_count * game_sound_buffer.byte_per_sample, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+    int32 channel_count = 2;
+    game_sound_buffer.memory = VirtualAlloc(0, game_sound_buffer.sample_count * game_sound_buffer.byte_per_sample * channel_count, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
     
     Game_Code game_code = {};
     win32_load_game_code(&game_code);
