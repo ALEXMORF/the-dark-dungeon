@@ -15,6 +15,7 @@ things I implemented:
  9. basic AI (9/21/2016)
  10. Faster platform layer with SDL (9/23/2016)
  11. Asnychronous sound playback with task-based system (10/8/2016)
+ 12. One variant memory block per entity, added enemies' firing state (10/28/2016)
  
 TODO List: 
  1. apply effects like shadow, fog, etc. 
