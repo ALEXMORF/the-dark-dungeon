@@ -206,7 +206,7 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 player_position, rea
                             aiming_state->allowed_firing_interval = 1.0f;
                         } break;
                     }
-                    aiming_state->allowed_firing_animation_cd = 0.2f;
+                    aiming_state->allowed_firing_animation_cd = 0.1f;
                     aiming_state->firing_animation_cd = 0.0f;
                     aiming_state->firing_timer = 0.0f;
 
@@ -234,8 +234,7 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 player_position, rea
                     aiming_state->just_fired = false;
                     if (aiming_state->firing_animation_cd > 0)
                     {
-                        aiming_state->firing_animation_cd =
-                            reduce(aiming_state->firing_animation_cd, dt);
+                        aiming_state->firing_animation_cd = reduce(aiming_state->firing_animation_cd, dt);
                     }
                 }
             } break;

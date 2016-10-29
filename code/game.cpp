@@ -1,12 +1,13 @@
 /*
  *TODO LIST:
 
- 1. Add audio to enemy's shooting
+ 1. Have a smooth outro (fading black screen)
  2. Fix the audio engine's clipping issue
  3. Fix the audio engine's temporal issue (place it on a separate thread)
  4. Fix the sprite generation duplicate code 
  5. Procedure map generation
- 6. Robust asset loading routine
+ 6. add ui and multiple game states
+ 7. Robust asset loading routine
  
  */
 #include "game.h"
@@ -176,11 +177,23 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     game_state->transient_allocator.used = 0;
     
     simulate_world(game_state, input);
-
+    
     //output sound
     if (game_state->player.has_fired)
     {
-        game_state->audio_task_list.push_task(&game_state->pistol2_sound);
+        game_state->audio_task_list.push_task(&game_state->pistol2_sound, 1.0f);
+    }
+    for (int i = 0; i < game_state->entity_list.count; ++i)
+    {
+        Entity *entity = (Entity *)&game_state->entity_list.content[i];
+        if (entity->state == aiming_state)
+        {
+            Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
+            if (aiming_state->just_fired)
+            {
+                game_state->audio_task_list.push_task(&game_state->pistol_sound, 0.3f);
+            }
+        }
     }
     
     //
