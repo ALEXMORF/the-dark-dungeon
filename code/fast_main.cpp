@@ -172,8 +172,20 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     int32 target_frame_per_second = 60;
     real32 audio_latency_ms = (1000.0f / target_frame_per_second) + 1; //in ms
     bool32 frame_rate_lock = true;
-
+    
     SDL_Init(SDL_INIT_EVERYTHING);
+
+    SDL_version compiled_version = {};
+    SDL_version linked_version = {};
+    SDL_VERSION(&compiled_version);
+    SDL_GetVersion(&linked_version);
+    if (linked_version.major != compiled_version.major ||
+        linked_version.minor != compiled_version.minor ||
+        linked_version.patch != compiled_version.patch)
+    {
+        show_error("your SDL runtime binary and SDL static library have different versions, play at your own caution");
+    }
+
     SDL_Window *sdl_window = SDL_CreateWindow("The Dark Dungeon",
                                           SDL_WINDOWPOS_CENTERED,
                                           SDL_WINDOWPOS_CENTERED,
@@ -395,7 +407,23 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         OutputDebugStringA(debug_buffer);
 #endif
     }
-
+    SDL_PauseAudio(1);
+    
+    //NOTE(chen):only builds with SDL2.0.5, purely for asthetic bullshit
+    if (compiled_version.major >= 2 && linked_version.major >= 2 &&
+        compiled_version.minor >= 0 && linked_version.minor >= 0 &&
+        compiled_version.patch >= 5 && compiled_version.patch >= 5)
+    {
+        real32 window_opacity = 1.0f;
+        real32 window_opacity_dec_rate = 0.05f;
+        while (window_opacity > window_opacity_dec_rate)
+        {
+            window_opacity -= window_opacity_dec_rate;
+            SDL_SetWindowOpacity(sdl_window, window_opacity);
+            Sleep(20);
+        }
+    }
+    
     SDL_CloseAudio();
     SDL_DestroyWindow(sdl_window);
     SDL_DestroyRenderer(sdl_renderer);
