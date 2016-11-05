@@ -175,22 +175,22 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     
     SDL_Init(SDL_INIT_EVERYTHING);
 
-    SDL_version compiled_version = {};
-    SDL_version linked_version = {};
-    SDL_VERSION(&compiled_version);
-    SDL_GetVersion(&linked_version);
-    if (linked_version.major != compiled_version.major ||
-        linked_version.minor != compiled_version.minor ||
-        linked_version.patch != compiled_version.patch)
+    SDL_version sdl_compiled_version = {};
+    SDL_version sdl_linked_version = {};
+    SDL_VERSION(&sdl_compiled_version);
+    SDL_GetVersion(&sdl_linked_version);
+    if (sdl_linked_version.major != sdl_compiled_version.major ||
+        sdl_linked_version.minor != sdl_compiled_version.minor ||
+        sdl_linked_version.patch != sdl_compiled_version.patch)
     {
         show_error("your SDL runtime binary and SDL static library have different versions, play at your own caution");
     }
 
     SDL_Window *sdl_window = SDL_CreateWindow("The Dark Dungeon",
-                                          SDL_WINDOWPOS_CENTERED,
-                                          SDL_WINDOWPOS_CENTERED,
-                                          window_width, window_height,
-                                          0);
+                                              100,
+                                              SDL_WINDOWPOS_CENTERED,
+                                              window_width, window_height,
+                                              0);
     SDL_Renderer *sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_PRESENTVSYNC|SDL_RENDERER_ACCELERATED);
     SDL_Texture *sdl_offscreen_texture = SDL_CreateTexture(sdl_renderer,
                                                            SDL_PIXELFORMAT_ARGB8888,
@@ -410,9 +410,9 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     SDL_PauseAudio(1);
     
     //NOTE(chen):only builds with SDL2.0.5, purely for asthetic bullshit
-    if (compiled_version.major >= 2 && linked_version.major >= 2 &&
-        compiled_version.minor >= 0 && linked_version.minor >= 0 &&
-        compiled_version.patch >= 5 && compiled_version.patch >= 5)
+    if (sdl_compiled_version.major >= 2 && sdl_linked_version.major >= 2 &&
+        sdl_compiled_version.minor >= 0 && sdl_linked_version.minor >= 0 &&
+        sdl_compiled_version.patch >= 5 && sdl_linked_version.patch >= 5)
     {
         real32 window_opacity = 1.0f;
         real32 window_opacity_dec_rate = 0.05f;

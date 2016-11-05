@@ -1,13 +1,16 @@
 /*
  *TODO LIST:
 
- 1. Have a smooth outro (fading black screen)
- 2. Fix the audio engine's clipping issue
- 3. Fix the audio engine's temporal issue (place it on a separate thread)
- 4. Fix the sprite generation duplicate code 
- 5. Procedure map generation
- 6. add ui and multiple game states
- 7. Robust asset loading routine
+ . Fix the audio engine's clipping issue
+ . Fix the audio engine's temporal issue (place it on a separate thread)
+ . Fix the sprite generation duplicate code 
+ . Procedure map generation
+ . add ui and multiple game states
+ . Robust asset loading routine
+
+ TODO LINGERING:
+
+ . A bug where game freezes for 3 seconds then slowly recovers
  
  */
 #include "game.h"
