@@ -30,12 +30,12 @@ player_input_process(Player *player, Game_Input *input)
     {
         player->has_fired = false;
     }
-    
-    real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity;
+
+    real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity; //NOTE(chen): I don't know what this crap is, fix that maybe?
     player->angle += player_delta_angle;
     recanonicalize_angle(&player->angle);
 }
-                       
+
 #define Movement_Search_Wall(tile_map, entity, velocity) movement_search_wall(tile_map, entity->position, velocity, entity->collision_radius)
 internal v2
 movement_search_wall(Tile_Map *tile_map, v2 position, v2 desired_velocity, real32 radius)
@@ -258,10 +258,31 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 player_position, rea
     entity->just_got_shot = false;
 }
 
-//
-//
-//
+internal bool
+line_vs_circle(Line_Segment L, Circle C)
+{
+    v2 a_to_b = L.end - L.start;
+    v2 a_to_c = C.position - L.start;
 
+    real32 a_to_b_theta = get_angle(a_to_b);
+    real32 a_to_c_theta = get_angle(a_to_c);
+    real32 delta_theta = get_angle_diff(a_to_c_theta, a_to_b_theta);
+
+    real32 a_to_c_proj_len = cosf(delta_theta) * len(a_to_c);
+    v2 a_to_c_proj = normalize(a_to_b) * a_to_c_proj_len;
+
+    v2 closest_point = L.start + a_to_c_proj;
+    if (len(C.position - closest_point) <= C.radius)
+    {
+        return true;
+    }
+    return false;
+}
+
+//
+//
+//
+        
 internal void
 simulate_world(Game_State *game_state, Game_Input *input)
 {
@@ -288,6 +309,34 @@ simulate_world(Game_State *game_state, Game_Input *input)
         }
     }
 
+    //check for player being hit by bullets
+    for (int32 i = 0; i < game_state->entity_list.count; ++i)
+    {
+        Entity *entity = &game_state->entity_list.content[i];
+        if (entity->state == aiming_state)
+        {
+            Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
+            if (aiming_state->just_fired)
+            {
+                Line_Segment bullet_line = {};
+                bullet_line.start = entity->position;
+                bullet_line.end = cast_ray(&game_state->tile_map, entity->position, entity->angle).hit_position;
+
+                Circle player_hitbox = {};
+                player_hitbox.position = player->position;
+                player_hitbox.radius = player->collision_radius;
+
+                if (line_vs_circle(bullet_line, player_hitbox))
+                {
+                    if (player->hp > 0)
+                    {
+                        player->hp -= 1;
+                    }
+                }
+            }
+        }
+    }
+    
     if (player->has_fired)
     {
         if (game_state->currently_aimed_entity != 0 && game_state->currently_aimed_entity->hp != 0)

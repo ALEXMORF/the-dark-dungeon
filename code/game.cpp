@@ -1,6 +1,7 @@
 /*
  *TODO LIST:
 
+ . Bitmap font rendering
  . Fix the audio engine's clipping issue
  . Fix the audio engine's temporal issue (place it on a separate thread)
  . Fix the sprite generation duplicate code 
@@ -97,6 +98,8 @@ fill_entities(Linear_Allocator *allocator, Entity_List *entity_list)
 internal void
 initialize_player(Player *player)
 {
+    player->hp = PLAYER_MAX_HP;
+    
     player->position = {3.0f, 3.0f};
     player->angle = 0.0f;
     player->collision_radius = 0.3f;
@@ -267,6 +270,22 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                        (int32)weapon_sprite_size.y, 0);
             texture_x += texture_mapper;
         }
+    }
+
+    //HUD overlay
+    {
+        real32 width_per_hp = (real32)(buffer->width / PLAYER_MAX_HP);
+        real32 lerp_ratio = 5.0f * input->dt_per_frame;
+        real32 hp_count = clamp((real32)game_state->player.hp, 0.0f, (real32)PLAYER_MAX_HP);
+        
+        real32 target_hp_display_width = width_per_hp * hp_count;
+        real32 hp_display_height = 10.0f;
+        game_state->hp_display_width = lerp(game_state->hp_display_width, target_hp_display_width,
+                                            lerp_ratio);
+        
+        draw_rectangle(buffer, 0, 0, buffer->width, (int32)hp_display_height, 0x00555500);
+        draw_rectangle(buffer, 0, 0, (int32)game_state->hp_display_width,
+                       (int32)hp_display_height, 0x00ffff00);
     }
 }
 

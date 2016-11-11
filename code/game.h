@@ -31,6 +31,8 @@ enum Weapon_Type
     weapon_count
 };
 
+#define PLAYER_MAX_HP 10
+
 struct Player
 {
     //coordniate
@@ -42,6 +44,7 @@ struct Player
 
     //record
     bool32 has_fired;
+    int32 hp;
     
     //weapon handling
     Weapon_Type weapon_type;
@@ -83,4 +86,7 @@ struct Game_State
 
     //audio system
     Audio_Task_List audio_task_list;
+
+    //HUD persistent data
+    real32 hp_display_width;
 };

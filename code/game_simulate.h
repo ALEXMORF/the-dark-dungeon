@@ -10,3 +10,14 @@ struct Aiming_State
     bool just_fired;
 };
 
+struct Line_Segment
+{
+    v2 start;
+    v2 end;
+};
+
+struct Circle
+{
+    v2 position;
+    real32 radius;
+};
