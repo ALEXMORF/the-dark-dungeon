@@ -49,3 +49,6 @@ things to test out: global game event queue(?)
 
  screenshot 7 (9/10/2016)
 ![image](https://cloud.githubusercontent.com/assets/16845654/18414551/8ea1fe62-7782-11e6-9fbd-174f868bc1f5.png)
+
+ screenshot 8 (11/10/2016)
+![image](https://cloud.githubusercontent.com/assets/16845654/20205660/72523014-a78f-11e6-8367-f26a653b72d2.png)
