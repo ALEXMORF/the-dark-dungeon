@@ -16,6 +16,7 @@ things I implemented:
  10. Faster platform layer with SDL (9/23/2016)
  11. Asnychronous sound playback with task-based system (10/8/2016)
  12. One variant memory block per entity, added enemies' firing state (10/28/2016)
+ 13. Real collision detection, player hitpoints visual representation (11/10/2016)
  
 TODO List: 
  1. apply effects like shadow, fog, etc. 
@@ -49,3 +50,6 @@ things to test out: global game event queue(?)
 
  screenshot 7 (9/10/2016)
 ![image](https://cloud.githubusercontent.com/assets/16845654/18414551/8ea1fe62-7782-11e6-9fbd-174f868bc1f5.png)
+
+ screenshot 8 (11/10/2016)
+![image](https://cloud.githubusercontent.com/assets/16845654/20205660/72523014-a78f-11e6-8367-f26a653b72d2.png)
