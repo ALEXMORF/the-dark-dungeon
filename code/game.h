@@ -22,6 +22,8 @@
 #include "game_entity.h"
 #include "game_simulate.h"
 
+#include "game_meta.h"
+
 enum Weapon_Type
 {
     knife,
@@ -62,7 +64,7 @@ struct Game_State
     //game
     Player player;
     Tile_Map tile_map;
-    Entity_List entity_list;
+    DBuffer(Entity) entity_buffer;
     Entity *currently_aimed_entity;
     
     //bitmap asset
@@ -86,7 +88,7 @@ struct Game_State
 
     //audio system
     Audio_Task_List audio_task_list;
-
+    
     //HUD persistent data
     real32 hp_display_width;
 };

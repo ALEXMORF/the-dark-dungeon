@@ -44,10 +44,3 @@ struct Entity
     Memory variant_block;
 };
 
-struct Entity_List
-{
-    Entity *content;
-    int32 count;
-    int32 capacity;
-};
-

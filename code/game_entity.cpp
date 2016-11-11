@@ -1,12 +1,5 @@
 #include "game_entity.h"
 
-internal void
-add_entity(Entity_List *list, Entity entity)
-{
-    assert(list->count+1 < list->capacity);
-    list->content[list->count++] = entity;
-}
-
 inline Entity
 make_static_entity(Entity_Type type, v2 position)
 {

@@ -296,9 +296,9 @@ simulate_world(Game_State *game_state, Game_Input *input)
     }
     player->position += Movement_Search_Wall(&game_state->tile_map, player, player->velocity);
     
-    for (int32 i = 0; i < game_state->entity_list.count; ++i)
+    for (int32 i = 0; i < game_state->entity_buffer.count; ++i)
     {
-        Entity *entity = &game_state->entity_list.content[i];
+        Entity *entity = &game_state->entity_buffer.e[i];
         switch (entity->type)
         {
             case guard:
@@ -310,9 +310,9 @@ simulate_world(Game_State *game_state, Game_Input *input)
     }
 
     //check for player being hit by bullets
-    for (int32 i = 0; i < game_state->entity_list.count; ++i)
+    for (int32 i = 0; i < game_state->entity_buffer.count; ++i)
     {
-        Entity *entity = &game_state->entity_list.content[i];
+        Entity *entity = &game_state->entity_buffer.e[i];
         if (entity->state == aiming_state)
         {
             Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;

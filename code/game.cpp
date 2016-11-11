@@ -82,17 +82,17 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
 }
 
 inline void
-fill_entities(Linear_Allocator *allocator, Entity_List *entity_list)
+fill_entities(Linear_Allocator *allocator, DBuffer(Entity) *entity_buffer)
 {
-    add_entity(entity_list, make_dynamic_entity(allocator, guard, {6.0f, 15.5f}));
-    add_entity(entity_list, make_dynamic_entity(allocator, guard, {15.0f, 7.0f}, pi32));
-    add_entity(entity_list, make_dynamic_entity(allocator, guard, {6.0f, 7.0f}));
-    add_entity(entity_list, make_dynamic_entity(allocator, ss, {15.0f, 6.0f}, pi32));
-    add_entity(entity_list, make_dynamic_entity(allocator, ss, {15.0f, 8.0f}, pi32));
-    add_entity(entity_list, make_dynamic_entity(allocator, ss, {15.0f, 9.0f}));
-    add_entity(entity_list, make_dynamic_entity(allocator, ss, {15.0f, 15.0f}, pi32));
-    add_entity(entity_list, make_dynamic_entity(allocator, ss, {14.0f, 15.0f}));
-    add_entity(entity_list, make_dynamic_entity(allocator, ss, {16.0f, 15.0f}));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, guard, {6.0f, 15.5f}));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, guard, {15.0f, 7.0f}, pi32));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, guard, {6.0f, 7.0f}));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {15.0f, 6.0f}, pi32));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {15.0f, 8.0f}, pi32));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {15.0f, 9.0f}));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {15.0f, 15.0f}, pi32));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {14.0f, 15.0f}));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {16.0f, 15.0f}));
 }
 
 internal void
@@ -158,9 +158,9 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
         initialize_player(&game_state->player);
 
-        game_state->entity_list.capacity = ENTITY_COUNT_LIMIT;
-        game_state->entity_list.content = Push_Array(&game_state->permanent_allocator, game_state->entity_list.capacity, Entity);
-        fill_entities(&game_state->permanent_allocator, &game_state->entity_list);
+        game_state->entity_buffer.capacity = ENTITY_COUNT_LIMIT;
+        game_state->entity_buffer.e = Push_Array(&game_state->permanent_allocator, game_state->entity_buffer.capacity, Entity);
+        fill_entities(&game_state->permanent_allocator, &game_state->entity_buffer);
         
         load_assets(game_state, memory->platform_load_image, memory->platform_load_audio);
         
@@ -189,9 +189,9 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     {
         game_state->audio_task_list.push_task(&game_state->pistol2_sound, 1.0f);
     }
-    for (int i = 0; i < game_state->entity_list.count; ++i)
+    for (int i = 0; i < game_state->entity_buffer.count; ++i)
     {
-        Entity *entity = (Entity *)&game_state->entity_list.content[i];
+        Entity *entity = (Entity *)&game_state->entity_buffer.e[i];
         if (entity->state == aiming_state)
         {
             Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
@@ -208,11 +208,11 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     fill_buffer(buffer, 0);
     
     Sprite_List sprite_list = {};
-    sprite_list.capacity = game_state->entity_list.capacity;
+    sprite_list.capacity = game_state->entity_buffer.capacity;
     sprite_list.content = Push_Array(&game_state->transient_allocator, sprite_list.capacity, Sprite);
 
     //draw 3d scene and sprites
-    generate_sprite_list(game_state, &sprite_list, game_state->entity_list.content, game_state->entity_list.count);
+    generate_sprite_list(game_state, &sprite_list, game_state->entity_buffer.e, game_state->entity_buffer.count);
     sort_sprites(sprite_list.content, sprite_list.count, game_state->player.position);
     game_state->currently_aimed_entity = render_3d_scene(buffer, &game_state->render_context,
                                                          &game_state->tile_map,
@@ -274,18 +274,19 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
     //HUD overlay
     {
-        real32 width_per_hp = (real32)(buffer->width / PLAYER_MAX_HP);
-        real32 lerp_ratio = 5.0f * input->dt_per_frame;
-        real32 hp_count = clamp((real32)game_state->player.hp, 0.0f, (real32)PLAYER_MAX_HP);
+        //hp-bar
+        {
+            real32 width_per_hp = (real32)(buffer->width / PLAYER_MAX_HP);
+            real32 lerp_ratio = 5.0f * input->dt_per_frame;
+            real32 hp_count = clamp((real32)game_state->player.hp, 0.0f, (real32)PLAYER_MAX_HP);
         
-        real32 target_hp_display_width = width_per_hp * hp_count;
-        real32 hp_display_height = 10.0f;
-        game_state->hp_display_width = lerp(game_state->hp_display_width, target_hp_display_width,
-                                            lerp_ratio);
+            real32 target_hp_display_width = width_per_hp * hp_count;
+            real32 hp_display_height = 10.0f;
+            game_state->hp_display_width = lerp(game_state->hp_display_width, target_hp_display_width, lerp_ratio);
         
-        draw_rectangle(buffer, 0, 0, buffer->width, (int32)hp_display_height, 0x00555500);
-        draw_rectangle(buffer, 0, 0, (int32)game_state->hp_display_width,
-                       (int32)hp_display_height, 0x00ffff00);
+            draw_rectangle(buffer, 0, 0, buffer->width, (int32)hp_display_height, 0x00555500);
+            draw_rectangle(buffer, 0, 0, (int32)game_state->hp_display_width, (int32)hp_display_height, 0x00ffff00);
+        }
     }
 }
 
