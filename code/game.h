@@ -78,6 +78,9 @@ struct Game_State
     Loaded_Image_Sheet ss_texture_sheet;
     Loaded_Image_Sheet weapon_texture_sheet;
 
+    //font
+    Loaded_Image_Sheet font_bitmap_sheet;
+    
     //audio asset
     Loaded_Audio pistol_sound;
     Loaded_Audio pistol2_sound;

@@ -8,11 +8,11 @@
  . Procedure map generation
  . add ui and multiple game states
  . Robust asset loading routine
-
+ 
  TODO LINGERING:
 
- . A bug where game freezes for 3 seconds then slowly recovers
- 
+ . A bug where game freezes for 3 seconds then slowly recovers (sometimes even crashes)
+
  */
 #include "game.h"
  
@@ -56,25 +56,16 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
     game_state->light_texture = load_image(platform_load_image, "../data/greenlight.png");
 
     game_state->weapon_texture_sheet = load_image_sheet(platform_load_image, "../data/weapons.png");
-    game_state->weapon_texture_sheet.image_count_x = 5;
-    game_state->weapon_texture_sheet.image_count_y = 5;
-    game_state->weapon_texture_sheet.stride_offset = 1;
-    game_state->weapon_texture_sheet.image_width = 64;
-    game_state->weapon_texture_sheet.image_height = 64;
+    config_image_sheet(&game_state->weapon_texture_sheet, 5, 5, 1, 64, 64);
 
     game_state->guard_texture_sheet = load_image_sheet(platform_load_image, "../data/guard.png");
-    game_state->guard_texture_sheet.image_count_x = 8;
-    game_state->guard_texture_sheet.image_count_y = 7;
-    game_state->guard_texture_sheet.stride_offset = 1;
-    game_state->guard_texture_sheet.image_width = 64;
-    game_state->guard_texture_sheet.image_height = 64;
+    config_image_sheet(&game_state->guard_texture_sheet, 8, 7, 1, 64, 64);
 
     game_state->ss_texture_sheet = load_image_sheet(platform_load_image, "../data/ss.png");
-    game_state->ss_texture_sheet.image_count_x = 8;
-    game_state->ss_texture_sheet.image_count_y = 7;
-    game_state->ss_texture_sheet.stride_offset = 1;
-    game_state->ss_texture_sheet.image_width = 63;
-    game_state->ss_texture_sheet.image_height = 63;
+    config_image_sheet(&game_state->ss_texture_sheet, 8, 7, 1, 63, 63);
+
+    game_state->font_bitmap_sheet = load_image_sheet(platform_load_image, "../data/shiny_font.png");
+    auto_config_image_sheet(&game_state->font_bitmap_sheet, 16, 6);
 
     game_state->pistol_sound = load_audio(platform_load_audio, "../data/pistol.wav");
     game_state->pistol2_sound = load_audio(platform_load_audio, "../data/pistol2.wav");
@@ -287,6 +278,12 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             draw_rectangle(buffer, 0, 0, buffer->width, (int32)hp_display_height, 0x00555500);
             draw_rectangle(buffer, 0, 0, (int32)game_state->hp_display_width, (int32)hp_display_height, 0x00ffff00);
         }
+        
+        //debug info
+        {
+            Loaded_Image debug_info = extract_image_from_sheet(&game_state->font_bitmap_sheet, 0, 1);
+            draw_bitmap(buffer, &debug_info, 100, 100, 125, 125);
+        }
     }
 }
 
@@ -294,7 +291,7 @@ extern "C" GAME_PROCESS_SOUND(game_process_sound)
 {
     Game_State *game_state = (Game_State *)memory->permanent_memory.storage;
     Audio_Task_List *audio_task_list = &game_state->audio_task_list;
-    real32 master_audio_volume = 0.5f;
+    real32 master_audio_volume = 0.1f;
         
     //clear buffer
     {

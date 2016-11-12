@@ -70,7 +70,7 @@ extract_image_from_sheet(Loaded_Image_Sheet *sheet, int32 image_x, int32 image_y
     
     int32 x_offset = image_x * (sheet->image_width + sheet->stride_offset);
     int32 y_offset = image_y * (sheet->image_height + sheet->stride_offset);
-
+    
     Loaded_Image result = {};
     result.data = sheet->data + (x_offset * sheet->bytes_per_pixel) + (y_offset * sheet->pitch);
     result.width = sheet->image_width;
@@ -79,6 +79,28 @@ extract_image_from_sheet(Loaded_Image_Sheet *sheet, int32 image_x, int32 image_y
     result.pitch = sheet->pitch;
         
     return result;
+}
+
+inline void
+config_image_sheet(Loaded_Image_Sheet *sheet, int32 image_count_x, int32 image_count_y,
+                   uint32 stride_offset, int32 image_width, int32 image_height)
+{
+    sheet->image_count_x = image_count_x;
+    sheet->image_count_y = image_count_y;
+    sheet->stride_offset = stride_offset;
+    sheet->image_width = image_width;
+    sheet->image_height = image_height;
+}
+
+//NOTE(chen): samething as config, but automatically deduce each image dimension
+//            stride_offset always assumed to be 0 
+inline void
+auto_config_image_sheet(Loaded_Image_Sheet *sheet, int32 image_count_x, int32 image_count_y)
+{
+    int32 stride_offset = 0;
+    int32 image_width = sheet->width / image_count_x;
+    int32 image_height = sheet->height / image_count_y;
+    config_image_sheet(sheet, image_count_x, image_count_y, stride_offset, image_width, image_height);
 }
 
 inline Loaded_Audio

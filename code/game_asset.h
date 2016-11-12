@@ -25,7 +25,7 @@ struct Loaded_Image_Sheet
     //as a sheet spec
     int32 image_count_x;
     int32 image_count_y;
-
+    
     uint32 stride_offset;
     
     int32 image_width;

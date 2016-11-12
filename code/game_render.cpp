@@ -95,7 +95,7 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
     {
         int32 bytes_per_pixel = 4;
         uint32 *source_pixel = (uint32 *)loaded_image->data + source_x;
- 
+        
         real32 mapper = (real32)loaded_image->height / (real32)dest_height;
         real32 source_y = 0.0f;
 
@@ -142,3 +142,59 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
     }
 }
            
+internal void
+draw_bitmap(Game_Offscreen_Buffer *buffer, Loaded_Image *bitmap, int32 min_x, int32 min_y,
+            int32 max_x, int32 max_y)
+{
+    if_do(min_x < 0, min_x = 0);
+    if_do(min_y < 0, min_y = 0);
+    if_do(max_x > buffer->width, max_x = buffer->width);
+    if_do(max_y > buffer->height, max_y = buffer->height);
+
+    real32 image_height = (real32)max_y - (real32)min_y;
+    real32 image_width = (real32)max_x - (real32)min_x;
+    
+    real32 image_to_bitmap_x = (real32)bitmap->width / image_width;
+    real32 image_to_bitmap_y = (real32)bitmap->height / image_height;
+    
+    uint32 *dest_ptr = (uint32 *)buffer->memory + min_x + min_y * buffer->width;
+    uint8 *src_ptr = bitmap->data;
+    
+    real32 bitmap_y = 0.0f;
+    for (int y = min_y; y < max_y; ++y)
+    {
+        uint32 *dest_ptr_w = (uint32 *)dest_ptr;
+
+        real32 bitmap_x = 0.0f;
+        for (int x = min_x; x < max_x; ++x)
+        {
+            uint8 *current_src_ptr = src_ptr + (int32)roundf(bitmap_x) * bitmap->bytes_per_pixel + (int32)roundf(bitmap_y) * bitmap->pitch;
+            
+            uint32 dest_value = *dest_ptr_w;
+            uint32 src_value = *(uint32 *)current_src_ptr;
+            
+            uint8 old_R = (uint8)((dest_value & red_mask) >> 16);
+            uint8 old_G = (uint8)((dest_value & green_mask) >> 8);
+            uint8 old_B = (uint8)((dest_value & blue_mask) >> 0);
+
+            uint8 new_A = (uint8)((src_value & alpha_mask) >> 24);
+            uint8 new_R = (uint8)((src_value & red_mask) >> 16);
+            uint8 new_G = (uint8)((src_value & green_mask) >> 8);
+            uint8 new_B = (uint8)((src_value & blue_mask) >> 0);
+            
+            real32 A = (real32)new_A / 255.0f;
+
+            uint8 R = (uint8)((1.0f - A) * (real32)old_R + A * (real32)new_R);
+            uint8 G = (uint8)((1.0f - A) * (real32)old_G + A * (real32)new_G);
+            uint8 B = (uint8)((1.0f - A) * (real32)old_B + A * (real32)new_B);
+            
+            *dest_ptr_w++ = (uint32)((R << 16) | (G << 8) | B);
+
+            bitmap_x += image_to_bitmap_x;
+        }
+        
+        dest_ptr += buffer->width;
+
+        bitmap_y += image_to_bitmap_y;
+    }
+}

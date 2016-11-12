@@ -187,7 +187,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     }
 
     SDL_Window *sdl_window = SDL_CreateWindow("The Dark Dungeon",
-                                              100,
+                                              SDL_WINDOWPOS_CENTERED,
                                               SDL_WINDOWPOS_CENTERED,
                                               window_width, window_height,
                                               0);
