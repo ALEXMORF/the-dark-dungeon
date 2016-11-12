@@ -268,7 +268,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         //hp-bar
         {
             real32 width_per_hp = (real32)(buffer->width / PLAYER_MAX_HP);
-            real32 lerp_ratio = 5.0f * input->dt_per_frame;
+            real32 lerp_ratio = 3.0f * input->dt_per_frame;
             real32 hp_count = clamp((real32)game_state->player.hp, 0.0f, (real32)PLAYER_MAX_HP);
         
             real32 target_hp_display_width = width_per_hp * hp_count;
@@ -276,7 +276,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             game_state->hp_display_width = lerp(game_state->hp_display_width, target_hp_display_width, lerp_ratio);
         
             draw_rectangle(buffer, 0, 0, buffer->width, (int32)hp_display_height, 0x00555500);
-            draw_rectangle(buffer, 0, 0, (int32)game_state->hp_display_width, (int32)hp_display_height, 0x00ffff00);
+            draw_rectangle(buffer, 0, 0, (int32)target_hp_display_width, (int32)hp_display_height, 0x00ffff00);
+            draw_rectangle(buffer, (int32)target_hp_display_width, 0, (int32)game_state->hp_display_width, (int32)hp_display_height, 0x00ff0000);
         }
         
         //debug info
