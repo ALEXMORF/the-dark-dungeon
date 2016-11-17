@@ -21,7 +21,8 @@ load_image(Platform_Load_Image *platform_load_image, char *filename)
         swap(pixel_components[0], pixel_components[2]);
         pixel_components += bytes_per_pixel;
     }
-    
+
+    assert(result.data);
     return result;
 }
 
@@ -47,6 +48,7 @@ load_image_sheet(Platform_Load_Image *platform_load_image, char *filename)
         pixel_components += bytes_per_pixel;
     }
 
+    assert(result.data);
     return result;
 }
 

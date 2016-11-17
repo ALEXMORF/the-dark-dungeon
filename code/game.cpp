@@ -2,6 +2,7 @@
  *TODO LIST:
 
  . Bitmap font rendering
+ . Compress code with Def_Buffer macro
  . Fix the audio engine's clipping issue
  . Fix the audio engine's temporal issue (place it on a separate thread)
  . Fix the sprite generation duplicate code 
@@ -64,8 +65,8 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
     game_state->ss_texture_sheet = load_image_sheet(platform_load_image, "../data/ss.png");
     config_image_sheet(&game_state->ss_texture_sheet, 8, 7, 1, 63, 63);
 
-    game_state->font_bitmap_sheet = load_image_sheet(platform_load_image, "../data/shiny_font.png");
-    auto_config_image_sheet(&game_state->font_bitmap_sheet, 16, 6);
+    game_state->font_bitmap_sheet = load_image_sheet(platform_load_image, "../data/font_8x8.png");
+    auto_config_image_sheet(&game_state->font_bitmap_sheet, 77, 1);
 
     game_state->pistol_sound = load_audio(platform_load_audio, "../data/pistol.wav");
     game_state->pistol2_sound = load_audio(platform_load_audio, "../data/pistol2.wav");
@@ -282,8 +283,11 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         
         //debug info
         {
-            Loaded_Image debug_info = extract_image_from_sheet(&game_state->font_bitmap_sheet, 0, 1);
-            draw_bitmap(buffer, &debug_info, 100, 100, 125, 125);
+            for (int i = 8; i < 30; ++i)
+            {
+                Loaded_Image debug_info = extract_image_from_sheet(&game_state->font_bitmap_sheet, i, 0);
+                draw_bitmap(buffer, &debug_info, 100 + 25 * i, 100, 125 + 25 * i, 125);
+            }
         }
     }
 }
@@ -292,7 +296,7 @@ extern "C" GAME_PROCESS_SOUND(game_process_sound)
 {
     Game_State *game_state = (Game_State *)memory->permanent_memory.storage;
     Audio_Task_List *audio_task_list = &game_state->audio_task_list;
-    real32 master_audio_volume = 0.1f;
+    real32 master_audio_volume = 0.3f;
         
     //clear buffer
     {
