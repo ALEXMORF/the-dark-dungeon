@@ -243,6 +243,8 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         show_error("game code loading failure");
         return -1;
     }
+
+    Debug_State debug_state = {};
     
     uint64 last_tsc = __rdtsc();
         
@@ -352,7 +354,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         if (window_is_active)
         {
             SDL_WarpMouseInWindow(sdl_window, window_width/2, window_height/2);
-            game_code.game_update_and_render(&game_memory, &game_input, &game_buffer);
+            game_code.game_update_and_render(&game_memory, &game_input, &game_buffer, &debug_state);
 
             if (!skip_current_sound_frame)
             {
@@ -406,6 +408,9 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                  elapsed_ms, ms_took_to_process, mtsc);
         OutputDebugStringA(debug_buffer);
 #endif
+
+        debug_state.last_frame_process_time = ms_took_to_process;
+        debug_state.last_frame_mtsc = mtsc;
     }
     SDL_PauseAudio(1);
     

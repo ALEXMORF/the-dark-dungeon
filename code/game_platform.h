@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 #include <math.h>
 typedef uint8_t uint8;
 typedef uint16_t uint16;
@@ -102,7 +103,13 @@ struct Game_Input
     real32 dt_per_frame;
 };
 
-#define GAME_UPDATE_AND_RENDER(name) void name(Game_Memory *memory, Game_Input *input, Game_Offscreen_Buffer *buffer)
+struct Debug_State
+{
+    real32 last_frame_process_time;
+    uint64 last_frame_mtsc;
+};
+
+#define GAME_UPDATE_AND_RENDER(name) void name(Game_Memory *memory, Game_Input *input, Game_Offscreen_Buffer *buffer, Debug_State *debug_state)
 typedef GAME_UPDATE_AND_RENDER(Game_Update_And_Render);
 #define GAME_PROCESS_SOUND(name) void name(Game_Memory *memory, Game_Sound_Buffer *buffer)
 typedef GAME_PROCESS_SOUND(Game_Process_Sound);

@@ -88,7 +88,7 @@ struct Game_State
     
     //render
     Render_Context render_context;
-
+    
     //audio system
     Audio_Task_List audio_task_list;
     

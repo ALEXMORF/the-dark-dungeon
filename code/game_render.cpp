@@ -168,7 +168,7 @@ draw_bitmap(Game_Offscreen_Buffer *buffer, Loaded_Image *bitmap, int32 min_x, in
         real32 bitmap_x = 0.0f;
         for (int x = min_x; x < max_x; ++x)
         {
-            uint8 *current_src_ptr = src_ptr + (int32)roundf(bitmap_x) * bitmap->bytes_per_pixel + (int32)roundf(bitmap_y) * bitmap->pitch;
+            uint8 *current_src_ptr = src_ptr + (int32)floorf(bitmap_x) * bitmap->bytes_per_pixel + (int32)floorf(bitmap_y) * bitmap->pitch;
             
             uint32 dest_value = *dest_ptr_w;
             uint32 src_value = *(uint32 *)current_src_ptr;

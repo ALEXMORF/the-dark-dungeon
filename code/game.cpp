@@ -100,6 +100,64 @@ initialize_player(Player *player)
     player->weapon_cd = 0.3f;
 }
 
+inline int
+get_string_length(char *str)
+{
+    int result = 0;
+    while (*str++)
+    {
+        result += 1;
+    }
+    return result;
+}
+
+inline int
+get_font_index(char character)
+{
+    if (character >= 'a' && character <= 'z')
+    {
+        character += 'A' - 'a';
+    }
+    assert(character >= '(' && character <= 'Z');
+    
+    char initial_character = '(';
+    int start_index_offset = 8;
+    
+    return start_index_offset + (character - initial_character);
+}
+
+#define draw_string(buffer, font_sheet, min_x, min_y, max_x, max_y, string_format, ...) \
+    {                                                                   \
+    char str_buffer[50] = {};                                               \
+    snprintf(str_buffer, sizeof(str_buffer), string_format, ##__VA_ARGS__); \
+    _draw_string(buffer, font_sheet, str_buffer, min_x, min_y, max_x, max_y); \
+    }
+internal void
+_draw_string(Game_Offscreen_Buffer *buffer, Loaded_Image_Sheet *font_sheet, char *string, int min_x, int min_y, int max_x, int max_y)
+{
+    if_do(min_x < 0, min_x = 0);
+    if_do(min_y < 0, min_y = 0);
+    if_do(max_x > buffer->width, max_x = buffer->width);
+    if_do(max_y > buffer->height, max_y = buffer->height);
+
+    int string_length = get_string_length(string);
+    int bitmap_width = (int32)(((real32)max_x - min_x) / string_length);
+
+    for (int i = 0; i < string_length; ++i)
+    {
+        if (string[i] == ' ')
+        {
+            continue;
+        }
+        
+        int bitmap_index = get_font_index(string[i]);
+        int bitmap_min_x = min_x + bitmap_width * i;
+        
+        Loaded_Image font_image = extract_image_from_sheet(font_sheet, bitmap_index, 0);
+        draw_bitmap(buffer, &font_image, bitmap_min_x, min_y, bitmap_min_x + bitmap_width, max_y);
+    }
+}
+
 extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 {
     assert(sizeof(Game_State) <= memory->permanent_memory.size);
@@ -280,14 +338,13 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             draw_rectangle(buffer, 0, 0, (int32)target_hp_display_width, (int32)hp_display_height, 0x00ffff00);
             draw_rectangle(buffer, (int32)target_hp_display_width, 0, (int32)game_state->hp_display_width, (int32)hp_display_height, 0x00ff0000);
         }
-        
+
         //debug info
         {
-            for (int i = 8; i < 30; ++i)
-            {
-                Loaded_Image debug_info = extract_image_from_sheet(&game_state->font_bitmap_sheet, i, 0);
-                draw_bitmap(buffer, &debug_info, 100 + 25 * i, 100, 125 + 25 * i, 125);
-            }
+            draw_string(buffer, &game_state->font_bitmap_sheet, 50, 100, 350, 125,
+                        "process time: %.2fms", debug_state->last_frame_process_time);
+            draw_string(buffer, &game_state->font_bitmap_sheet, 50, 130, 350, 155,
+                        "mtsc: %lld cycles", debug_state->last_frame_mtsc);
         }
     }
 }
