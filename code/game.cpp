@@ -38,8 +38,7 @@ inline void
 load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
             Platform_Load_Audio *platform_load_audio)
 {
-#define Load_Wall_Tex(index, filename)                                  \
-    game_state->wall_textures.E[index] = load_image(platform_load_image, filename)
+#define Load_Wall_Tex(index, filename) game_state->wall_textures.E[index] = load_image(platform_load_image, filename)
     
     game_state->wall_textures.count = 6;
     game_state->wall_textures.E = Push_Array(&game_state->permanent_allocator, game_state->wall_textures.count, Loaded_Image);
@@ -126,14 +125,11 @@ get_font_index(char character)
     return start_index_offset + (character - initial_character);
 }
 
-#define draw_string(buffer, font_sheet, min_x, min_y, max_x, max_y, string_format, ...) \
-    {                                                                   \
-    char str_buffer[50] = {};                                               \
-    snprintf(str_buffer, sizeof(str_buffer), string_format, ##__VA_ARGS__); \
-    _draw_string(buffer, font_sheet, str_buffer, min_x, min_y, max_x, max_y); \
-    }
+#define draw_string(buffer, font_sheet, min_x, min_y, max_x, max_y, string_format, ...) { char string[255] = {}; snprintf(string, sizeof(string), string_format, ##__VA_ARGS__); draw_string_unformatted(buffer, font_sheet, min_x, min_y, max_x, max_y, string); } 
+#define draw_string_autosized(buffer, font_sheet, min_x, min_y, font_width, font_height, string_format, ...) { char string[255] = {}; snprintf(string, sizeof(string), string_format, ##__VA_ARGS__); draw_string_unformatted(buffer, font_sheet, min_x, min_y, min_x + font_width * get_string_length(string), min_y + font_height, string); } 
 internal void
-_draw_string(Game_Offscreen_Buffer *buffer, Loaded_Image_Sheet *font_sheet, char *string, int min_x, int min_y, int max_x, int max_y)
+draw_string_unformatted(Game_Offscreen_Buffer *buffer, Loaded_Image_Sheet *font_sheet, int min_x, int min_y, int max_x, int max_y,
+                        char *string)
 {
     if_do(min_x < 0, min_x = 0);
     if_do(min_y < 0, min_y = 0);
@@ -142,7 +138,7 @@ _draw_string(Game_Offscreen_Buffer *buffer, Loaded_Image_Sheet *font_sheet, char
 
     int string_length = get_string_length(string);
     int bitmap_width = (int32)(((real32)max_x - min_x) / string_length);
-
+    
     for (int i = 0; i < string_length; ++i)
     {
         if (string[i] == ' ')
@@ -157,7 +153,7 @@ _draw_string(Game_Offscreen_Buffer *buffer, Loaded_Image_Sheet *font_sheet, char
         draw_bitmap(buffer, &font_image, bitmap_min_x, min_y, bitmap_min_x + bitmap_width, max_y);
     }
 }
-
+    
 extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 {
     assert(sizeof(Game_State) <= memory->permanent_memory.size);
@@ -224,7 +220,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             real32 real_scan_y = ((real32)buffer->height/2 + (real32)i / inverse_aspect_ratio);
             render_context->floorcast_table[i] = (real32)buffer->height / (2*real_scan_y - buffer->height);
         }
-
+        
         Audio_Task_List *audio_task_list = &game_state->audio_task_list;
         audio_task_list->push_task_looped(&game_state->background_music);
 
@@ -341,9 +337,9 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
         //debug info
         {
-            draw_string(buffer, &game_state->font_bitmap_sheet, 50, 100, 350, 125,
+            draw_string_autosized(buffer, &game_state->font_bitmap_sheet, 50, 100, 25, 25,
                         "process time: %.2fms", debug_state->last_frame_process_time);
-            draw_string(buffer, &game_state->font_bitmap_sheet, 50, 130, 350, 155,
+            draw_string_autosized(buffer, &game_state->font_bitmap_sheet, 50, 130, 25, 25,
                         "mtsc: %lld cycles", debug_state->last_frame_mtsc);
         }
     }
