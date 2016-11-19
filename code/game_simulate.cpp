@@ -302,13 +302,17 @@ simulate_world(Game_State *game_state, Game_Input *input)
     real32 dt = input->dt_per_frame;
     Player *player = &game_state->player;
 
-    player_input_process(player, input);    
-    if (player->weapon_cd_counter != 0)
+    //update player
     {
-        player->weapon_cd_counter -= (dt < player->weapon_cd_counter? dt: player->weapon_cd_counter);
+        player_input_process(player, input);    
+        if (player->weapon_cd_counter != 0)
+        {
+            player->weapon_cd_counter -= (dt < player->weapon_cd_counter? dt: player->weapon_cd_counter);
+        }
+        player->position += Movement_Search_Wall(&game_state->tile_map, player, player->velocity);
     }
-    player->position += Movement_Search_Wall(&game_state->tile_map, player, player->velocity);
     
+    //update entities
     for (int32 i = 0; i < game_state->entity_buffer.count; ++i)
     {
         Entity *entity = &game_state->entity_buffer.e[i];
@@ -349,14 +353,27 @@ simulate_world(Game_State *game_state, Game_Input *input)
             }
         }
     }
-    
+
+    //check which entities is damaged by player
     if (player->has_fired)
     {
-        if (game_state->currently_aimed_entity != 0 && game_state->currently_aimed_entity->hp != 0)
+        Line_Segment bullet_line = {};
+        bullet_line.start = player->position;
+        bullet_line.end = cast_ray(&game_state->tile_map, player->position, player->angle).hit_position;
+        
+        for (int i = 0; i < game_state->entity_buffer.count; ++i)
         {
-            Entity *entity_shot = game_state->currently_aimed_entity;
-            --entity_shot->hp;
-            entity_shot->is_damaged = true;
+            Entity *entity = &game_state->entity_buffer.e[i];
+            
+            Circle entity_hitbox = {};
+            entity_hitbox.position = entity->position;
+            entity_hitbox.radius = entity->collision_radius;
+            
+            if (line_vs_circle(bullet_line, entity_hitbox))
+            {
+                entity->hp -= 1;
+                entity->is_damaged = true;
+            }
         }
     }
 }

@@ -65,7 +65,6 @@ struct Game_State
     Player player;
     Tile_Map tile_map;
     DBuffer(Entity) entity_buffer;
-    Entity *currently_aimed_entity;
     
     //bitmap asset
     DBuffer(Loaded_Image) wall_texture_buffer;

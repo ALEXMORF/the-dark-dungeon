@@ -17,7 +17,7 @@ make_dynamic_entity(Linear_Allocator *allocator, Entity_Type type, v2 position, 
     result.type = type;
     result.position = position;
     result.angle = angle;
-    result.collision_radius = 0.1f;
+    result.collision_radius = 0.3f;
     result.speed = 1.5f;
 
     switch (result.type)

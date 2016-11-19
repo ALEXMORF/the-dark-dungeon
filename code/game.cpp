@@ -1,19 +1,22 @@
 /*
  *TODO LIST:
-
- . Compress code with Def_Buffer macro
- . Fix the audio engine's clipping issue
- . Fix the audio engine's temporal issue (place it on a separate thread)
- . Fix the sprite generation duplicate code 
+ 
+ . Fix the sprite generation duplicate code
  . Procedure map generation
  . add ui and multiple game states
  . Robust asset loading routine
+
+ TODO BUGS:
+
+ . cast_ray() function sometimes returns non-valid result
  
  TODO LINGERING:
 
  . A bug where game freezes for 3 seconds then slowly recovers (sometimes even crashes)
+ . Fix the audio engine's clipping issue
+ . Fix the audio engine's temporal issue (place it on a separate thread)
+*/
 
- */
 #include "game.h"
  
 #include "game_math.cpp"
@@ -245,15 +248,11 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //draw 3d scene and sprites
     generate_sprite_list(game_state, &sprite_list, game_state->entity_buffer.e, game_state->entity_buffer.count);
     sort_sprites(sprite_list.content, sprite_list.count, game_state->player.position);
-    game_state->currently_aimed_entity = render_3d_scene(buffer, &game_state->render_context,
-                                                         &game_state->tile_map,
-                                                         game_state->player.position,
-                                                         game_state->player.angle, 
-                                                         &game_state->floor_texture,
-                                                         &game_state->ceiling_texture,
-                                                         &game_state->wall_texture_buffer,
-                                                         sprite_list.content, sprite_list.count,
-                                                         memory->platform_eight_async_proc);
+    render_3d_scene(buffer, &game_state->render_context, &game_state->tile_map,
+                    game_state->player.position, game_state->player.angle, 
+                    &game_state->floor_texture, &game_state->ceiling_texture,
+                    &game_state->wall_texture_buffer, sprite_list.content, sprite_list.count,
+                    memory->platform_eight_async_proc);
     
     //animate first-person weapon
     {
