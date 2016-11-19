@@ -1,6 +1,7 @@
 /*
  *TODO LIST:
- 
+
+ . Replace unnecessary dynamic buffer with static buffer
  . Fix the sprite generation duplicate code
  . Procedure map generation
  . add ui and multiple game states
