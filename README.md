@@ -17,6 +17,7 @@ things I implemented:
  11. Asnychronous sound playback with task-based system (10/8/2016)
  12. One variant memory block per entity, added enemies' firing state (10/28/2016)
  13. Real collision detection, player hitpoints visual representation (11/10/2016)
+ 14. Big code cleanup and replaced graphically-based collision detection with real collision detection (11/19/2016)
  
 TODO List: 
  1. apply effects like shadow, fog, etc. 
