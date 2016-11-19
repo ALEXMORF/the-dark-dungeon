@@ -32,6 +32,7 @@ struct Render_Context
     real32 *z_buffer;
 };
 
+#if 0
 //NOTE(chen): structure for parallel rendering
 struct Render_Data
 {
@@ -42,10 +43,11 @@ struct Render_Data
     real32 view_angle;
     Loaded_Image *floor_texture;
     Loaded_Image *ceiling_texture;
-    Texture_List *wall_textures;
+    DBuffer(Loaded_Image) *wall_textures;
     Projection_Spec *projection_spec;
     World_Spec *world_spec;
 
     int current_thread_index;
     int thread_count;
 };
+#endif

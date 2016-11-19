@@ -1,6 +1,6 @@
 #include "game_audio.h"
 
-void Audio_Task_List::push_task(Loaded_Audio *loaded_audio, real32 volume)
+void Audio_System::push_task(Loaded_Audio *loaded_audio, real32 volume)
 {
     assert(length < AUDIO_TASK_MAX);
     
@@ -11,13 +11,13 @@ void Audio_Task_List::push_task(Loaded_Audio *loaded_audio, real32 volume)
     ++length;
 }
 
-void Audio_Task_List::push_task_looped(Loaded_Audio *loaded_audio, real32 volume)
+void Audio_System::push_task_looped(Loaded_Audio *loaded_audio, real32 volume)
 {
     push_task(loaded_audio, volume);
     content[length-1].is_looping = true;
 }
 
-void Audio_Task_List::remove_task(int index)
+void Audio_System::remove_task(int index)
 {
     assert(index >= 0 && index < AUDIO_TASK_MAX);
     assert(length > 0);

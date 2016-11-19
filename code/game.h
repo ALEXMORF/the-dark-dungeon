@@ -68,7 +68,7 @@ struct Game_State
     Entity *currently_aimed_entity;
     
     //bitmap asset
-    Texture_List wall_textures;
+    DBuffer(Loaded_Image) wall_texture_buffer;
     Loaded_Image floor_texture;
     Loaded_Image ceiling_texture;
     Loaded_Image barrel_texture;
@@ -90,7 +90,7 @@ struct Game_State
     Render_Context render_context;
     
     //audio system
-    Audio_Task_List audio_task_list;
+    Audio_System audio_system;
     
     //HUD persistent data
     real32 hp_display_width;

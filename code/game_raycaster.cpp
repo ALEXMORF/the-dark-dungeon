@@ -99,7 +99,7 @@ internal Entity *
 render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
                 Tile_Map *tile_map, v2 position, real32 view_angle,
                 Loaded_Image *floor_texture, Loaded_Image *ceiling_texture,
-                Texture_List *wall_textures,
+                DBuffer(Loaded_Image) *wall_texture_buffer,
                 Sprite *sprites, int32 sprite_count,
                 Platform_Eight_Async_Proc *platform_eight_async_proc)
 {
@@ -139,8 +139,8 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
         //wall rendering routine
         {
             int32 tile_value = get_tile_value(tile_map, reflection.tile_x, reflection.tile_y);
-            assert(tile_value >= 1 && tile_value < wall_textures->count);
-            Loaded_Image *wall_texture = &wall_textures->E[tile_value-1];
+            assert(tile_value >= 1 && tile_value < wall_texture_buffer->count);
+            Loaded_Image *wall_texture = &wall_texture_buffer->e[tile_value-1];
 
             real32 tile_size = 1.0f;
             real32 texture_x_percentage = (reflection.x_side_faced?
@@ -167,11 +167,15 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
                 //inlined lerp
                 v2 floor_position = {};
                 floor_position.x = (position.x * (1.0f - interpolent) + hit_position.x * interpolent);
-                floor_position.y =  (position.y * (1.0f - interpolent) + hit_position.y * interpolent);
+                floor_position.y = (position.y * (1.0f - interpolent) + hit_position.y * interpolent);
 
+#if 0
                 int32 texture_x = ((int32)(floor_position.x*floor_texture->width) % floor_texture->width);
                 int32 texture_y = ((int32)(floor_position.y*floor_texture->height) % floor_texture->height);
-                
+#else
+                int32 texture_x = (int32)((floor_position.x - (int32)floor_position.x)*floor_texture->width);
+                int32 texture_y = (int32)((floor_position.y - (int32)floor_position.y)*floor_texture->height);
+#endif
                 uint32 *dest_pixels = (uint32 *)buffer->memory;
                 uint32 *floor_source_pixels = (uint32 *)floor_texture->data;
                 

@@ -1,7 +1,6 @@
 /*
  *TODO LIST:
 
- . Bitmap font rendering
  . Compress code with Def_Buffer macro
  . Fix the audio engine's clipping issue
  . Fix the audio engine's temporal issue (place it on a separate thread)
@@ -38,17 +37,16 @@ inline void
 load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
             Platform_Load_Audio *platform_load_audio)
 {
-#define Load_Wall_Tex(index, filename) game_state->wall_textures.E[index] = load_image(platform_load_image, filename)
+    DBuffer(Loaded_Image) *wall_texture_buffer = &game_state->wall_texture_buffer;
+    wall_texture_buffer->capacity = 6;
+    wall_texture_buffer->e = Push_Array(&game_state->permanent_allocator, wall_texture_buffer->capacity, Loaded_Image);
+    add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, "../data/redbrick.png"));
+    add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, "../data/bluestone.png"));
+    add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, "../data/colorstone.png"));
+    add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, "../data/eagle.png"));
+    add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, "../data/purplestone.png"));
+    add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, "../data/wood.png"));
     
-    game_state->wall_textures.count = 6;
-    game_state->wall_textures.E = Push_Array(&game_state->permanent_allocator, game_state->wall_textures.count, Loaded_Image);
-    Load_Wall_Tex(0, "../data/redbrick.png");
-    Load_Wall_Tex(1, "../data/bluestone.png");
-    Load_Wall_Tex(2, "../data/colorstone.png");
-    Load_Wall_Tex(3, "../data/eagle.png");
-    Load_Wall_Tex(4, "../data/purplestone.png");
-    Load_Wall_Tex(5, "../data/wood.png");
-        
     game_state->floor_texture = load_image(platform_load_image, "../data/greystone.png");
     game_state->ceiling_texture = load_image(platform_load_image, "../data/greystone.png");
     game_state->barrel_texture = load_image(platform_load_image, "../data/barrel.png");
@@ -84,19 +82,6 @@ fill_entities(Linear_Allocator *allocator, DBuffer(Entity) *entity_buffer)
     add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {15.0f, 15.0f}, pi32));
     add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {14.0f, 15.0f}));
     add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {16.0f, 15.0f}));
-}
-
-internal void
-initialize_player(Player *player)
-{
-    player->hp = PLAYER_MAX_HP;
-    
-    player->position = {3.0f, 3.0f};
-    player->angle = 0.0f;
-    player->collision_radius = 0.3f;
-    player->weapon_animation_index = 1;
-    player->weapon_type = pistol;
-    player->weapon_cd = 0.3f;
 }
 
 inline int
@@ -221,8 +206,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             render_context->floorcast_table[i] = (real32)buffer->height / (2*real_scan_y - buffer->height);
         }
         
-        Audio_Task_List *audio_task_list = &game_state->audio_task_list;
-        audio_task_list->push_task_looped(&game_state->background_music);
+        Audio_System *audio_system = &game_state->audio_system;
+        audio_system->push_task_looped(&game_state->background_music);
 
         memory->is_initialized = true;
     }
@@ -233,7 +218,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //output sound
     if (game_state->player.has_fired)
     {
-        game_state->audio_task_list.push_task(&game_state->pistol2_sound, 1.0f);
+        game_state->audio_system.push_task(&game_state->pistol2_sound, 1.0f);
     }
     for (int i = 0; i < game_state->entity_buffer.count; ++i)
     {
@@ -243,7 +228,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
             if (aiming_state->just_fired)
             {
-                game_state->audio_task_list.push_task(&game_state->pistol_sound, 0.3f);
+                game_state->audio_system.push_task(&game_state->pistol_sound, 0.3f);
             }
         }
     }
@@ -266,7 +251,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                                                          game_state->player.angle, 
                                                          &game_state->floor_texture,
                                                          &game_state->ceiling_texture,
-                                                         &game_state->wall_textures,
+                                                         &game_state->wall_texture_buffer,
                                                          sprite_list.content, sprite_list.count,
                                                          memory->platform_eight_async_proc);
     
@@ -322,25 +307,38 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     {
         //hp-bar
         {
-            real32 width_per_hp = (real32)(buffer->width / PLAYER_MAX_HP);
+            real32 min_x = 100;
+            real32 max_x = 500;
+            real32 min_y = 10;
+            real32 max_y = 40;
+            
+            real32 width_per_hp = (real32)((max_x - min_x) / PLAYER_MAX_HP);
             real32 lerp_ratio = 3.0f * input->dt_per_frame;
             real32 hp_count = clamp((real32)game_state->player.hp, 0.0f, (real32)PLAYER_MAX_HP);
-        
+            
             real32 target_hp_display_width = width_per_hp * hp_count;
-            real32 hp_display_height = 10.0f;
             game_state->hp_display_width = lerp(game_state->hp_display_width, target_hp_display_width, lerp_ratio);
-        
-            draw_rectangle(buffer, 0, 0, buffer->width, (int32)hp_display_height, 0x00555500);
-            draw_rectangle(buffer, 0, 0, (int32)target_hp_display_width, (int32)hp_display_height, 0x00ffff00);
-            draw_rectangle(buffer, (int32)target_hp_display_width, 0, (int32)game_state->hp_display_width, (int32)hp_display_height, 0x00ff0000);
-        }
 
+            draw_string(buffer, &game_state->font_bitmap_sheet, 10, 10, 120, 40, "HP: ");
+            draw_rectangle(buffer, (int32)min_x, (int32)min_y, (int32)max_x, (int32)max_y, 0x00550000);
+            draw_rectangle(buffer, (int32)min_x, (int32)min_y, (int32)min_x + (int32)game_state->hp_display_width, (int32)max_y, 0x00ff0000);
+        }
+        
         //debug info
         {
-            draw_string_autosized(buffer, &game_state->font_bitmap_sheet, 50, 100, 25, 25,
-                        "process time: %.2fms", debug_state->last_frame_process_time);
-            draw_string_autosized(buffer, &game_state->font_bitmap_sheet, 50, 130, 25, 25,
-                        "mtsc: %lld cycles", debug_state->last_frame_mtsc);
+            int32 layout_height = 80;
+            int32 layout_dheight = 30;
+            
+            draw_string_autosized(buffer, &game_state->font_bitmap_sheet, 10, layout_height, 15, 15, "DEBUG:");
+            layout_height += layout_dheight;
+            
+            draw_string_autosized(buffer, &game_state->font_bitmap_sheet, 10, layout_height, 15, 15,
+                                  "process time: %.2fms", debug_state->last_frame_process_time);
+            layout_height += layout_dheight;
+            
+            draw_string_autosized(buffer, &game_state->font_bitmap_sheet, 10, layout_height, 15, 15,
+                                  "mtsc: %lld cycles", debug_state->last_frame_mtsc);
+            layout_height += layout_dheight;
         }
     }
 }
@@ -348,8 +346,8 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 extern "C" GAME_PROCESS_SOUND(game_process_sound)
 {
     Game_State *game_state = (Game_State *)memory->permanent_memory.storage;
-    Audio_Task_List *audio_task_list = &game_state->audio_task_list;
-    real32 master_audio_volume = 0.3f;
+    Audio_System *audio_system = &game_state->audio_system;
+    real32 master_audio_volume = 0.1f;
         
     //clear buffer
     {
@@ -360,10 +358,10 @@ extern "C" GAME_PROCESS_SOUND(game_process_sound)
         }
     }
     
-    for (int i = 0; i < audio_task_list->length; ++i)
+    for (int i = 0; i < audio_system->length; ++i)
     {
         //grab stuff
-        Audio_Task *current_task = &audio_task_list->content[i];
+        Audio_Task *current_task = &audio_system->content[i];
         Loaded_Audio *current_audio = current_task->loaded_audio;
         int16 *audio_samples = ((int16 *)current_audio->memory +
                                 (current_task->current_position*current_audio->channels));
@@ -410,9 +408,9 @@ extern "C" GAME_PROCESS_SOUND(game_process_sound)
     }
 
     //remove finished tasks
-    for (int i = 0; i < audio_task_list->length; ++i)
+    for (int i = 0; i < audio_system->length; ++i)
     {
-        Audio_Task *current_task = &audio_task_list->content[i];
+        Audio_Task *current_task = &audio_system->content[i];
         if (current_task->is_finished)
         {
             if (current_task->is_looping) 
@@ -422,7 +420,7 @@ extern "C" GAME_PROCESS_SOUND(game_process_sound)
             }
             else 
             {
-                audio_task_list->remove_task(i);
+                audio_system->remove_task(i);
                 --i;
             }
         }

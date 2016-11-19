@@ -20,16 +20,11 @@ enum Entity_State
     entity_state_count
 };
 
-struct Entity_Clock
-{
-    real32 timer[entity_state_count];
-};
-
 struct Entity
 {
     Entity_Type type;
     Entity_State state;
-    Entity_Clock clock;
+    real32 clock[entity_state_count];
     
     v2 position;
     real32 speed;
@@ -38,8 +33,8 @@ struct Entity
     real32 collision_radius;
     
     int32 hp;
-    bool32 just_got_shot;
-
+    bool32 is_damaged;
+    
     bool variant_block_is_initialized;
     Memory variant_block;
 };

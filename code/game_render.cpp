@@ -90,7 +90,6 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
            int32 source_x, int32 dest_x, int32 dest_y, int32 dest_height,
            Shader_Fn *shader = 0, real32 shader_ratio = 0.5f)
 {
-    
     if (dest_x >= 0 && dest_x < buffer->width)
     {
         int32 bytes_per_pixel = 4;
@@ -120,10 +119,7 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
         //render
         for (int32 y = 0; y < dest_height; ++y)
         {
-#define alpha_mask 0xFF000000
-            
-            uint32 source_value = *(uint32 *)((uint8 *)source_pixel +
-                                              ((int32)source_y * loaded_image->pitch));
+            uint32 source_value = *(uint32 *)((uint8 *)source_pixel + ((int32)source_y * loaded_image->pitch));
             if ((source_value & alpha_mask) != 0)
             {
                 if (shader)

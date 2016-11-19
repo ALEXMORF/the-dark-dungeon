@@ -25,7 +25,7 @@
     };                                                          \
     void add_##Type(DBuffer(Type) *buffer, Type item)           \
     {                                                           \
-        assert(buffer->count+1 < buffer->capacity);             \
+        assert(buffer->count < buffer->capacity);               \
         buffer->e[buffer->count++] = item;                      \
     }
 
@@ -36,3 +36,4 @@
 //////////////////////////////////////////////////
 
 Def_DBuffer(Entity);
+Def_DBuffer(Loaded_Image);

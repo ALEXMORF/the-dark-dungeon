@@ -11,7 +11,7 @@ struct Audio_Task
     bool is_looping;
 };
 
-struct Audio_Task_List
+struct Audio_System
 {
     Audio_Task content[AUDIO_TASK_MAX];
     int32 length;

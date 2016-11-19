@@ -1,6 +1,19 @@
 #include "game_simulate.h"
 
 internal void
+initialize_player(Player *player)
+{
+    player->hp = PLAYER_MAX_HP;
+    
+    player->position = {3.0f, 3.0f};
+    player->angle = 0.0f;
+    player->collision_radius = 0.3f;
+    player->weapon_animation_index = 1;
+    player->weapon_type = pistol;
+    player->weapon_cd = 0.3f;
+}
+
+internal void
 player_input_process(Player *player, Game_Input *input)
 {
     real32 player_speed = 2.5f;
@@ -91,7 +104,7 @@ inline void
 enter_state(Entity *entity, Entity_State next_state, real32 timer)
 {
     entity->state = next_state;
-    entity->clock.timer[entity->state] = timer;
+    entity->clock[entity->state] = timer;
     entity->variant_block_is_initialized = false;
 }
 
@@ -116,7 +129,7 @@ search_player(Tile_Map *tile_map, Entity *entity, v2 player_position, real32 fov
 internal void
 tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 player_position, real32 dt)
 {
-    Entity_Clock *clock = &entity->clock;
+    real32 *clock = entity->clock;
     real32 hurting_state_interval = 0.1f;
     real32 waiting_state_interval = 1.5f;
     real32 firing_state_interval = 0.3f;
@@ -126,13 +139,13 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 player_position, rea
     if (entity->hp > 0)
     {
         //prestate processing stage
-        if (entity->just_got_shot)
+        if (entity->is_damaged)
         {
             enter_state(entity, hurting_state, hurting_state_interval);
         }
-
+        
         //state processing stage
-        bool32 clock_ends = (clock->timer[entity->state] == 0.0f);
+        bool32 clock_ends = (clock[entity->state] == 0.0f);
         bool32 clock_ticks_forward = false;
         switch (entity->state)
         {
@@ -149,7 +162,7 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 player_position, rea
             {
                 clock_ticks_forward = true;
                 
-                bool32 not_initialized = clock->timer[entity->state] == 0.0f;
+                bool32 not_initialized = clock[entity->state] == 0.0f;
                 
                 if (search_player(tile_map, entity, player_position, fov))
                 {
@@ -242,20 +255,20 @@ tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 player_position, rea
 
         if (clock_ticks_forward)
         {
-            clock->timer[entity->state] += dt;
+            clock[entity->state] += dt;
         }
         else
         {
-            clock->timer[entity->state] = reduce(clock->timer[entity->state], dt);
+            clock[entity->state] = reduce(clock[entity->state], dt);
         }
     }
     else
     {
         entity->state = death_state;
-        clock->timer[death_state] += dt;
+        clock[death_state] += dt;
     }
 
-    entity->just_got_shot = false;
+    entity->is_damaged = false;
 }
 
 internal bool
@@ -267,7 +280,7 @@ line_vs_circle(Line_Segment L, Circle C)
     real32 a_to_b_theta = get_angle(a_to_b);
     real32 a_to_c_theta = get_angle(a_to_c);
     real32 delta_theta = get_angle_diff(a_to_c_theta, a_to_b_theta);
-
+    
     real32 a_to_c_proj_len = cosf(delta_theta) * len(a_to_c);
     v2 a_to_c_proj = normalize(a_to_b) * a_to_c_proj_len;
 
@@ -308,7 +321,7 @@ simulate_world(Game_State *game_state, Game_Input *input)
             } break;
         }
     }
-
+    
     //check for player being hit by bullets
     for (int32 i = 0; i < game_state->entity_buffer.count; ++i)
     {
@@ -321,7 +334,7 @@ simulate_world(Game_State *game_state, Game_Input *input)
                 Line_Segment bullet_line = {};
                 bullet_line.start = entity->position;
                 bullet_line.end = cast_ray(&game_state->tile_map, entity->position, entity->angle).hit_position;
-
+                
                 Circle player_hitbox = {};
                 player_hitbox.position = player->position;
                 player_hitbox.radius = player->collision_radius;
@@ -343,7 +356,7 @@ simulate_world(Game_State *game_state, Game_Input *input)
         {
             Entity *entity_shot = game_state->currently_aimed_entity;
             --entity_shot->hp;
-            entity_shot->just_got_shot = true;
+            entity_shot->is_damaged = true;
         }
     }
 }
