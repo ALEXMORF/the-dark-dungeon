@@ -1,7 +1,7 @@
 # the-dark-dungeon
 a game with the application of raycasting.
 
-All the game code and render code is coded by hand with only one library. The render code is written without any external libraries, but the asset loading uses stb_image, because it's boring stuff and I don't feel like doing from scratch. 
+The entire game is coded written by hand without any library (well except one just for asset loading). The render code is written without any external libraries, but the asset loading uses stb_image, because it's boring stuff and I don't feel like doing from scratch. 
 
 things I implemented:
  1. texture mapping for wall rendering. 
