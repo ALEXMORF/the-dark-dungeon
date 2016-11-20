@@ -1,8 +1,9 @@
 /*
  *TODO LIST:
-
+ 
  . Replace unnecessary dynamic buffer with static buffer
  . Fix the sprite generation duplicate code
+ . Add more interactiviy (screen turns red when shot, enemies pushed back when shot, etc)
  . Procedure map generation
  . add ui and multiple game states
  . Robust asset loading routine
@@ -44,12 +45,15 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
     DBuffer(Loaded_Image) *wall_texture_buffer = &game_state->wall_texture_buffer;
     wall_texture_buffer->capacity = 6;
     wall_texture_buffer->e = Push_Array(&game_state->permanent_allocator, wall_texture_buffer->capacity, Loaded_Image);
-    add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, "../data/redbrick.png"));
-    add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, "../data/bluestone.png"));
-    add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, "../data/colorstone.png"));
-    add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, "../data/eagle.png"));
-    add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, "../data/purplestone.png"));
-    add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, "../data/wood.png"));
+
+    char *texture_filenames[6] = {
+        "../data/redbrick.png", "../data/bluestone.png", "../data/colorstone.png",
+        "../data/eagle.png", "../data/purplestone.png", "../data/wood.png"
+    };
+    for (int i = 0; i < array_count(texture_filenames); ++i)
+    {
+        add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, texture_filenames[i]));
+    }
     
     game_state->floor_texture = load_image(platform_load_image, "../data/greystone.png");
     game_state->ceiling_texture = load_image(platform_load_image, "../data/greystone.png");

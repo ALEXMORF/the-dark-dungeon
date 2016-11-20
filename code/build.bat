@@ -12,4 +12,4 @@ set linker_flags=-incremental:no user32.lib gdi32.lib winmm.lib
 
 del *.pdb 1> NUL 2> NUL
 cl %compiler_flags% %macro_flags% ..\code\game.cpp -LD /link -PDB:game_%random%.pdb %linker_flags% -EXPORT:game_update_and_render -EXPORT:game_process_sound
-cl -Femain %compiler_flags% %macro_flags% -I %sdl_include_path% ..\code\fast_main.cpp /link -LIBPATH:%sdl_lib_path% %linker_flags% SDL2.lib SDL2main.lib
+cl -Femain %compiler_flags% %macro_flags% -I %sdl_include_path% ..\code\fast_main.cpp /link -SUBSYSTEM:windows,5.1 -LIBPATH:%sdl_lib_path% %linker_flags% SDL2.lib SDL2main.lib
