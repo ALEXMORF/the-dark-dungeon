@@ -1,16 +1,25 @@
 /*
  *TODO LIST:
- 
+
+
+ Code cleanness:
  . Replace unnecessary dynamic buffer with static buffer
- . Fix the sprite generation duplicate code
+ . Replace the sprite generation duplicate code with an animation system
+
+ Game play:
+ . Weaponary system (melee, pistol, reloading, ammo, etc)
+ . Make the difference between penetrating bullets and non-penetrating bullet
  . Add more interactiviy (screen turns red when shot, enemies pushed back when shot, etc)
+
+ Future Features:
  . Procedure map generation
  . add ui and multiple game states
  . Robust asset loading routine
 
  TODO BUGS:
 
- . cast_ray() function sometimes returns non-valid result
+ . cast_ray() function sometimes returns non-valid result,
+   tentative fix by inclusively determining quadrants, see how it helps.
  
  TODO LINGERING:
 
@@ -45,7 +54,7 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
     DBuffer(Loaded_Image) *wall_texture_buffer = &game_state->wall_texture_buffer;
     wall_texture_buffer->capacity = 6;
     wall_texture_buffer->e = Push_Array(&game_state->permanent_allocator, wall_texture_buffer->capacity, Loaded_Image);
-
+    
     char *texture_filenames[6] = {
         "../data/redbrick.png", "../data/bluestone.png", "../data/colorstone.png",
         "../data/eagle.png", "../data/purplestone.png", "../data/wood.png"
@@ -196,7 +205,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         Copy_Array(temp_tiles, tile_map->tiles, tile_count, uint32);
 
         initialize_player(&game_state->player);
-
+        
         game_state->entity_buffer.capacity = ENTITY_COUNT_LIMIT;
         game_state->entity_buffer.e = Push_Array(&game_state->permanent_allocator, game_state->entity_buffer.capacity, Entity);
         fill_entities(&game_state->permanent_allocator, &game_state->entity_buffer);
@@ -240,7 +249,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             }
         }
     }
-    
+        
     //
     //
     //Render game
@@ -262,7 +271,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //animate first-person weapon
     {
         Player *player = &game_state->player;
- 
+        
         real32 animation_cycle = player->weapon_cd - 0.02f;
         real32 animation_index_count = 4.0f;
         int32 animation_ending_index = 1;
@@ -322,7 +331,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             
             real32 target_hp_display_width = width_per_hp * hp_count;
             game_state->hp_display_width = lerp(game_state->hp_display_width, target_hp_display_width, lerp_ratio);
-
+            
             draw_string(buffer, &game_state->font_bitmap_sheet, 10, 10, 120, 40, "HP: ");
             draw_rectangle(buffer, (int32)min_x, (int32)min_y, (int32)max_x, (int32)max_y, 0x00550000);
             draw_rectangle(buffer, (int32)min_x, (int32)min_y, (int32)min_x + (int32)game_state->hp_display_width, (int32)max_y, 0x00ff0000);
@@ -337,11 +346,11 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             layout_height += layout_dheight;
             
             draw_string_autosized(buffer, &game_state->font_bitmap_sheet, 10, layout_height, 15, 15,
-                                  "process time: %.2fms", debug_state->last_frame_process_time);
+                                  " process time: %.2fms", debug_state->last_frame_process_time);
             layout_height += layout_dheight;
             
             draw_string_autosized(buffer, &game_state->font_bitmap_sheet, 10, layout_height, 15, 15,
-                                  "mtsc: %lld cycles", debug_state->last_frame_mtsc);
+                                  " mtsc: %lld cycles", debug_state->last_frame_mtsc);
             layout_height += layout_dheight;
         }
     }

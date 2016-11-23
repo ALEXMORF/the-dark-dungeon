@@ -282,12 +282,15 @@ line_vs_circle(Line_Segment L, Circle C)
     real32 delta_theta = get_angle_diff(a_to_c_theta, a_to_b_theta);
     
     real32 a_to_c_proj_len = cosf(delta_theta) * len(a_to_c);
-    v2 a_to_c_proj = normalize(a_to_b) * a_to_c_proj_len;
-
-    v2 closest_point = L.start + a_to_c_proj;
-    if (len(C.position - closest_point) <= C.radius)
+    if (a_to_c_proj_len <= len(a_to_b))
     {
-        return true;
+        v2 a_to_c_proj = normalize(a_to_b) * a_to_c_proj_len;
+
+        v2 closest_point = L.start + a_to_c_proj;
+        if (len(C.position - closest_point) <= C.radius)
+        {
+            return true;
+        }
     }
     return false;
 }

@@ -97,7 +97,7 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
         
         real32 mapper = (real32)loaded_image->height / (real32)dest_height;
         real32 source_y = 0.0f;
-
+        
         //NOTE(chen): clip the size and move the source pointer to where it should be 
         uint32 *dest_pixel = (uint32 *)buffer->memory + dest_x + dest_y * buffer->width;
         if (dest_y < 0)
@@ -146,7 +146,7 @@ draw_bitmap(Game_Offscreen_Buffer *buffer, Loaded_Image *bitmap, int32 min_x, in
     if_do(min_y < 0, min_y = 0);
     if_do(max_x > buffer->width, max_x = buffer->width);
     if_do(max_y > buffer->height, max_y = buffer->height);
-
+    
     real32 image_height = (real32)max_y - (real32)min_y;
     real32 image_width = (real32)max_x - (real32)min_x;
     
@@ -172,7 +172,7 @@ draw_bitmap(Game_Offscreen_Buffer *buffer, Loaded_Image *bitmap, int32 min_x, in
             uint8 old_R = (uint8)((dest_value & red_mask) >> 16);
             uint8 old_G = (uint8)((dest_value & green_mask) >> 8);
             uint8 old_B = (uint8)((dest_value & blue_mask) >> 0);
-
+	    
             uint8 new_A = (uint8)((src_value & alpha_mask) >> 24);
             uint8 new_R = (uint8)((src_value & red_mask) >> 16);
             uint8 new_G = (uint8)((src_value & green_mask) >> 8);

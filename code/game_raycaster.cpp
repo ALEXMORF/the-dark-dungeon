@@ -10,19 +10,19 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
     int32 current_tile_x = (int32)position.x;
     int32 current_tile_y = (int32)position.y;
     
-    bool32 angle_is_in_quadrant_1 = (angle > 0 && angle < pi32/2.0f);
-    bool32 angle_is_in_quadrant_2 = (angle > pi32/2.0f && angle < pi32);
-    bool32 angle_is_in_quadrant_3 = (angle > pi32 && angle < pi32*3.0f/2.0f);
-    bool32 angle_is_in_quadrant_4 = (angle > pi32*3.0f/2.0f);
+    bool32 angle_is_in_quadrant_1 = (angle >= 0 && angle <= pi32/2.0f);
+    bool32 angle_is_in_quadrant_2 = (angle >= pi32/2.0f && angle <= pi32);
+    bool32 angle_is_in_quadrant_3 = (angle >= pi32 && angle <= pi32*3.0f/2.0f);
+    bool32 angle_is_in_quadrant_4 = (angle >= pi32*3.0f/2.0f);
     
     //horizontal hit
     {
         //NOTE(chen): direction of the ray we are casting (right = 1.0f, left = -1.0f)
         real32 sign = 0.0f;
-
+        
         if_do(angle_is_in_quadrant_4 || angle_is_in_quadrant_1 || angle == 0.0f, sign = 1.0f);
         if_do(angle_is_in_quadrant_2 || angle_is_in_quadrant_3 || angle == pi32, sign = -1.0f);
-
+        
         if (sign != 0.0f)
         {
             real32 initial_dx = (real32)(current_tile_x + (int32)(sign < 0.0f? 0: 1)) - position.x;
