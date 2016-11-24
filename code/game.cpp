@@ -2,11 +2,11 @@
  *TODO LIST:
 
  Code cleanness:
- . Extract out a physics system as service component???
+ . Extract out a physics system as service component??? YES!!
  . Replace unnecessary dynamic buffer with static buffer
  . Replace the sprite generation duplicate code with an animation system
  
- Game play:
+ Gameplay:
  . Weaponary system (melee, pistol, reloading, ammo, etc) 50% done
  . Show the direction from where the damage comes from 
  . Add more interactiviy (screen turns red when shot, enemies pushed back when shot, etc)
@@ -22,16 +22,15 @@
 
  . cast_ray() function sometimes returns non-valid result,
    tentative fix by inclusively determining quadrants, see how it helps.
- 
+   
  TODO LINGERING:
-
+ 
  . A bug where game freezes for 3 seconds then slowly recovers (sometimes even crashes)
  . Fix the audio engine's clipping issue
- . Fix the audio engine's temporal issue (place it on a separate thread)
 */
 
 #include "game.h"
- 
+
 #include "game_math.cpp"
 #include "game_tiles.cpp"
 #include "game_memory.cpp"
@@ -88,6 +87,8 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
     game_state->pistol_sound = load_audio(platform_load_audio, "../data/pistol.wav");
     game_state->pistol2_sound = load_audio(platform_load_audio, "../data/pistol2.wav");
     game_state->pistol_reload_sound = load_audio(platform_load_audio, "../data/pistol_reload.wav");
+    game_state->rifle_sound = load_audio(platform_load_audio, "../data/rifle.wav");
+    game_state->minigun_sound = load_audio(platform_load_audio, "../data/minigun.wav");
     game_state->background_music = load_audio(platform_load_audio, "../data/background1.wav");
 }
 
@@ -183,16 +184,39 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     
     //output sound
     {
+        Audio_System *audio_system = &game_state->audio_system;
+        
         //player fire sound
         if (game_state->player.has_fired)
         {
-            game_state->audio_system.push_task(&game_state->pistol2_sound, 1.0f);
-        }
+            switch (game_state->player.weapon.type)
+            {
+                case pistol:
+                {
+                    audio_system->push_task(&game_state->pistol2_sound, 1.0f);
+                } break;
+                
+                case rifle:
+                {
+                    audio_system->push_task(&game_state->rifle_sound, 1.0f);
+                } break;
 
+                case minigun:
+                {
+                    audio_system->push_task(&game_state->minigun_sound, 2.0f);
+                } break;
+
+                default:
+                {
+                    assert(!"unknown weapon type");
+                };
+            }
+        }
+        
         //player reload sound
         if (game_state->player.weapon.reload_time == game_state->player.weapon.max_reload_time)
         {
-            game_state->audio_system.push_task(&game_state->pistol_reload_sound, 2.0f);
+            audio_system->push_task(&game_state->pistol_reload_sound, 2.0f);
         }
 
         //enemy fire sound
@@ -204,7 +228,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                 Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
                 if (aiming_state->just_fired)
                 {
-                    game_state->audio_system.push_task(&game_state->pistol_sound, 0.3f);
+                    audio_system->push_task(&game_state->pistol_sound, 0.3f);
                 }
             }
         }
@@ -253,7 +277,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //draw first-person weapon
     {
         Player *player = &game_state->player;
-
+        
         //calculate offset for reloading animation
         if (player->weapon.is_reloading)
         {
@@ -264,7 +288,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         {
             player->weapon_reload_offset = lerp(player->weapon_reload_offset, 0.0f, 0.2f);   
         }
-
+        
         //bob and render weapon sprites
         real32 y_scale = (real32)buffer->height / 50;
         real32 x_scale = (real32)buffer->width / 40;

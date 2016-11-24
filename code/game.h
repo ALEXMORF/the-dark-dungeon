@@ -42,7 +42,7 @@ struct Weapon
     int32 animation_index;
     real32 cd;
     real32 cd_counter;
-
+    
     bool32 is_reloading;
     real32 max_reload_time;
     real32 reload_time;
@@ -99,6 +99,8 @@ struct Game_State
     Loaded_Audio pistol_sound;
     Loaded_Audio pistol2_sound;
     Loaded_Audio pistol_reload_sound;
+    Loaded_Audio rifle_sound;
+    Loaded_Audio minigun_sound;
     Loaded_Audio background_music;
     
     //render

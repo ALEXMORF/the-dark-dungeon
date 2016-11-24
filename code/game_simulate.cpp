@@ -12,6 +12,28 @@ initialize_pistol(Weapon *weapon)
 }
 
 internal void
+initialize_rifle(Weapon *weapon)
+{
+    weapon->animation_index = 1;
+    weapon->type = rifle;
+    weapon->cd = 0.1f;
+    
+    weapon->max_reload_time = 1.0f;
+    weapon->max_ammo = weapon->ammo = 20;
+}
+
+internal void
+initialize_minigun(Weapon *weapon)
+{
+    weapon->animation_index = 1;
+    weapon->type = minigun;
+    weapon->cd = 0.1f;
+    
+    weapon->max_reload_time = 1.0f;
+    weapon->max_ammo = weapon->ammo = 100;
+}
+
+internal void
 weapon_reload(Weapon *weapon)
 {
     weapon->is_reloading = true;
@@ -27,7 +49,7 @@ initialize_player(Player *player)
     player->angle = 0.0f;
     player->collision_radius = 0.3f;
 
-    initialize_pistol(&player->weapon);
+    initialize_rifle(&player->weapon);
 }
 
 internal void
