@@ -1,7 +1,7 @@
 # the-dark-dungeon
 a game with the application of raycasting.
 
-The entire game is coded written by hand without any library (well except one just for asset loading). The render code is written without any external libraries, but the asset loading uses stb_image, because it's boring stuff and I don't feel like doing from scratch. 
+The entire game is coded by hand without any library (well except one just for asset loading). The render code is written without any external libraries, but the asset loading uses stb_image, because it's boring stuff and I don't feel like doing from scratch. 
 
 things I implemented:
  1. texture mapping for wall rendering. 
@@ -18,6 +18,8 @@ things I implemented:
  12. One variant memory block per entity, added enemies' firing state (10/28/2016)
  13. Real collision detection, player hitpoints visual representation (11/10/2016)
  14. Big code cleanup and replaced graphically-based collision detection with real collision detection (11/19/2016)
+ 15. Bitmap font rendering (11/20/2016)
+ 16. Basic ammo/reload system for pistol (11/23/2016)
  
 TODO List: 
  1. apply effects like shadow, fog, etc. 
@@ -58,3 +60,6 @@ NOTE:
 
  screenshot 8 (11/10/2016)
 ![image](https://cloud.githubusercontent.com/assets/16845654/20205660/72523014-a78f-11e6-8367-f26a653b72d2.png)
+
+ screenshot 9 (11/23/2016)
+![image](https://cloud.githubusercontent.com/assets/16845654/20609341/1aa08602-b240-11e6-87e7-60f83c34d885.png)
