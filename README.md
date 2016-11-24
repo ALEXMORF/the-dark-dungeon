@@ -18,6 +18,8 @@ things I implemented:
  12. One variant memory block per entity, added enemies' firing state (10/28/2016)
  13. Real collision detection, player hitpoints visual representation (11/10/2016)
  14. Big code cleanup and replaced graphically-based collision detection with real collision detection (11/19/2016)
+ 15. Bitmap font rendering (11/20/2016)
+ 16. Basic ammo/reload system for pistol (11/23/2016)
  
 TODO List: 
  1. apply effects like shadow, fog, etc. 
