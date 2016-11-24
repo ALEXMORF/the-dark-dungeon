@@ -287,6 +287,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                     bind_key(SDLK_d, keyboard->right);
                     bind_key(SDLK_w, keyboard->up);
                     bind_key(SDLK_s, keyboard->down);
+                    bind_key(SDLK_r, keyboard->R);
                     
                     if (key_code == SDLK_ESCAPE)
                     {

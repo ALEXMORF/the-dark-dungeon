@@ -1,6 +1,24 @@
 #include "game_simulate.h"
 
 internal void
+initialize_pistol(Weapon *weapon)
+{
+    weapon->animation_index = 1;
+    weapon->type = pistol;
+    weapon->cd = 0.3f;
+    
+    weapon->max_reload_time = 1.0f;
+    weapon->max_ammo = weapon->ammo = 8;
+}
+
+internal void
+weapon_reload(Weapon *weapon)
+{
+    weapon->is_reloading = true;
+    weapon->reload_time = weapon->max_reload_time;
+}
+
+internal void
 initialize_player(Player *player)
 {
     player->hp = PLAYER_MAX_HP;
@@ -8,45 +26,84 @@ initialize_player(Player *player)
     player->position = {3.0f, 3.0f};
     player->angle = 0.0f;
     player->collision_radius = 0.3f;
-    player->weapon_animation_index = 1;
-    player->weapon_type = pistol;
-    player->weapon_cd = 0.3f;
+
+    initialize_pistol(&player->weapon);
 }
 
 internal void
 player_input_process(Player *player, Game_Input *input)
 {
-    real32 player_speed = 2.5f;
-    real32 lerp_constant = 0.15f;
-    real32 mouse_sensitivity = 0.7f;
-
-    real32 forward = 0.0f;
-    real32 left = 0.0f;
-    if_do(input->keyboard.left, left = 1.0f);
-    if_do(input->keyboard.right, left = -1.0f);
-    if_do(input->keyboard.up, forward = 1.0f);
-    if_do(input->keyboard.down, forward = -1.0f);
-    
-    v2 player_d_velocity = {};
-    player_d_velocity += {cosf(player->angle) *forward, sinf(player->angle) * forward};    
-    player_d_velocity += {cosf(player->angle + pi32/2.0f) * left, sinf(player->angle + pi32/2.0f) * left};    
-    player_d_velocity = normalize(player_d_velocity);
-    player_d_velocity *= player_speed * input->dt_per_frame;
-    player->velocity = lerp(player->velocity, player_d_velocity, lerp_constant);
-    
-    if (input->mouse.down && player->weapon_cd_counter == 0.0f)
+    //movement
     {
-        player->weapon_cd_counter = player->weapon_cd;
-        player->has_fired = true;
+        real32 player_speed = 2.5f;
+        real32 lerp_constant = 0.15f;
+        real32 mouse_sensitivity = 0.7f;
+        
+        real32 forward = 0.0f;
+        real32 left = 0.0f;
+        if_do(input->keyboard.left, left = 1.0f);
+        if_do(input->keyboard.right, left = -1.0f);
+        if_do(input->keyboard.up, forward = 1.0f);
+        if_do(input->keyboard.down, forward = -1.0f);
+        
+        v2 player_d_velocity = {};
+        player_d_velocity += {cosf(player->angle) *forward, sinf(player->angle) * forward};    
+        player_d_velocity += {cosf(player->angle + pi32/2.0f) * left, sinf(player->angle + pi32/2.0f) * left};    
+        player_d_velocity = normalize(player_d_velocity);
+        player_d_velocity *= player_speed * input->dt_per_frame;
+        player->velocity = lerp(player->velocity, player_d_velocity, lerp_constant);
+        
+        //orientation
+        {
+            real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity; //NOTE(chen): I don't know what this crap is, fix that maybe?
+            player->angle += player_delta_angle;
+            recanonicalize_angle(&player->angle);
+        }
     }
-    else
+    
+    //firing system
     {
-        player->has_fired = false;
-    }
+        Weapon *weapon = &player->weapon;
 
-    real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity; //NOTE(chen): I don't know what this crap is, fix that maybe?
-    player->angle += player_delta_angle;
-    recanonicalize_angle(&player->angle);
+        if (weapon->is_reloading == false && input->keyboard.R)
+        {
+            weapon_reload(weapon);
+        }
+        else
+        {
+            if (weapon->is_reloading)
+            {
+                weapon->reload_time = reduce(weapon->reload_time, input->dt_per_frame);
+                if (weapon->reload_time <= 0.0f)
+                {
+                    weapon->is_reloading = false;
+                    weapon->ammo = weapon->max_ammo;
+                    weapon->reload_time = 0.0f;
+                }
+            }
+            else
+            {
+                if (input->mouse.down && weapon->cd_counter == 0.0f)
+                {
+                    if (weapon->ammo > 0)
+                    {
+                        weapon->cd_counter = weapon->cd;
+                        player->has_fired = true;
+                        weapon->ammo -= 1;
+                    }
+                    //reload
+                    else
+                    {
+                        weapon_reload(weapon);
+                    }
+                }
+                else
+                {
+                    player->has_fired = false;
+                }
+            }
+        }
+    }
 }
 
 #define Movement_Search_Wall(tile_map, entity, velocity) movement_search_wall(tile_map, entity->position, velocity, entity->collision_radius)
@@ -304,13 +361,13 @@ simulate_world(Game_State *game_state, Game_Input *input)
 {
     real32 dt = input->dt_per_frame;
     Player *player = &game_state->player;
-
+    
     //update player
     {
         player_input_process(player, input);    
-        if (player->weapon_cd_counter != 0)
+        if (player->weapon.cd_counter != 0)
         {
-            player->weapon_cd_counter -= (dt < player->weapon_cd_counter? dt: player->weapon_cd_counter);
+            player->weapon.cd_counter -= (dt < player->weapon.cd_counter? dt: player->weapon.cd_counter);
         }
         player->position += Movement_Search_Wall(&game_state->tile_map, player, player->velocity);
     }
@@ -356,7 +413,7 @@ simulate_world(Game_State *game_state, Game_Input *input)
             }
         }
     }
-
+    
     //check which entities is damaged by player
     if (player->has_fired)
     {

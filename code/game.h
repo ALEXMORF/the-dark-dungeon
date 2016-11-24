@@ -21,6 +21,7 @@
 
 #include "game_entity.h"
 #include "game_simulate.h"
+#include "game_ui.h"
 
 #include "game_meta.h"
 
@@ -35,6 +36,20 @@ enum Weapon_Type
 
 #define PLAYER_MAX_HP 10
 
+struct Weapon
+{
+    Weapon_Type type;
+    int32 animation_index;
+    real32 cd;
+    real32 cd_counter;
+
+    bool32 is_reloading;
+    real32 max_reload_time;
+    real32 reload_time;
+    int32 max_ammo;
+    int32 ammo;
+};
+
 struct Player
 {
     //coordniate
@@ -43,16 +58,16 @@ struct Player
     real32 collision_radius;
     real32 angle;
     real32 pace;
-
+    
+    //NOTE(chen): for weapon animation
+    real32 weapon_reload_offset;
+    
     //record
     bool32 has_fired;
     int32 hp;
-    
-    //weapon handling
-    Weapon_Type weapon_type;
-    int32 weapon_animation_index;
-    real32 weapon_cd;
-    real32 weapon_cd_counter;
+
+    //components
+    Weapon weapon;
 };
 
 struct Game_State
@@ -83,6 +98,7 @@ struct Game_State
     //audio asset
     Loaded_Audio pistol_sound;
     Loaded_Audio pistol2_sound;
+    Loaded_Audio pistol_reload_sound;
     Loaded_Audio background_music;
     
     //render

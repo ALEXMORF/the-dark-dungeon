@@ -1,16 +1,18 @@
 /*
  *TODO LIST:
 
-
  Code cleanness:
+ . Extract out a physics system as service component???
  . Replace unnecessary dynamic buffer with static buffer
  . Replace the sprite generation duplicate code with an animation system
-
+ 
  Game play:
- . Weaponary system (melee, pistol, reloading, ammo, etc)
- . Make the difference between penetrating bullets and non-penetrating bullet
+ . Weaponary system (melee, pistol, reloading, ammo, etc) 50% done
+ . Show the direction from where the damage comes from 
  . Add more interactiviy (screen turns red when shot, enemies pushed back when shot, etc)
-
+ . Make the difference between penetrating bullets and non-penetrating bullet
+ . Add decorations, collectables, and bosses
+ 
  Future Features:
  . Procedure map generation
  . add ui and multiple game states
@@ -42,6 +44,7 @@
 
 #include "game_entity.cpp"
 #include "game_simulate.cpp"
+#include "game_ui.cpp"
 
 //
 //
@@ -69,10 +72,10 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
     game_state->barrel_texture = load_image(platform_load_image, "../data/barrel.png");
     game_state->pillar_texture = load_image(platform_load_image, "../data/pillar.png");
     game_state->light_texture = load_image(platform_load_image, "../data/greenlight.png");
-
+    
     game_state->weapon_texture_sheet = load_image_sheet(platform_load_image, "../data/weapons.png");
     config_image_sheet(&game_state->weapon_texture_sheet, 5, 5, 1, 64, 64);
-
+    
     game_state->guard_texture_sheet = load_image_sheet(platform_load_image, "../data/guard.png");
     config_image_sheet(&game_state->guard_texture_sheet, 8, 7, 1, 64, 64);
 
@@ -84,6 +87,7 @@ load_assets(Game_State *game_state, Platform_Load_Image *platform_load_image,
 
     game_state->pistol_sound = load_audio(platform_load_audio, "../data/pistol.wav");
     game_state->pistol2_sound = load_audio(platform_load_audio, "../data/pistol2.wav");
+    game_state->pistol_reload_sound = load_audio(platform_load_audio, "../data/pistol_reload.wav");
     game_state->background_music = load_audio(platform_load_audio, "../data/background1.wav");
 }
 
@@ -101,61 +105,6 @@ fill_entities(Linear_Allocator *allocator, DBuffer(Entity) *entity_buffer)
     add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {16.0f, 15.0f}));
 }
 
-inline int
-get_string_length(char *str)
-{
-    int result = 0;
-    while (*str++)
-    {
-        result += 1;
-    }
-    return result;
-}
-
-inline int
-get_font_index(char character)
-{
-    if (character >= 'a' && character <= 'z')
-    {
-        character += 'A' - 'a';
-    }
-    assert(character >= '(' && character <= 'Z');
-    
-    char initial_character = '(';
-    int start_index_offset = 8;
-    
-    return start_index_offset + (character - initial_character);
-}
-
-#define draw_string(buffer, font_sheet, min_x, min_y, max_x, max_y, string_format, ...) { char string[255] = {}; snprintf(string, sizeof(string), string_format, ##__VA_ARGS__); draw_string_unformatted(buffer, font_sheet, min_x, min_y, max_x, max_y, string); } 
-#define draw_string_autosized(buffer, font_sheet, min_x, min_y, font_width, font_height, string_format, ...) { char string[255] = {}; snprintf(string, sizeof(string), string_format, ##__VA_ARGS__); draw_string_unformatted(buffer, font_sheet, min_x, min_y, min_x + font_width * get_string_length(string), min_y + font_height, string); } 
-internal void
-draw_string_unformatted(Game_Offscreen_Buffer *buffer, Loaded_Image_Sheet *font_sheet, int min_x, int min_y, int max_x, int max_y,
-                        char *string)
-{
-    if_do(min_x < 0, min_x = 0);
-    if_do(min_y < 0, min_y = 0);
-    if_do(max_x > buffer->width, max_x = buffer->width);
-    if_do(max_y > buffer->height, max_y = buffer->height);
-
-    int string_length = get_string_length(string);
-    int bitmap_width = (int32)(((real32)max_x - min_x) / string_length);
-    
-    for (int i = 0; i < string_length; ++i)
-    {
-        if (string[i] == ' ')
-        {
-            continue;
-        }
-        
-        int bitmap_index = get_font_index(string[i]);
-        int bitmap_min_x = min_x + bitmap_width * i;
-        
-        Loaded_Image font_image = extract_image_from_sheet(font_sheet, bitmap_index, 0);
-        draw_bitmap(buffer, &font_image, bitmap_min_x, min_y, bitmap_min_x + bitmap_width, max_y);
-    }
-}
-    
 extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 {
     assert(sizeof(Game_State) <= memory->permanent_memory.size);
@@ -225,7 +174,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         
         Audio_System *audio_system = &game_state->audio_system;
         audio_system->push_task_looped(&game_state->background_music);
-
+        
         memory->is_initialized = true;
     }
     game_state->transient_allocator.used = 0;
@@ -233,23 +182,34 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     simulate_world(game_state, input);
     
     //output sound
-    if (game_state->player.has_fired)
     {
-        game_state->audio_system.push_task(&game_state->pistol2_sound, 1.0f);
-    }
-    for (int i = 0; i < game_state->entity_buffer.count; ++i)
-    {
-        Entity *entity = (Entity *)&game_state->entity_buffer.e[i];
-        if (entity->state == aiming_state)
+        //player fire sound
+        if (game_state->player.has_fired)
         {
-            Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
-            if (aiming_state->just_fired)
+            game_state->audio_system.push_task(&game_state->pistol2_sound, 1.0f);
+        }
+
+        //player reload sound
+        if (game_state->player.weapon.reload_time == game_state->player.weapon.max_reload_time)
+        {
+            game_state->audio_system.push_task(&game_state->pistol_reload_sound, 2.0f);
+        }
+
+        //enemy fire sound
+        for (int i = 0; i < game_state->entity_buffer.count; ++i)
+        {
+            Entity *entity = (Entity *)&game_state->entity_buffer.e[i];
+            if (entity->state == aiming_state)
             {
-                game_state->audio_system.push_task(&game_state->pistol_sound, 0.3f);
+                Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
+                if (aiming_state->just_fired)
+                {
+                    game_state->audio_system.push_task(&game_state->pistol_sound, 0.3f);
+                }
             }
         }
     }
-        
+    
     //
     //
     //Render game
@@ -258,7 +218,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     Sprite_List sprite_list = {};
     sprite_list.capacity = game_state->entity_buffer.capacity;
     sprite_list.content = Push_Array(&game_state->transient_allocator, sprite_list.capacity, Sprite);
-
+    
     //draw 3d scene and sprites
     generate_sprite_list(game_state, &sprite_list, game_state->entity_buffer.e, game_state->entity_buffer.count);
     sort_sprites(sprite_list.content, sprite_list.count, game_state->player.position);
@@ -272,26 +232,40 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     {
         Player *player = &game_state->player;
         
-        real32 animation_cycle = player->weapon_cd - 0.02f;
+        real32 animation_cycle = player->weapon.cd - 0.02f;
         real32 animation_index_count = 4.0f;
         int32 animation_ending_index = 1;
-        if (player->weapon_cd_counter)
+        if (player->weapon.cd_counter)
         {
-            real32 time_passed = player->weapon_cd - player->weapon_cd_counter;
+            real32 time_passed = player->weapon.cd - player->weapon.cd_counter;
             if (time_passed < animation_cycle)
             {
                 real32 animation_index_interval = animation_cycle / animation_index_count;
-                player->weapon_animation_index = (int32)(time_passed / animation_index_interval + (animation_ending_index + 1)) % ((int32)animation_index_count + 1);
+                player->weapon.animation_index = (int32)(time_passed / animation_index_interval + (animation_ending_index + 1)) % ((int32)animation_index_count + 1);
             }
             else
             {
-                player->weapon_animation_index = animation_ending_index;
+                player->weapon.animation_index = animation_ending_index;
             }
         }
     }
     
     //draw first-person weapon
     {
+        Player *player = &game_state->player;
+
+        //calculate offset for reloading animation
+        if (player->weapon.is_reloading)
+        {
+            real32 max_reload_offset = 200.0f;
+            player->weapon_reload_offset = lerp(player->weapon_reload_offset, max_reload_offset, 0.2f);
+        }
+        else
+        {
+            player->weapon_reload_offset = lerp(player->weapon_reload_offset, 0.0f, 0.2f);   
+        }
+
+        //bob and render weapon sprites
         real32 y_scale = (real32)buffer->height / 50;
         real32 x_scale = (real32)buffer->width / 40;
         game_state->player.pace += len(game_state->player.velocity);
@@ -300,12 +274,12 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         
         v2 weapon_sprite_size = {(real32)buffer->height, (real32)buffer->height};
         int32 weapon_upper_left = bob_x + (buffer->width - (int32)weapon_sprite_size.x) / 2;
-        int32 weapon_upper_top = 0 + bob_y;
+        int32 weapon_upper_top = 0 + bob_y + (int32)player->weapon_reload_offset;
         int32 weapon_lower_right = weapon_upper_left + (int32)weapon_sprite_size.x;
         
         Loaded_Image weapon_image = extract_image_from_sheet(&game_state->weapon_texture_sheet,
-                                                             game_state->player.weapon_animation_index,
-                                                             game_state->player.weapon_type);
+                                                             player->weapon.animation_index,
+                                                             player->weapon.type);
         real32 texture_x = 0.0f;
         real32 texture_mapper = (real32)weapon_image.width / weapon_sprite_size.x;
         for (int32 dest_x = weapon_upper_left; dest_x < weapon_lower_right; ++dest_x)
@@ -320,12 +294,10 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     {
         //hp-bar
         {
-            real32 min_x = 100;
-            real32 max_x = 500;
-            real32 min_y = 10;
-            real32 max_y = 40;
+            v2 min = {100, 10};
+            v2 max = {500, 40};
             
-            real32 width_per_hp = (real32)((max_x - min_x) / PLAYER_MAX_HP);
+            real32 width_per_hp = (real32)((max.x - min.x) / PLAYER_MAX_HP);
             real32 lerp_ratio = 3.0f * input->dt_per_frame;
             real32 hp_count = clamp((real32)game_state->player.hp, 0.0f, (real32)PLAYER_MAX_HP);
             
@@ -333,8 +305,18 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             game_state->hp_display_width = lerp(game_state->hp_display_width, target_hp_display_width, lerp_ratio);
             
             draw_string(buffer, &game_state->font_bitmap_sheet, 10, 10, 120, 40, "HP: ");
-            draw_rectangle(buffer, (int32)min_x, (int32)min_y, (int32)max_x, (int32)max_y, 0x00550000);
-            draw_rectangle(buffer, (int32)min_x, (int32)min_y, (int32)min_x + (int32)game_state->hp_display_width, (int32)max_y, 0x00ff0000);
+            draw_rectangle(buffer, min.x, min.y, max.x, max.y, 0x00550000);
+            draw_rectangle(buffer, min.x, min.y, min.x + game_state->hp_display_width, max.y, 0x00ff0000);
+        }
+
+        //ammo count
+        {
+            int32 min_x = 700;
+            int32 min_y = 500;
+            int32 font_size = 20;
+            
+            draw_string_autosized(buffer, &game_state->font_bitmap_sheet, min_x, min_y, font_size, font_size,
+                                  "ammo: %d / %d", game_state->player.weapon.ammo, game_state->player.weapon.max_ammo);
         }
         
         //debug info

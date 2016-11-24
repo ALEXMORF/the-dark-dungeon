@@ -94,6 +94,7 @@ struct Game_Input
         bool32 up;
         bool32 down;
         bool32 space;
+        bool32 R;
     } keyboard;
     struct
     {

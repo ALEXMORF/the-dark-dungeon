@@ -86,6 +86,15 @@ draw_rectangle(Game_Offscreen_Buffer *buffer,
 }
 
 internal void
+draw_rectangle(Game_Offscreen_Buffer *buffer,
+               real32 min_x, real32 min_y,
+               real32 max_x, real32 max_y,
+               uint32 color)
+{
+    draw_rectangle(buffer, (int32)min_x, (int32)min_y, (int32)max_x, (int32)max_y, color);
+}
+
+internal void
 copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
            int32 source_x, int32 dest_x, int32 dest_y, int32 dest_height,
            Shader_Fn *shader = 0, real32 shader_ratio = 0.5f)
@@ -172,7 +181,7 @@ draw_bitmap(Game_Offscreen_Buffer *buffer, Loaded_Image *bitmap, int32 min_x, in
             uint8 old_R = (uint8)((dest_value & red_mask) >> 16);
             uint8 old_G = (uint8)((dest_value & green_mask) >> 8);
             uint8 old_B = (uint8)((dest_value & blue_mask) >> 0);
-	    
+            
             uint8 new_A = (uint8)((src_value & alpha_mask) >> 24);
             uint8 new_R = (uint8)((src_value & red_mask) >> 16);
             uint8 new_G = (uint8)((src_value & green_mask) >> 8);
