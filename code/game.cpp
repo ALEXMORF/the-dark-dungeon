@@ -7,11 +7,14 @@
  . Replace the sprite generation duplicate code with an animation system
  
  Gameplay:
- . Weaponary system (melee, pistol, reloading, ammo, etc) 50% done
+ . Weaponary system (phase-based animation and melee) 90% done
  . Show the direction from where the damage comes from 
  . Add more interactiviy (screen turns red when shot, enemies pushed back when shot, etc)
  . Make the difference between penetrating bullets and non-penetrating bullet
  . Add decorations, collectables, and bosses
+ 
+ Performance:
+ . Multithreaded rendering (simutaniously drawing 8 portions of the screen)
  
  Future Features:
  . Procedure map generation
@@ -265,7 +268,9 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             if (time_passed < animation_cycle)
             {
                 real32 animation_index_interval = animation_cycle / animation_index_count;
-                player->weapon.animation_index = (int32)(time_passed / animation_index_interval + (animation_ending_index + 1)) % ((int32)animation_index_count + 1);
+                player->weapon.animation_index =
+                    (int32)(time_passed / animation_index_interval +
+                            (animation_ending_index + 1)) % ((int32)animation_index_count + 1);
             }
             else
             {
@@ -340,7 +345,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             int32 font_size = 20;
             
             draw_string_autosized(buffer, &game_state->font_bitmap_sheet, min_x, min_y, font_size, font_size,
-                                  "ammo: %d / %d", game_state->player.weapon.ammo, game_state->player.weapon.max_ammo);
+                                  "ammo: %d / %d", game_state->player.weapon.cache_ammo, game_state->player.weapon.bank_ammo);
         }
         
         //debug info

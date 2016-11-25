@@ -6,7 +6,7 @@ pushd ..\build
 
 set sdl_lib_path=C:\SDL_vs\lib\x86
 set sdl_include_path=C:\SDL_vs\include
-set compiler_flags=-nologo -Z7 -MD -Gm- -GR- -EHa- -Od -Oi -WX -W4 -wd4100 -wd4189 -wd4505 -wd4127 
+set compiler_flags=-nologo -Z7 -MT -Gm- -GR- -EHa- -Od -Oi -WX -W4 -wd4100 -wd4189 -wd4505 -wd4127 
 set macro_flags=-DPOOR_DEBUG=1 -DRELEASE_BUILD=0
 set linker_flags=-incremental:no user32.lib gdi32.lib winmm.lib 
 

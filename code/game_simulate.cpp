@@ -1,6 +1,32 @@
 #include "game_simulate.h"
 
 internal void
+weapon_start_reload(Weapon *weapon)
+{
+    if (weapon->bank_ammo > 0)
+    {
+        weapon->is_reloading = true;
+        weapon->reload_time = weapon->max_reload_time;
+    }
+}
+
+internal void
+weapon_end_reload(Weapon *weapon)
+{
+    weapon->is_reloading = false;
+
+    int32 ammo_to_refill = weapon->cache_max_ammo - weapon->cache_ammo;
+    if (ammo_to_refill > weapon->bank_ammo)
+    {
+        ammo_to_refill = weapon->bank_ammo;
+    }
+    
+    weapon->bank_ammo -= ammo_to_refill;
+    weapon->cache_ammo += ammo_to_refill;
+    weapon->reload_time = 0.0f;
+}
+
+internal void
 initialize_pistol(Weapon *weapon)
 {
     weapon->animation_index = 1;
@@ -8,7 +34,8 @@ initialize_pistol(Weapon *weapon)
     weapon->cd = 0.3f;
     
     weapon->max_reload_time = 1.0f;
-    weapon->max_ammo = weapon->ammo = 8;
+    weapon->cache_max_ammo = weapon->cache_ammo = 8;
+    weapon->bank_ammo = 32;
 }
 
 internal void
@@ -18,8 +45,9 @@ initialize_rifle(Weapon *weapon)
     weapon->type = rifle;
     weapon->cd = 0.1f;
     
-    weapon->max_reload_time = 1.0f;
-    weapon->max_ammo = weapon->ammo = 20;
+    weapon->max_reload_time = 1.5f;
+    weapon->cache_max_ammo = weapon->cache_ammo = 30;
+    weapon->bank_ammo = 90;
 }
 
 internal void
@@ -27,17 +55,11 @@ initialize_minigun(Weapon *weapon)
 {
     weapon->animation_index = 1;
     weapon->type = minigun;
-    weapon->cd = 0.1f;
+    weapon->cd = 0.09f;
     
     weapon->max_reload_time = 1.0f;
-    weapon->max_ammo = weapon->ammo = 100;
-}
-
-internal void
-weapon_reload(Weapon *weapon)
-{
-    weapon->is_reloading = true;
-    weapon->reload_time = weapon->max_reload_time;
+    weapon->cache_max_ammo = weapon->cache_ammo = 100;
+    weapon->bank_ammo = 300;
 }
 
 internal void
@@ -48,7 +70,7 @@ initialize_player(Player *player)
     player->position = {3.0f, 3.0f};
     player->angle = 0.0f;
     player->collision_radius = 0.3f;
-
+    
     initialize_rifle(&player->weapon);
 }
 
@@ -86,10 +108,10 @@ player_input_process(Player *player, Game_Input *input)
     //firing system
     {
         Weapon *weapon = &player->weapon;
-
+        
         if (weapon->is_reloading == false && input->keyboard.R)
         {
-            weapon_reload(weapon);
+            weapon_start_reload(weapon);
         }
         else
         {
@@ -98,25 +120,23 @@ player_input_process(Player *player, Game_Input *input)
                 weapon->reload_time = reduce(weapon->reload_time, input->dt_per_frame);
                 if (weapon->reload_time <= 0.0f)
                 {
-                    weapon->is_reloading = false;
-                    weapon->ammo = weapon->max_ammo;
-                    weapon->reload_time = 0.0f;
+                    weapon_end_reload(weapon);
                 }
             }
             else
             {
                 if (input->mouse.down && weapon->cd_counter == 0.0f)
                 {
-                    if (weapon->ammo > 0)
+                    if (weapon->cache_ammo > 0)
                     {
                         weapon->cd_counter = weapon->cd;
                         player->has_fired = true;
-                        weapon->ammo -= 1;
+                        weapon->cache_ammo -= 1;
                     }
                     //reload
                     else
                     {
-                        weapon_reload(weapon);
+                        weapon_start_reload(weapon);
                     }
                 }
                 else

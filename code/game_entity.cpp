@@ -24,12 +24,12 @@ make_dynamic_entity(Linear_Allocator *allocator, Entity_Type type, v2 position, 
     {
         case guard:
         {
-            result.hp = 2;
+            result.hp = 3;
         } break;
 
         case ss:
         {
-            result.hp = 3;
+            result.hp = 5;
         } break;
 
         default:

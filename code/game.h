@@ -46,8 +46,9 @@ struct Weapon
     bool32 is_reloading;
     real32 max_reload_time;
     real32 reload_time;
-    int32 max_ammo;
-    int32 ammo;
+    int32 cache_max_ammo;
+    int32 cache_ammo;
+    int32 bank_ammo;
 };
 
 struct Player
