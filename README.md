@@ -26,8 +26,7 @@ things I learned:
 
   The urge to apply abstractions/OOP, in most cases, originates from the inability to read code. Then in that case, what abstractions achieve is not making the code readable, but conceiving the programmer that it is readable, which really leaves the program more complicated and fragmented than it should have been. 
 
-  A rule to assess the readability of a program:
-    
+  A rule to assess the readability of a program:    
     Good code should actually take a bit longer to read, but very easily understandable, without 1000 layers of "abstraction"s. 
     
     
