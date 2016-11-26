@@ -27,11 +27,11 @@
 
 enum Weapon_Type
 {
-    knife,
+    knife, 
     pistol,
     rifle,
     minigun,
-    weapon_count
+    weapon_type_count
 };
 
 #define PLAYER_MAX_HP 10
@@ -66,9 +66,14 @@ struct Player
     //record
     bool32 has_fired;
     int32 hp;
-
+    
     //components
-    Weapon weapon;
+    int32 weapon_index;
+    Weapon weapons[weapon_type_count];
+
+    Weapon *get_weapon() {
+        return &weapons[weapon_index];
+    }
 };
 
 struct Game_State

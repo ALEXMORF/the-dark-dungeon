@@ -288,6 +288,17 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                     bind_key(SDLK_w, keyboard->up);
                     bind_key(SDLK_s, keyboard->down);
                     bind_key(SDLK_r, keyboard->R);
+
+                    bind_key(SDLK_1, keyboard->number[1]);
+                    bind_key(SDLK_2, keyboard->number[2]);
+                    bind_key(SDLK_3, keyboard->number[3]);
+                    bind_key(SDLK_4, keyboard->number[4]);
+                    bind_key(SDLK_5, keyboard->number[5]);
+                    bind_key(SDLK_6, keyboard->number[6]);
+                    bind_key(SDLK_7, keyboard->number[7]);
+                    bind_key(SDLK_8, keyboard->number[8]);
+                    bind_key(SDLK_9, keyboard->number[9]);
+                    bind_key(SDLK_0, keyboard->number[0]);
                     
                     if (key_code == SDLK_ESCAPE)
                     {
@@ -401,14 +412,6 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         }
         last_counter = win32_get_wallclock();   
         ms_per_frame = elapsed_ms;
-        
-#if POOR_DEBUG
-        char debug_buffer[256] = {};
-        snprintf(debug_buffer, sizeof(debug_buffer),
-                 "ms_per_frame:%.02f, ms_took_to_process:%.02f, Mega-TSC:%lld \n",
-                 elapsed_ms, ms_took_to_process, mtsc);
-        OutputDebugStringA(debug_buffer);
-#endif
 
         debug_state.last_frame_process_time = ms_took_to_process;
         debug_state.last_frame_mtsc = mtsc;

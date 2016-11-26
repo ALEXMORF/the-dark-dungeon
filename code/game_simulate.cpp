@@ -27,39 +27,48 @@ weapon_end_reload(Weapon *weapon)
 }
 
 internal void
-initialize_pistol(Weapon *weapon)
+initialize_weapon(Weapon *weapon, Weapon_Type weapon_type)
 {
     weapon->animation_index = 1;
-    weapon->type = pistol;
-    weapon->cd = 0.3f;
-    
-    weapon->max_reload_time = 1.0f;
-    weapon->cache_max_ammo = weapon->cache_ammo = 8;
-    weapon->bank_ammo = 32;
-}
+    weapon->type = weapon_type;
 
-internal void
-initialize_rifle(Weapon *weapon)
-{
-    weapon->animation_index = 1;
-    weapon->type = rifle;
-    weapon->cd = 0.1f;
+    switch (weapon->type)
+    {
+        case pistol:
+        {
+            weapon->animation_index = 1;
+            weapon->cd = 0.3f;
     
-    weapon->max_reload_time = 1.5f;
-    weapon->cache_max_ammo = weapon->cache_ammo = 30;
-    weapon->bank_ammo = 90;
-}
+            weapon->max_reload_time = 1.0f;
+            weapon->cache_max_ammo = weapon->cache_ammo = 8;
+            weapon->bank_ammo = 32;
+        } break;
+        
+        case rifle:
+        {
+            weapon->animation_index = 1;
+            weapon->cd = 0.1f;
+    
+            weapon->max_reload_time = 1.5f;
+            weapon->cache_max_ammo = weapon->cache_ammo = 30;
+            weapon->bank_ammo = 90;
+        } break;
 
-internal void
-initialize_minigun(Weapon *weapon)
-{
-    weapon->animation_index = 1;
-    weapon->type = minigun;
-    weapon->cd = 0.09f;
+        case minigun:
+        {
+            weapon->animation_index = 1;
+            weapon->cd = 0.08f;
     
-    weapon->max_reload_time = 1.0f;
-    weapon->cache_max_ammo = weapon->cache_ammo = 100;
-    weapon->bank_ammo = 300;
+            weapon->max_reload_time = 2.0f;
+            weapon->cache_max_ammo = weapon->cache_ammo = 100;
+            weapon->bank_ammo = 300;
+        } break;
+
+        default:
+        {
+            assert(!"weapon type exhuasted");
+        } break;
+    }
 }
 
 internal void
@@ -71,7 +80,10 @@ initialize_player(Player *player)
     player->angle = 0.0f;
     player->collision_radius = 0.3f;
     
-    initialize_rifle(&player->weapon);
+    initialize_weapon(&player->weapons[pistol], pistol);
+    initialize_weapon(&player->weapons[rifle], rifle);
+    initialize_weapon(&player->weapons[minigun], minigun);
+    player->weapon_index = rifle;
 }
 
 internal void
@@ -104,10 +116,20 @@ player_input_process(Player *player, Game_Input *input)
             recanonicalize_angle(&player->angle);
         }
     }
+
+    //weapon switch
+    for (int i = 0; i < 4; ++i)
+    {
+        if (input->keyboard.number[i] && player->get_weapon()->type != i)
+        {
+            player->weapon_index = i;
+            break;
+        }
+    }
     
     //firing system
     {
-        Weapon *weapon = &player->weapon;
+        Weapon *weapon = player->get_weapon();
         
         if (weapon->is_reloading == false && input->keyboard.R)
         {
@@ -407,9 +429,9 @@ simulate_world(Game_State *game_state, Game_Input *input)
     //update player
     {
         player_input_process(player, input);    
-        if (player->weapon.cd_counter != 0)
+        if (player->get_weapon()->cd_counter != 0)
         {
-            player->weapon.cd_counter -= (dt < player->weapon.cd_counter? dt: player->weapon.cd_counter);
+            player->get_weapon()->cd_counter -= (dt < player->get_weapon()->cd_counter? dt: player->get_weapon()->cd_counter);
         }
         player->position += Movement_Search_Wall(&game_state->tile_map, player, player->velocity);
     }

@@ -81,7 +81,7 @@ struct Game_Sound_Buffer
     void *memory;
     uint32 running_sample_index;
     int32 sample_count;
-
+    
     uint32 byte_per_sample;
 };
 
@@ -95,6 +95,7 @@ struct Game_Input
         bool32 down;
         bool32 space;
         bool32 R;
+        bool32 number[10];
     } keyboard;
     struct
     {
