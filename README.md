@@ -29,7 +29,7 @@ things I learned:
   A rule to assess the readability of a program:
     Code shouldn't be necesarry very easily readable, but after an iteration of reading it, the programmer must be able to UNDERSTAND the code, but just "read" it and forget. 
     
-    player.update();         //NOTE: okay you update the player, but I don't know what it is!! I dont understand!!
+    player.update();         //NOTE: okay... don't know what it really does but I will tell your word for it... I guess?
     
     //player update
     {
