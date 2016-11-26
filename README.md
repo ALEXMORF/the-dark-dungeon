@@ -31,7 +31,7 @@ things I learned:
     
     
     
-    player.update();         //NOTE: okay... don't know what it really does but I will tell your word for it... I guess?
+    player.update();         //NOTE: okay... don't know what it really does but I will take your word for it... I guess?
     
     //player update
     {
