@@ -24,7 +24,7 @@ things I implemented:
 
 things I learned:
 
- The urge to apply abstractions, in most cases, originates from the inability to read code. Then in that case, what abstractions achieve is not making the code readable, but conceiving the programmer that it is readable, which really leaves the program more complicated and fragmented than it should have been. 
+ The urge to apply abstractions/OOP, in most cases, originates from the inability to read code. Then in that case, what abstractions achieve is not making the code readable, but conceiving the programmer that it is readable, which really leaves the program more complicated and fragmented than it should have been. 
 
 TODO List: 
  1. apply effects like shadow, fog, etc. 
