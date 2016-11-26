@@ -33,7 +33,7 @@ things I learned:
     
     player.update();         //NOTE: okay... don't know what it really does but I will take your word for it... I guess?
     
-    //player update
+    //player update          //NOTE: okay, I understand.
     {
         real32 player_speed = 3.0f;
         real32 lerp_constant = 0.15f;
@@ -57,7 +57,7 @@ things I learned:
         real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity; 
         player->angle += player_delta_angle;
         recanonicalize_angle(&player->angle);
-    }                        //NOTE: okay, I understand. 
+    }                        
  
 TODO List: 
  1. apply effects like shadow, fog, etc. 
