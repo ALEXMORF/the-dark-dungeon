@@ -30,6 +30,8 @@ things I learned:
     
     Good code should actually take a bit longer to read, but very easily understandable, without 1000 layers of "abstraction"s. 
     
+    
+    
     player.update();         //NOTE: okay... don't know what it really does but I will tell your word for it... I guess?
     
     //player update
