@@ -35,8 +35,28 @@ things I learned:
     
     //player update
     {
-        player.x += dx;
-        player.y += dy;
+        real32 player_speed = 3.0f;
+        real32 lerp_constant = 0.15f;
+        real32 mouse_sensitivity = 0.7f;
+        
+        real32 forward = 0.0f;
+        real32 left = 0.0f;
+        if_do(input->keyboard.left, left = 1.0f);
+        if_do(input->keyboard.right, left = -1.0f);
+        if_do(input->keyboard.up, forward = 1.0f);
+        if_do(input->keyboard.down, forward = -1.0f);
+        
+        v2 player_d_velocity = {};
+        player_d_velocity += {cosf(player->angle) *forward, sinf(player->angle) * forward};    
+        player_d_velocity += {cosf(player->angle + pi32/2.0f) * left, sinf(player->angle + pi32/2.0f) * left};    
+        player_d_velocity = normalize(player_d_velocity);
+        player_d_velocity *= player_speed * input->dt_per_frame;
+        player->velocity = lerp(player->velocity, player_d_velocity, lerp_constant);
+        
+        //orientation
+        real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity; 
+        player->angle += player_delta_angle;
+        recanonicalize_angle(&player->angle);
     }                        //NOTE: okay, I understand. 
  
 TODO List: 
