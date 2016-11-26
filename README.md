@@ -27,7 +27,8 @@ things I learned:
   The urge to apply abstractions/OOP, in most cases, originates from the inability to read code. Then in that case, what abstractions achieve is not making the code readable, but conceiving the programmer that it is readable, which really leaves the program more complicated and fragmented than it should have been. 
 
   A rule to assess the readability of a program:
-    Code shouldn't be necesarry very easily readable, but after an iteration of reading it, the programmer must be able to UNDERSTAND the code, but just "read" it and forget. 
+    
+    Good code should actually take a bit longer to read, but very easily understandable, without 1000 layers of "abstraction"s. 
     
     player.update();         //NOTE: okay... don't know what it really does but I will tell your word for it... I guess?
     
