@@ -1,175 +1,5 @@
 #include "game_simulate.h"
 
-internal void
-weapon_start_reload(Weapon *weapon)
-{
-    if (weapon->bank_ammo > 0)
-    {
-        weapon->is_reloading = true;
-        weapon->reload_time = weapon->max_reload_time;
-    }
-}
-
-internal void
-weapon_end_reload(Weapon *weapon)
-{
-    weapon->is_reloading = false;
-
-    int32 ammo_to_refill = weapon->cache_max_ammo - weapon->cache_ammo;
-    if (ammo_to_refill > weapon->bank_ammo)
-    {
-        ammo_to_refill = weapon->bank_ammo;
-    }
-    
-    weapon->bank_ammo -= ammo_to_refill;
-    weapon->cache_ammo += ammo_to_refill;
-    weapon->reload_time = 0.0f;
-}
-
-internal void
-initialize_weapon(Weapon *weapon, Weapon_Type weapon_type)
-{
-    weapon->animation_index = 1;
-    weapon->type = weapon_type;
-
-    switch (weapon->type)
-    {
-        case pistol:
-        {
-            weapon->animation_index = 1;
-            weapon->cd = 0.3f;
-    
-            weapon->max_reload_time = 1.0f;
-            weapon->cache_max_ammo = weapon->cache_ammo = 8;
-            weapon->bank_ammo = 32;
-        } break;
-        
-        case rifle:
-        {
-            weapon->animation_index = 1;
-            weapon->cd = 0.1f;
-    
-            weapon->max_reload_time = 1.5f;
-            weapon->cache_max_ammo = weapon->cache_ammo = 30;
-            weapon->bank_ammo = 90;
-        } break;
-
-        case minigun:
-        {
-            weapon->animation_index = 1;
-            weapon->cd = 0.08f;
-    
-            weapon->max_reload_time = 2.0f;
-            weapon->cache_max_ammo = weapon->cache_ammo = 100;
-            weapon->bank_ammo = 300;
-        } break;
-
-        default:
-        {
-            assert(!"weapon type exhuasted");
-        } break;
-    }
-}
-
-internal void
-initialize_player(Player *player)
-{
-    player->hp = PLAYER_MAX_HP;
-    
-    player->position = {3.0f, 3.0f};
-    player->angle = 0.0f;
-    player->collision_radius = 0.3f;
-    
-    initialize_weapon(&player->weapons[pistol], pistol);
-    initialize_weapon(&player->weapons[rifle], rifle);
-    initialize_weapon(&player->weapons[minigun], minigun);
-    player->weapon_index = rifle;
-}
-
-internal void
-player_input_process(Player *player, Game_Input *input)
-{
-    //movement
-    {
-        real32 player_speed = 2.5f;
-        real32 lerp_constant = 0.15f;
-        real32 mouse_sensitivity = 0.7f;
-        
-        real32 forward = 0.0f;
-        real32 left = 0.0f;
-        if_do(input->keyboard.left, left = 1.0f);
-        if_do(input->keyboard.right, left = -1.0f);
-        if_do(input->keyboard.up, forward = 1.0f);
-        if_do(input->keyboard.down, forward = -1.0f);
-        
-        v2 player_d_velocity = {};
-        player_d_velocity += {cosf(player->angle) *forward, sinf(player->angle) * forward};    
-        player_d_velocity += {cosf(player->angle + pi32/2.0f) * left, sinf(player->angle + pi32/2.0f) * left};    
-        player_d_velocity = normalize(player_d_velocity);
-        player_d_velocity *= player_speed * input->dt_per_frame;
-        player->velocity = lerp(player->velocity, player_d_velocity, lerp_constant);
-        
-        //orientation
-        {
-            real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity; //NOTE(chen): I don't know what this crap is, fix that maybe?
-            player->angle += player_delta_angle;
-            recanonicalize_angle(&player->angle);
-        }
-    }
-
-    //weapon switch
-    for (int i = 0; i < 4; ++i)
-    {
-        if (input->keyboard.number[i] && player->get_weapon()->type != i)
-        {
-            player->weapon_index = i;
-            break;
-        }
-    }
-    
-    //firing system
-    {
-        Weapon *weapon = player->get_weapon();
-        
-        if (weapon->is_reloading == false && input->keyboard.R)
-        {
-            weapon_start_reload(weapon);
-        }
-        else
-        {
-            if (weapon->is_reloading)
-            {
-                weapon->reload_time = reduce(weapon->reload_time, input->dt_per_frame);
-                if (weapon->reload_time <= 0.0f)
-                {
-                    weapon_end_reload(weapon);
-                }
-            }
-            else
-            {
-                if (input->mouse.down && weapon->cd_counter == 0.0f)
-                {
-                    if (weapon->cache_ammo > 0)
-                    {
-                        weapon->cd_counter = weapon->cd;
-                        player->has_fired = true;
-                        weapon->cache_ammo -= 1;
-                    }
-                    //reload
-                    else
-                    {
-                        weapon_start_reload(weapon);
-                    }
-                }
-                else
-                {
-                    player->has_fired = false;
-                }
-            }
-        }
-    }
-}
-
 #define Movement_Search_Wall(tile_map, entity, velocity) movement_search_wall(tile_map, entity->position, velocity, entity->collision_radius)
 internal v2
 movement_search_wall(Tile_Map *tile_map, v2 position, v2 desired_velocity, real32 radius)
@@ -248,7 +78,7 @@ search_player(Tile_Map *tile_map, Entity *entity, v2 player_position, real32 fov
 //
 
 internal void
-tick_entity_by_state(Entity *entity, Tile_Map *tile_map, v2 player_position, real32 dt)
+update_basic_entity(Entity *entity, Tile_Map *tile_map, v2 player_position, real32 dt)
 {
     real32 *clock = entity->clock;
     real32 hurting_state_interval = 0.1f;
@@ -431,7 +261,7 @@ simulate_world(Game_State *game_state, Game_Input *input)
         player_input_process(player, input);    
         if (player->get_weapon()->cd_counter != 0)
         {
-            player->get_weapon()->cd_counter -= (dt < player->get_weapon()->cd_counter? dt: player->get_weapon()->cd_counter);
+            player->get_weapon()->cd_counter = reduce(player->get_weapon()->cd_counter, dt);
         }
         player->position += Movement_Search_Wall(&game_state->tile_map, player, player->velocity);
     }
@@ -445,7 +275,7 @@ simulate_world(Game_State *game_state, Game_Input *input)
             case guard:
             case ss:
             {
-                tick_entity_by_state(entity, &game_state->tile_map, player->position, dt);
+                update_basic_entity(entity, &game_state->tile_map, player->position, dt);
             } break;
         }
     }

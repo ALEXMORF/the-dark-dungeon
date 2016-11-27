@@ -109,6 +109,7 @@ struct Game_Input
 struct Debug_State
 {
     real32 last_frame_process_time;
+    real32 last_frame_time;
     uint64 last_frame_mtsc;
 };
 

@@ -173,8 +173,11 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     real32 audio_latency_ms = (1000.0f / target_frame_per_second) + 10; //in ms
     bool32 frame_rate_lock = true;
     
+    //NOTE(chen): limit windows to schedule this program 1ms at max
+    timeBeginPeriod(1);
+    
     SDL_Init(SDL_INIT_EVERYTHING);
-
+    
     SDL_version sdl_compiled_version = {};
     SDL_version sdl_linked_version = {};
     SDL_VERSION(&sdl_compiled_version);
@@ -185,13 +188,13 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
     {
         show_error("your SDL runtime binary and SDL static library have different versions, play at your own caution");
     }
-
+    
     SDL_Window *sdl_window = SDL_CreateWindow("The Dark Dungeon",
                                               SDL_WINDOWPOS_CENTERED,
                                               SDL_WINDOWPOS_CENTERED,
                                               window_width, window_height,
                                               0);
-    SDL_Renderer *sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_PRESENTVSYNC|SDL_RENDERER_ACCELERATED);
+    SDL_Renderer *sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_PRESENTVSYNC);
     SDL_Texture *sdl_offscreen_texture = SDL_CreateTexture(sdl_renderer,
                                                            SDL_PIXELFORMAT_ARGB8888,
                                                            SDL_TEXTUREACCESS_STREAMING,
@@ -385,25 +388,25 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         SDL_RenderCopy(sdl_renderer, sdl_offscreen_texture, 0, 0);
 
         real32 ms_took_to_process = win32_get_elapsed_ms(last_counter, win32_get_wallclock());
+        uint64 current_tsc = __rdtsc();
+        uint64 mtsc = (current_tsc - last_tsc) / 1024*1024;
+        last_tsc = __rdtsc();
         
         SDL_RenderPresent(sdl_renderer);
         
         real32 elapsed_ms = win32_get_elapsed_ms(last_counter, win32_get_wallclock());
         real32 target_ms = 1000.0f / (real32)target_frame_per_second;
-
-        uint64 current_tsc = __rdtsc();
-        uint64 mtsc = (current_tsc - last_tsc) / 1024*1024;
-        last_tsc = __rdtsc();
         
         if (frame_rate_lock)
         {
             if (target_ms > elapsed_ms)
             {
                 Sleep((DWORD)(target_ms - elapsed_ms));
-                do
+                elapsed_ms = win32_get_elapsed_ms(last_counter, win32_get_wallclock());
+                while (elapsed_ms < target_ms)
                 {
                     elapsed_ms = win32_get_elapsed_ms(last_counter, win32_get_wallclock());
-                } while (elapsed_ms < target_ms);
+                }
             }
         }
         else
@@ -413,6 +416,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         last_counter = win32_get_wallclock();   
         ms_per_frame = elapsed_ms;
 
+        debug_state.last_frame_time = ms_per_frame;
         debug_state.last_frame_process_time = ms_took_to_process;
         debug_state.last_frame_mtsc = mtsc;
     }

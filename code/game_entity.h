@@ -27,10 +27,11 @@ struct Entity
     real32 clock[entity_state_count];
     
     v2 position;
-    real32 speed;
-    v2 destination;
     real32 angle;
     real32 collision_radius;
+    
+    real32 speed;
+    v2 destination;
     
     int32 hp;
     bool32 is_damaged;

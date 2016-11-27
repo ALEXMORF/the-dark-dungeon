@@ -1,13 +1,12 @@
 /*
  *TODO LIST:
-
+ 
  Code cleanness:
  . Extract out a physics system as service component??? YES!!
  . Replace unnecessary dynamic buffer with static buffer
  . Replace the sprite generation duplicate code with an animation system
  
  Gameplay:
- . Weaponary system (phase-based animation and melee) 90% done
  . Show the direction from where the damage comes from
  . Physics engine backend
  . Add more interactiviy (screen turns red when shot, enemies pushed back when shot, etc)
@@ -45,6 +44,7 @@
 #include "game_raycaster.cpp"
 #include "game_audio.cpp"
 
+#include "game_player.cpp"
 #include "game_entity.cpp"
 #include "game_simulate.cpp"
 #include "game_ui.cpp"
@@ -254,19 +254,56 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     //animate first-person weapon
     {
         Player *player = &game_state->player;
-        
-        real32 animation_cycle = player->get_weapon()->cd - 0.02f;
-        real32 animation_index_count = 4.0f;
-        int32 animation_ending_index = 1;
-        if (player->get_weapon()->cd_counter)
+
+        //minigun animation
+        if (player->get_weapon()->type == minigun)
         {
-            real32 time_passed = player->get_weapon()->cd - player->get_weapon()->cd_counter;
-            if (time_passed < animation_cycle)
+            real32 animation_firing_period = player->get_weapon()->cd - 0.02f;
+            real32 animation_cooling_period = player->get_weapon()->cd;
+
+            real32 firing_base_index = 1.0f;
+            real32 firing_end_index = 3.0f;
+            real32 cooling_base_index = 4.0f;
+            real32 cooling_end_index = 0.0f;
+            int32 total_index_count = 5;
+            
+            if (player->get_weapon()->cd_counter) //still firing
             {
-                real32 animation_index_interval = animation_cycle / animation_index_count;
+                //set the animation index per frame
+                real32 time_passed = player->get_weapon()->cd - player->get_weapon()->cd_counter;
+                real32 firing_index_count = firing_end_index - firing_base_index + 1.0f;
+                real32 animation_index_frequency = animation_firing_period / firing_index_count;
+                int32 index_offset = (int32)(time_passed / animation_index_frequency);
                 player->get_weapon()->animation_index =
-                    (int32)(time_passed / animation_index_interval +
-                            (animation_ending_index + 1)) % ((int32)animation_index_count + 1);
+                    (int32)(firing_base_index + index_offset - firing_base_index) %
+                    ((int32)firing_end_index) + (int32)firing_base_index;
+            }
+            else 
+            {
+                player->get_weapon()->animation_index = 1;
+            }
+        }
+        //default weapon animation
+        else
+        {
+            real32 animation_period = player->get_weapon()->cd - 0.02f;
+            int32 animation_ending_index = 1;
+            real32 animation_index_count = 4.0f;
+        
+            if (player->get_weapon()->cd_counter)
+            {
+                real32 time_passed = player->get_weapon()->cd - player->get_weapon()->cd_counter;
+                if (time_passed < animation_period)
+                {
+                    real32 animation_index_interval = animation_period / animation_index_count;
+                    player->get_weapon()->animation_index =
+                        (int32)(time_passed / animation_index_interval +
+                                (animation_ending_index + 1)) % ((int32)animation_index_count + 1);
+                }
+                else
+                {
+                    player->get_weapon()->animation_index = animation_ending_index;
+                }
             }
             else
             {
@@ -281,17 +318,17 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         
         //calculate offset for reloading animation
         real32 animation_lerp = 0.1f;
+        real32 max_reload_offset = 200.0f;
         if (player->get_weapon()->is_reloading)
         {
-            real32 max_reload_offset = 200.0f;
             player->weapon_reload_offset = lerp(player->weapon_reload_offset, max_reload_offset, animation_lerp);
         }
         else
         {
-            player->weapon_reload_offset = lerp(player->weapon_reload_offset, 0.0f, animation_lerp);   
+            player->weapon_reload_offset = lerp(player->weapon_reload_offset, 0.0f, animation_lerp);
         }
         
-        //bob and render weapon sprites
+        //bob and render weapon sprite
         real32 y_scale = (real32)buffer->height / 50;
         real32 x_scale = (real32)buffer->width / 40;
         game_state->player.pace += len(game_state->player.velocity);
@@ -357,6 +394,10 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             
             draw_string_autosized(buffer, &game_state->font_bitmap_sheet, layout_x, layout_height, font_size, font_size,
                                   " process time: %.2fms", debug_state->last_frame_process_time);
+            layout_height += layout_dheight;
+            
+            draw_string_autosized(buffer, &game_state->font_bitmap_sheet, layout_x, layout_height, font_size, font_size,
+                                  " frame time: %.2fms", debug_state->last_frame_time);
             layout_height += layout_dheight;
             
             draw_string_autosized(buffer, &game_state->font_bitmap_sheet, layout_x, layout_height, font_size, font_size,

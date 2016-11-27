@@ -146,7 +146,19 @@ copy_slice(Game_Offscreen_Buffer *buffer, Loaded_Image *loaded_image,
         }
     }
 }
-           
+
+internal void
+draw_rectangle(Game_Offscreen_Buffer *buffer, Loaded_Image *bitmap, int32 min_x, int32 min_y,
+               int32 max_x, int32 max_y)
+{
+    if_do(min_x < 0, min_x = 0);
+    if_do(min_y < 0, min_y = 0);
+    if_do(max_x > buffer->width, max_x = buffer->width);
+    if_do(max_y > buffer->height, max_y = buffer->height);
+
+    
+}
+    
 internal void
 draw_bitmap(Game_Offscreen_Buffer *buffer, Loaded_Image *bitmap, int32 min_x, int32 min_y,
             int32 max_x, int32 max_y)
