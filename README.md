@@ -73,8 +73,6 @@ NOTE:
  
  Functions and data type definitions, in some way, are trees. The point of "struct" in C was to create multiple layers for a complex data type. Imagine if a data type have 100 fields; it's very hard to understand it. However, if the data type itself is composed of other 5 data types, and those five data types are also composed of five data types, and so on. It's almost as if the data type hiearchy is a penta search tree, and its purpose is to make time that programmer has to spend to reason about the code O(logn), n being the number of fields that's actually there. So I had one random thought: what if there is a program that can balance the "data type tree" and maximize its understandibility, like a B-tree or something. 
 
-<iframe width="854" height="480" src="https://www.youtube.com/embed/rgWLmUx7Chw" frameborder="0" allowfullscreen></iframe>
-
 #screenshots
 
  screenshot 1 (8/25/2016) 
