@@ -99,7 +99,7 @@ simulate_body(Rigid_Body *body, Tile_Map *tile_map)
     real32 velocity_lerp = 0.2f;
     
     //TODO(chen): simulate entity vs entity collision
-
+    
     //apply velocity
     v2 desired_velocity = lerp(body->velocity, body->velocity_to_apply, velocity_lerp);
     

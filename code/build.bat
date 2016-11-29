@@ -6,8 +6,8 @@ pushd ..\build
 
 set sdl_lib_path=C:\SDL_vs\lib\x86
 set sdl_include_path=C:\SDL_vs\include
-set compiler_flags=-nologo -Z7 -MT -Gm- -GR- -EHa- -Ox -Oi -WX -W4 -wd4100 -wd4189 -wd4505 -wd4127 
-set macro_flags=-DPOOR_DEBUG=1 -DRELEASE_BUILD=0
+set compiler_flags=-nologo -Z7 -MT -Gm- -GR- -EHa- -Od -Oi -WX -W4 -wd4100 -wd4189 -wd4505 -wd4127 
+set macro_flags=-DPOOR_DEBUG=1 -DRELEASE_BUILD=0 -DVSYNC=1
 set linker_flags=-incremental:no -SUBSYSTEM:windows,5.1 user32.lib gdi32.lib winmm.lib 
 
 del *.pdb 1> NUL 2> NUL
