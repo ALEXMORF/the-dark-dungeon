@@ -271,7 +271,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         {
             simulate_body(&entity_buffer->e[i].body, tile_map);
         }
-
+        
         simulate_body(&player->body, tile_map);
     }
     
