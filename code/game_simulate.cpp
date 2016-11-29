@@ -85,13 +85,6 @@ line_vs_circle(Line_Segment L, Circle C)
     return false;
 }
 
-internal void
-reset_body(Rigid_Body *body)
-{
-    body->velocity_to_apply = {0.0f, 0.0f};
-    body->force_to_apply = {0.0f};
-}
-
 //NOTE(chen): standard for force: each 10000N moves a body of mass 1KG back 1.0 world unit
 internal void
 simulate_body(Rigid_Body *body, Tile_Map *tile_map)
@@ -110,4 +103,8 @@ simulate_body(Rigid_Body *body, Tile_Map *tile_map)
     //update physical representation of body
     body->velocity = Movement_Search_Wall(tile_map, body, desired_velocity);
     body->position += body->velocity;
+
+    //reset rigid body, since all variables have been applied, they are discarded
+    body->velocity_to_apply = {0.0f, 0.0f};
+    body->force_to_apply = {0.0f};
 }
