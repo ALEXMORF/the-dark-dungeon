@@ -31,11 +31,9 @@ struct Weapon
 struct Player
 {
     //coordniate
-    v2 position;
-    real32 collision_radius;
+    Rigid_Body body;
     real32 angle;
     
-    v2 velocity;
     real32 pace;
     
     //NOTE(chen): for weapon animation

@@ -8,7 +8,6 @@
  
  Gameplay:
  . Show the direction from where the damage comes from
- . Physics engine backend
  . Add more interactiviy (screen turns red when shot, enemies pushed back when shot, etc)
  . Make the difference between penetrating bullets and non-penetrating bullet
  . Add decorations, collectables, and bosses
@@ -44,9 +43,9 @@
 #include "game_raycaster.cpp"
 #include "game_audio.cpp"
 
+#include "game_simulate.cpp"
 #include "game_player.cpp"
 #include "game_entity.cpp"
-#include "game_simulate.cpp"
 #include "game_ui.cpp"
 
 inline void
@@ -104,6 +103,87 @@ fill_entities(Linear_Allocator *allocator, DBuffer(Entity) *entity_buffer)
     add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {15.0f, 15.0f}, pi32));
     add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {14.0f, 15.0f}));
     add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {16.0f, 15.0f}));
+}
+
+internal void
+update_game_state(Game_State *game_state, Game_Input *input)
+{
+    real32 dt = input->dt_per_frame;
+    Player *player = &game_state->player;
+    
+    //update player
+    {
+        player_input_process(player, input);
+        if (player->get_weapon()->cd_counter != 0)
+        {
+            player->get_weapon()->cd_counter = reduce(player->get_weapon()->cd_counter, dt);
+        }
+    }
+    
+    //update entities
+    for (int32 i = 0; i < game_state->entity_buffer.count; ++i)
+    {
+        Entity *entity = &game_state->entity_buffer.e[i];
+        switch (entity->type)
+        {
+            case guard:
+            case ss:
+            {
+                update_basic_entity(entity, &game_state->tile_map, player->body.position, dt);
+            } break;
+        }
+    }
+    
+    //check for player being hit by bullets
+    for (int32 i = 0; i < game_state->entity_buffer.count; ++i)
+    {
+        Entity *entity = &game_state->entity_buffer.e[i];
+        if (entity->state == aiming_state)
+        {
+            Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
+            if (aiming_state->just_fired)
+            {
+                Line_Segment bullet_line = {};
+                bullet_line.start = entity->body.position;
+                bullet_line.end = cast_ray(&game_state->tile_map, entity->body.position, entity->angle).hit_position;
+                
+                Circle player_hitbox = {};
+                player_hitbox.position = player->body.position;
+                player_hitbox.radius = player->body.collision_radius;
+
+                if (line_vs_circle(bullet_line, player_hitbox))
+                {
+                    if (player->hp > 0)
+                    {
+                        player->hp -= 1;
+                    }
+                }
+            }
+        }
+    }
+    
+    //check which entities is damaged by player
+    if (player->has_fired)
+    {
+        Line_Segment bullet_line = {};
+        bullet_line.start = player->body.position;
+        bullet_line.end = cast_ray(&game_state->tile_map, player->body.position, player->angle).hit_position;
+        
+        for (int i = 0; i < game_state->entity_buffer.count; ++i)
+        {
+            Entity *entity = &game_state->entity_buffer.e[i];
+            
+            Circle entity_hitbox = {};
+            entity_hitbox.position = entity->body.position;
+            entity_hitbox.radius = entity->body.collision_radius;
+            
+            if (line_vs_circle(bullet_line, entity_hitbox))
+            {
+                entity->hp -= 1;
+                entity->is_damaged = true;
+            }
+        }
+    }
 }
 
 extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
@@ -179,7 +259,21 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     }
     game_state->transient_allocator.used = 0;
     
-    simulate_world(game_state, input);
+    update_game_state(game_state, input);
+
+    //physics backend
+    {
+        Tile_Map *tile_map = &game_state->tile_map;
+        DBuffer(Entity) *entity_buffer = &game_state->entity_buffer;
+        Player *player = &game_state->player;
+        
+        for (int i = 0; i < entity_buffer->count; ++i)
+        {
+            simulate_body(&entity_buffer->e[i].body, tile_map);
+        }
+
+        simulate_body(&player->body, tile_map);
+    }
     
     //output sound
     {
@@ -244,9 +338,9 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     
     //draw 3d scene and sprites
     generate_sprite_list(game_state, &sprite_list, game_state->entity_buffer.e, game_state->entity_buffer.count);
-    sort_sprites(sprite_list.content, sprite_list.count, game_state->player.position);
+    sort_sprites(sprite_list.content, sprite_list.count, game_state->player.body.position);
     render_3d_scene(buffer, &game_state->render_context, &game_state->tile_map,
-                    game_state->player.position, game_state->player.angle, 
+                    game_state->player.body.position, game_state->player.angle, 
                     &game_state->floor_texture, &game_state->ceiling_texture,
                     &game_state->wall_texture_buffer, sprite_list.content, sprite_list.count,
                     memory->platform_eight_async_proc);
@@ -331,7 +425,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         //bob and render weapon sprite
         real32 y_scale = (real32)buffer->height / 50;
         real32 x_scale = (real32)buffer->width / 40;
-        game_state->player.pace += len(game_state->player.velocity);
+        game_state->player.pace += len(game_state->player.body.velocity);
         int32 bob_x = (int32)(sinf(game_state->player.pace * 2.5f) * x_scale);
         int32 bob_y = (int32)(cosf(game_state->player.pace * 5.0f) * y_scale) + (int32)y_scale;
         

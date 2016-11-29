@@ -3,6 +3,7 @@
 internal Reflection_Sample
 cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
 {
+    recanonicalize_angle(&angle);
     Reflection_Sample result = {};
     
     result.ray_length = -1.0f;
@@ -10,10 +11,10 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
     int32 current_tile_x = (int32)position.x;
     int32 current_tile_y = (int32)position.y;
     
-    bool32 angle_is_in_quadrant_1 = (angle >= 0 && angle <= pi32/2.0f);
-    bool32 angle_is_in_quadrant_2 = (angle >= pi32/2.0f && angle <= pi32);
-    bool32 angle_is_in_quadrant_3 = (angle >= pi32 && angle <= pi32*3.0f/2.0f);
-    bool32 angle_is_in_quadrant_4 = (angle >= pi32*3.0f/2.0f);
+    bool32 angle_is_in_quadrant_1 = (angle > 0 && angle < pi32/2.0f);
+    bool32 angle_is_in_quadrant_2 = (angle > pi32/2.0f && angle < pi32);
+    bool32 angle_is_in_quadrant_3 = (angle > pi32 && angle < pi32*3.0f/2.0f);
+    bool32 angle_is_in_quadrant_4 = (angle > pi32*3.0f/2.0f);
     
     //horizontal hit
     {
@@ -89,13 +90,13 @@ cast_ray(Tile_Map *tile_map, v2 position, real32 angle)
             }
         }
     }
-
+    
     assert(result.is_valid);
     return result;
 }
 
 //NOTE(chen): precondition: have the sprite list sorted 
-internal Entity *
+internal void
 render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
                 Tile_Map *tile_map, v2 position, real32 view_angle,
                 Loaded_Image *floor_texture, Loaded_Image *ceiling_texture,
@@ -103,7 +104,6 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
                 Sprite *sprites, int32 sprite_count,
                 Platform_Eight_Async_Proc *platform_eight_async_proc)
 {
-    Entity *currently_aimed_entity = 0;
     real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
 
     Projection_Spec projection_spec = {};
@@ -246,16 +246,11 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
                 {
                     copy_slice(buffer, &sprite_image, (int32)(sprite_texture_x),
                                slice_index, sprite_upper_top, sprite_height, 0);
-                    if (slice_index == buffer->width/2 && sprites[i].owner->hp != 0)
-                    {
-                        currently_aimed_entity = sprites[i].owner;
-                    }
                 }
                 sprite_texture_x += texture_mapper;
             }
         }
     }
-    return currently_aimed_entity;
 }
 
 

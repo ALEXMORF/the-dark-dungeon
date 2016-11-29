@@ -19,9 +19,9 @@
 #include "game_raycaster.h"
 #include "game_audio.h"
 
+#include "game_simulate.h"
 #include "game_player.h"
 #include "game_entity.h"
-#include "game_simulate.h"
 #include "game_ui.h"
 
 #include "game_meta.h"

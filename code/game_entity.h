@@ -25,10 +25,9 @@ struct Entity
     Entity_Type type;
     Entity_State state;
     real32 clock[entity_state_count];
-    
-    v2 position;
+
+    Rigid_Body body;
     real32 angle;
-    real32 collision_radius;
     
     real32 speed;
     v2 destination;

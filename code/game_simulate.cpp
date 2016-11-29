@@ -51,175 +51,14 @@ movement_search_wall(Tile_Map *tile_map, v2 position, v2 desired_velocity, real3
     return result;
 }
 
-inline void
-enter_state(Entity *entity, Entity_State next_state, real32 timer)
+inline Rigid_Body
+default_rigid_body(v2 position, real32 collision_radius, real32 mass = 1.0f)
 {
-    entity->state = next_state;
-    entity->clock[entity->state] = timer;
-    entity->variant_block_is_initialized = false;
-}
-
-inline bool32
-search_player(Tile_Map *tile_map, Entity *entity, v2 player_position, real32 fov)
-{
-    real32 angle_player = get_angle(player_position - entity->position);
-    real32 angle_diff = get_angle_diff(angle_player, entity->angle);
-    real32 player_to_entity_dist = len(player_position - entity->position);
-    recanonicalize_angle(&angle_player);
-    real32 ray_length = cast_ray(tile_map, entity->position, angle_player).ray_length;
-                    
-    bool32 within_fov = (abs(angle_diff) <= fov/2.0f);
-    bool32 visible = ray_length > player_to_entity_dist;
-
-    return (within_fov && visible);
-}
-//
-//
-//
-
-internal void
-update_basic_entity(Entity *entity, Tile_Map *tile_map, v2 player_position, real32 dt)
-{
-    real32 *clock = entity->clock;
-    real32 hurting_state_interval = 0.1f;
-    real32 waiting_state_interval = 1.5f;
-    real32 firing_state_interval = 0.3f;
-    real32 fire_preparing_interval = 0.22f;
-    real32 fov = pi32 / 3.0f;
-    
-    if (entity->hp > 0)
-    {
-        //prestate processing stage
-        if (entity->is_damaged)
-        {
-            enter_state(entity, hurting_state, hurting_state_interval);
-        }
-        
-        //state processing stage
-        bool32 clock_ends = (clock[entity->state] == 0.0f);
-        bool32 clock_ticks_forward = false;
-        switch (entity->state)
-        {
-            case hurting_state:
-            {
-                if (clock_ends)
-                {
-                    entity->angle = get_angle(player_position - entity->position);
-                    enter_state(entity, waiting_state, waiting_state_interval);
-                }
-            } break;
-            
-            case walking_state:
-            {
-                clock_ticks_forward = true;
-                
-                bool32 not_initialized = clock[entity->state] == 0.0f;
-                
-                if (search_player(tile_map, entity, player_position, fov))
-                {
-                    enter_state(entity, aiming_state, 0.0f);
-                }
-                if (not_initialized)
-                {
-                    entity->angle += pi32 / 3.0f;
-                    recanonicalize_angle(&entity->angle);
-                    entity->destination = cast_ray(tile_map, entity->position, entity->angle).hit_position;
-                }
-
-                real32 distance_left = len(entity->destination - entity->position);
-                real32 speed = clamp(entity->speed, 0.0f, distance_left);
-                v2 displacement = normalize(entity->destination - entity->position) * speed * dt;
-                displacement = Movement_Search_Wall(tile_map, entity, displacement);
-                entity->position += displacement;
-                if (speed < entity->speed || len(displacement)/dt < speed)
-                {
-                    enter_state(entity, waiting_state, waiting_state_interval);
-                }
-            } break;
-            
-            case waiting_state:
-            {
-                if (search_player(tile_map, entity, player_position, fov))
-                {
-                    enter_state(entity, aiming_state, 0.0f);
-                }
-                if (clock_ends)
-                {
-                    enter_state(entity, walking_state, 0.0f);
-                }
-            } break;
-
-            case aiming_state:
-            {
-                clock_ticks_forward = true;
-                
-                assert(sizeof(Aiming_State) <= entity->variant_block.size);
-                Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
-                if (!entity->variant_block_is_initialized)
-                {
-                    //startup code
-                    switch (entity->type)
-                    {
-                        case guard:
-                        {
-                            aiming_state->allowed_firing_interval = 1.5f;
-                        } break;
-
-                        case ss:
-                        {
-                            aiming_state->allowed_firing_interval = 1.0f;
-                        } break;
-                    }
-                    aiming_state->allowed_firing_animation_cd = 0.1f;
-                    aiming_state->firing_animation_cd = 0.0f;
-                    aiming_state->firing_timer = 0.0f;
-
-                    entity->variant_block_is_initialized = true;
-                }
-
-                //scan for player
-                entity->angle = get_angle(player_position - entity->position);
-                recanonicalize_angle(&entity->angle);
-                if (!search_player(tile_map, entity, player_position, fov))
-                {
-                    enter_state(entity, walking_state, 0.0f);
-                }
-                
-                //firing system
-                aiming_state->firing_timer += dt;
-                if (aiming_state->firing_timer > aiming_state->allowed_firing_interval)
-                {
-                    aiming_state->firing_timer -= aiming_state->allowed_firing_interval;
-                    aiming_state->just_fired = true;
-                    aiming_state->firing_animation_cd = aiming_state->allowed_firing_animation_cd;
-                }
-                else
-                {
-                    aiming_state->just_fired = false;
-                    if (aiming_state->firing_animation_cd > 0)
-                    {
-                        aiming_state->firing_animation_cd = reduce(aiming_state->firing_animation_cd, dt);
-                    }
-                }
-            } break;
-        }
-
-        if (clock_ticks_forward)
-        {
-            clock[entity->state] += dt;
-        }
-        else
-        {
-            clock[entity->state] = reduce(clock[entity->state], dt);
-        }
-    }
-    else
-    {
-        entity->state = death_state;
-        clock[death_state] += dt;
-    }
-
-    entity->is_damaged = false;
+    Rigid_Body result = {};
+    result.position = position;
+    result.collision_radius = collision_radius;
+    result.mass = mass;
+    return result;
 }
 
 internal bool
@@ -246,88 +85,22 @@ line_vs_circle(Line_Segment L, Circle C)
     return false;
 }
 
-//
-//
-//
-        
 internal void
-simulate_world(Game_State *game_state, Game_Input *input)
+reset_body(Rigid_Body *body)
 {
-    real32 dt = input->dt_per_frame;
-    Player *player = &game_state->player;
-    
-    //update player
-    {
-        player_input_process(player, input);    
-        if (player->get_weapon()->cd_counter != 0)
-        {
-            player->get_weapon()->cd_counter = reduce(player->get_weapon()->cd_counter, dt);
-        }
-        player->position += Movement_Search_Wall(&game_state->tile_map, player, player->velocity);
-    }
-    
-    //update entities
-    for (int32 i = 0; i < game_state->entity_buffer.count; ++i)
-    {
-        Entity *entity = &game_state->entity_buffer.e[i];
-        switch (entity->type)
-        {
-            case guard:
-            case ss:
-            {
-                update_basic_entity(entity, &game_state->tile_map, player->position, dt);
-            } break;
-        }
-    }
-    
-    //check for player being hit by bullets
-    for (int32 i = 0; i < game_state->entity_buffer.count; ++i)
-    {
-        Entity *entity = &game_state->entity_buffer.e[i];
-        if (entity->state == aiming_state)
-        {
-            Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
-            if (aiming_state->just_fired)
-            {
-                Line_Segment bullet_line = {};
-                bullet_line.start = entity->position;
-                bullet_line.end = cast_ray(&game_state->tile_map, entity->position, entity->angle).hit_position;
-                
-                Circle player_hitbox = {};
-                player_hitbox.position = player->position;
-                player_hitbox.radius = player->collision_radius;
+    body->velocity_to_apply = {0.0f, 0.0f};
+    body->force_to_apply = {0.0f};
+}
 
-                if (line_vs_circle(bullet_line, player_hitbox))
-                {
-                    if (player->hp > 0)
-                    {
-                        player->hp -= 1;
-                    }
-                }
-            }
-        }
-    }
+internal void
+simulate_body(Rigid_Body *body, Tile_Map *tile_map)
+{
+    real32 velocity_lerp = 0.2f;
     
-    //check which entities is damaged by player
-    if (player->has_fired)
-    {
-        Line_Segment bullet_line = {};
-        bullet_line.start = player->position;
-        bullet_line.end = cast_ray(&game_state->tile_map, player->position, player->angle).hit_position;
-        
-        for (int i = 0; i < game_state->entity_buffer.count; ++i)
-        {
-            Entity *entity = &game_state->entity_buffer.e[i];
-            
-            Circle entity_hitbox = {};
-            entity_hitbox.position = entity->position;
-            entity_hitbox.radius = entity->collision_radius;
-            
-            if (line_vs_circle(bullet_line, entity_hitbox))
-            {
-                entity->hp -= 1;
-                entity->is_damaged = true;
-            }
-        }
-    }
+    //TODO(chen): simulate force
+    //TODO(chen): simulate collision
+
+    v2 desired_velocity = lerp(body->velocity, body->velocity_to_apply, velocity_lerp);
+    body->velocity = Movement_Search_Wall(tile_map, body, desired_velocity);
+    body->position += body->velocity;
 }

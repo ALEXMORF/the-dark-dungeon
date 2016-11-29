@@ -67,10 +67,9 @@ internal void
 initialize_player(Player *player)
 {
     player->hp = PLAYER_MAX_HP;
-    
-    player->position = {3.0f, 3.0f};
+
+    player->body = default_rigid_body({3.0f, 3.0f}, 0.3f);
     player->angle = 0.0f;
-    player->collision_radius = 0.3f;
     
     initialize_weapon(&player->weapons[pistol], pistol);
     initialize_weapon(&player->weapons[rifle], rifle);
@@ -99,7 +98,7 @@ player_input_process(Player *player, Game_Input *input)
         player_d_velocity += {cosf(player->angle + pi32/2.0f) * left, sinf(player->angle + pi32/2.0f) * left};    
         player_d_velocity = normalize(player_d_velocity);
         player_d_velocity *= player_speed * input->dt_per_frame;
-        player->velocity = lerp(player->velocity, player_d_velocity, lerp_constant);
+        player->body.velocity_to_apply = player_d_velocity;
         
         //orientation
         real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity; //NOTE(chen): I don't know what this crap is, fix that maybe?
@@ -141,7 +140,7 @@ player_input_process(Player *player, Game_Input *input)
             {
                 //finish reloadng
                 weapon->is_reloading = false;
-		
+                
                 int32 ammo_to_refill = weapon->cache_max_ammo - weapon->cache_ammo;
                 if (ammo_to_refill > weapon->bank_ammo)
                 {
