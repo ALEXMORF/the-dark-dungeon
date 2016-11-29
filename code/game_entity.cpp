@@ -78,8 +78,6 @@ update_basic_entity(Entity *entity, Tile_Map *tile_map, v2 player_position, real
     real32 fire_preparing_interval = 0.22f;
     real32 fov = pi32 / 3.0f;
 
-    reset_body(&entity->body);
-    
     if (entity->hp > 0)
     {
         //prestate processing stage

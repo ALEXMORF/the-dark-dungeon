@@ -114,7 +114,6 @@ update_game_state(Game_State *game_state, Game_Input *input)
     
     //update player
     {
-        reset_body(&player->body);
         player_input_process(player, input);
         if (player->get_weapon()->cd_counter != 0)
         {
@@ -278,9 +277,11 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         for (int i = 0; i < entity_buffer->count; ++i)
         {
             simulate_body(&entity_buffer->e[i].body, tile_map);
+            reset_body(&entity_buffer->e[i].body);
         }
         
         simulate_body(&player->body, tile_map);
+        reset_body(&player->body);
     }
     
     //output sound
