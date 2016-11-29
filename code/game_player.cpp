@@ -20,6 +20,8 @@ initialize_weapon(Weapon *weapon, Weapon_Type weapon_type)
             weapon->max_reload_time = 1.0f;
             weapon->cache_max_ammo = weapon->cache_ammo = 8;
             weapon->bank_ammo = 32;
+
+            weapon->force = 100.0f;
         } break;
         
         case rifle:
@@ -30,6 +32,8 @@ initialize_weapon(Weapon *weapon, Weapon_Type weapon_type)
             weapon->max_reload_time = 1.5f;
             weapon->cache_max_ammo = weapon->cache_ammo = 30;
             weapon->bank_ammo = 90;
+
+            weapon->force = 100.0f;
         } break;
 
         case minigun:
@@ -40,6 +44,8 @@ initialize_weapon(Weapon *weapon, Weapon_Type weapon_type)
             weapon->max_reload_time = 2.0f;
             weapon->cache_max_ammo = weapon->cache_ammo = 100;
             weapon->bank_ammo = 300;
+
+            weapon->force = 250.0f;
         } break;
         
         default:

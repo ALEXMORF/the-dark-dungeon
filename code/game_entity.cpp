@@ -5,7 +5,7 @@ make_static_entity(Entity_Type type, v2 position)
 {
     Entity result = {};
     result.type = type;
-    result.body = default_rigid_body(position, 0.0f);
+    result.body = default_rigid_body(position, 0.3f);
 
     return result;
 }
@@ -24,11 +24,13 @@ make_dynamic_entity(Linear_Allocator *allocator, Entity_Type type, v2 position, 
         case guard:
         {
             result.hp = 3;
+            result.weapon_force = 50.0f;
         } break;
 
         case ss:
         {
             result.hp = 5;
+            result.weapon_force = 30.0f;
         } break;
 
         default:

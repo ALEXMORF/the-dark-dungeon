@@ -14,6 +14,8 @@ enum Weapon_Type
 struct Weapon
 {
     Weapon_Type type;
+
+    real32 force;
     
     real32 cd;
     real32 cd_counter;

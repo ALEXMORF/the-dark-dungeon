@@ -92,15 +92,22 @@ reset_body(Rigid_Body *body)
     body->force_to_apply = {0.0f};
 }
 
+//NOTE(chen): standard for force: each 10000N moves a body of mass 1KG back 1.0 world unit
 internal void
 simulate_body(Rigid_Body *body, Tile_Map *tile_map)
 {
     real32 velocity_lerp = 0.2f;
     
-    //TODO(chen): simulate force
-    //TODO(chen): simulate collision
+    //TODO(chen): simulate entity vs entity collision
 
+    //apply velocity
     v2 desired_velocity = lerp(body->velocity, body->velocity_to_apply, velocity_lerp);
+    
+    //apply force
+    real32 force_constant = 10000.0f;
+    desired_velocity += (body->force_to_apply / force_constant) / body->mass;
+    
+    //update physical representation of body
     body->velocity = Movement_Search_Wall(tile_map, body, desired_velocity);
     body->position += body->velocity;
 }

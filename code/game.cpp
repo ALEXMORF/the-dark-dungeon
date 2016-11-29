@@ -8,6 +8,7 @@
  
  Gameplay:
  . Show the direction from where the damage comes from
+ . Physics: add entity vs entity & entity vs player collision
  . Add more interactiviy (screen turns red when shot, enemies pushed back when shot, etc)
  . Make the difference between penetrating bullets and non-penetrating bullet
  . Add decorations, collectables, and bosses
@@ -113,6 +114,7 @@ update_game_state(Game_State *game_state, Game_Input *input)
     
     //update player
     {
+        reset_body(&player->body);
         player_input_process(player, input);
         if (player->get_weapon()->cd_counter != 0)
         {
@@ -150,13 +152,16 @@ update_game_state(Game_State *game_state, Game_Input *input)
                 Circle player_hitbox = {};
                 player_hitbox.position = player->body.position;
                 player_hitbox.radius = player->body.collision_radius;
-
+                
                 if (line_vs_circle(bullet_line, player_hitbox))
                 {
                     if (player->hp > 0)
                     {
                         player->hp -= 1;
                     }
+
+                    v2 bullet_direction = normalize(bullet_line.end - bullet_line.start);
+                    player->body.force_to_apply = bullet_direction * entity->weapon_force;
                 }
             }
         }
@@ -181,6 +186,9 @@ update_game_state(Game_State *game_state, Game_Input *input)
             {
                 entity->hp -= 1;
                 entity->is_damaged = true;
+
+                v2 bullet_direction = normalize(bullet_line.end - bullet_line.start);
+                entity->body.force_to_apply = bullet_direction * player->get_weapon()->force;
             }
         }
     }

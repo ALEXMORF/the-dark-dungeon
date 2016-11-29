@@ -33,6 +33,7 @@ struct Entity
     v2 destination;
     
     int32 hp;
+    real32 weapon_force;
     bool32 is_damaged;
     
     bool variant_block_is_initialized;
