@@ -3,6 +3,12 @@ a game with the application of raycasting.
 
 The entire game is coded by hand without any library (well except one just for asset loading). The render code is written without any external libraries, but the asset loading uses stb_image, because it's boring stuff and I don't feel like doing from scratch. 
 
+#videos
+
+https://www.youtube.com/watch?v=rgWLmUx7Chw
+
+#Features and TODOs
+
 things I implemented:
  1. texture mapping for wall rendering. 
  2. floor & ceiling casting along with texture mapping.
@@ -22,7 +28,18 @@ things I implemented:
  16. Basic ammo/reload system for pistol (11/23/2016)
  17. Added rifle and minigun into the game (11/24/2016)
 
-things I learned:
+ 
+TODO List: 
+ 1. apply effects like shadow, fog, etc. 
+ 2. destructable obstacles. 
+ 3. refine the sound engine 
+ 4. canonicalize asset loading routine
+ 5. procedurally generated map
+ 6. expanded entity types (enemies, decoratives, ammo, health packs, tc)
+ 
+things to test out: global game event queue(?)
+ 
+#Things I took away from this project
 
   The urge to apply abstractions/OOP, in most cases, originates from the inability to read code. Then in that case, what abstractions achieve is not making the code readable, but conceiving the programmer that it is readable, which really leaves the program more complicated and fragmented than it should have been. 
 
@@ -58,24 +75,10 @@ things I learned:
         player->angle += player_delta_angle;
         recanonicalize_angle(&player->angle);
     }                        
- 
-TODO List: 
- 1. apply effects like shadow, fog, etc. 
- 2. destructable obstacles. 
- 3. refine the sound engine 
- 4. canonicalize asset loading routine
- 5. procedurally generated map
- 6. expanded entity types (enemies, decoratives, ammo, health packs, tc)
- 
-things to test out: global game event queue(?)
- 
+
 NOTE:
  
  Functions and data type definitions, in some way, are trees. The point of "struct" in C was to create multiple layers for a complex data type. Imagine if a data type have 100 fields; it's very hard to understand it. However, if the data type itself is composed of other 5 data types, and those five data types are also composed of five data types, and so on. It's almost as if the data type hiearchy is a penta search tree, and its purpose is to make time that programmer has to spend to reason about the code O(logn), n being the number of fields that's actually there. So I had one random thought: what if there is a program that can balance the "data type tree" and maximize its understandibility, like a B-tree or something. 
-
-#videos
-
-https://www.youtube.com/watch?v=rgWLmUx7Chw
 
 #screenshots
 
