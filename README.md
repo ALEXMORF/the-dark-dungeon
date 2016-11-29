@@ -28,6 +28,7 @@ things I implemented:
  16. Basic ammo/reload system for pistol (11/23/2016)
  17. Added rifle and minigun into the game (11/24/2016)
  18. Extracted out a physics simulation layer for future additional physics features (11/28/2016)
+ 19. Added force to bullets and tuned a force constant for a nice bullet recoil (11/28/2016)
  
 TODO List: 
  1. apply effects like shadow, fog, etc. 
