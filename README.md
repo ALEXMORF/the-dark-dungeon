@@ -1,11 +1,16 @@
 # the-dark-dungeon
 a game with the application of raycasting.
 
-The entire game is coded by hand without any library (well except one just for asset loading). The render code is written without any external libraries, but the asset loading uses stb_image, because it's boring stuff and I don't feel like doing from scratch. 
+The entire game is coded by hand without any library (well except one just for asset loading). The entire program is written without any external libraries, but the asset loading uses stb_image, because it's boring stuff and I don't feel like doing from scratch. 
+P.S.: because I don't want to initialize OpenGL through Win32 to get the v-sync, I cheated a little by using SDL. but that's just platform layer code; the actual bulk of code of the game is still written from scratch. 
 
 #videos
 
+TTD early demo (11/26/2016):
 https://www.youtube.com/watch?v=rgWLmUx7Chw
+
+TTD physics engine demo (11/28/2016):
+
 
 #Features and TODOs
 
