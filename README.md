@@ -27,7 +27,7 @@ things I implemented:
  15. Bitmap font rendering (11/20/2016)
  16. Basic ammo/reload system for pistol (11/23/2016)
  17. Added rifle and minigun into the game (11/24/2016)
-
+ 18. Extracted out a physics simulation layer for future additional physics features (11/28/2016)
  
 TODO List: 
  1. apply effects like shadow, fog, etc. 
