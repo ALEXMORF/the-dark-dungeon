@@ -1,12 +1,21 @@
 #include "game_entity.h"
 
 inline Entity
-make_static_entity(Entity_Type type, v2 position)
+make_static_entity(Entity_Type type, v2 position, Game_Asset *asset)
 {
     Entity result = {};
     result.type = type;
     result.body = default_rigid_body(position, 0.3f);
 
+    //TODO(chen): expand entity types
+    Loaded_Image_Sheet *sprite_sheet = &asset->entity_sheet;
+    switch (type)
+    {
+        default:
+        {
+            assert(!"unknown static entity type");
+        } break;
+    }
     return result;
 }
 

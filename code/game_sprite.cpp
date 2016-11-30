@@ -73,22 +73,12 @@ get_walk_index(int32 init_stride, int32 walk_index_count, real32 walk_cycle_peri
 }
 
 internal Loaded_Image
-get_currently_playing_texture(Game_State *game_state, Entity *entity)
+get_currently_playing_texture(Game_Asset *game_asset, Entity *entity, real32 camera_angle)
 {
     Loaded_Image result = {};
     
     switch (entity->type)
     {
-        case barrel:
-        {
-            result = game_state->barrel_texture;
-        } break;
-
-        case pillar:
-        {
-            result = game_state->pillar_texture;
-        } break;
-
         case guard:
         {
             if (entity->state == death_state)
@@ -99,11 +89,11 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
                 int32 texture_index_x = get_current_playing_index(entity->clock[death_state],
                                                                   death_animation_period,
                                                                   death_animation_index_count);  
-                result = extract_image_from_sheet(&game_state->guard_texture_sheet, texture_index_x, 5);
+                result = extract_image_from_sheet(&game_asset->guard_texture_sheet, texture_index_x, 5);
             }
             else if (entity->state == hurting_state)
             {
-                result = extract_image_from_sheet(&game_state->guard_texture_sheet, 7, 5);
+                result = extract_image_from_sheet(&game_asset->guard_texture_sheet, 7, 5);
             }
             else if (entity->state == aiming_state)
             {
@@ -114,7 +104,7 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 
                 if (aiming_state->firing_animation_cd > 0)
                 {
-                    result = extract_image_from_sheet(&game_state->guard_texture_sheet, 2, 6);
+                    result = extract_image_from_sheet(&game_asset->guard_texture_sheet, 2, 6);
                 }
                 else
                 {
@@ -123,7 +113,7 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
                     {
                         x_index = 0;
                     }
-                    result = extract_image_from_sheet(&game_state->guard_texture_sheet, x_index, 6);
+                    result = extract_image_from_sheet(&game_asset->guard_texture_sheet, x_index, 6);
                 }
             }
             else
@@ -132,14 +122,14 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
                 int32 walk_index_count = 4;
                 int32 walk_init_stride = 1;
                 
-                int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
+                int32 dir_index = get_directional_index(4, 8, entity->angle, camera_angle);
                 int32 walk_index = get_walk_index(walk_init_stride, walk_index_count, walk_cycle_period, entity->clock[walking_state]);
                 if (entity->state != walking_state)
                 {
                     walk_index = 0;
                 }
                 
-                result = extract_image_from_sheet(&game_state->guard_texture_sheet, dir_index, walk_index);
+                result = extract_image_from_sheet(&game_asset->guard_texture_sheet, dir_index, walk_index);
             }
             
         } break;
@@ -152,11 +142,11 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
                 int32 death_animation_index_count = 5;
                 
                 int32 texture_index_x = get_current_playing_index(entity->clock[death_state], death_animation_period, death_animation_index_count);  
-                result = extract_image_from_sheet(&game_state->ss_texture_sheet, texture_index_x, 5);
+                result = extract_image_from_sheet(&game_asset->ss_texture_sheet, texture_index_x, 5);
             }
             else if (entity->state == hurting_state)
             {
-                result = extract_image_from_sheet(&game_state->ss_texture_sheet, 7, 5);         
+                result = extract_image_from_sheet(&game_asset->ss_texture_sheet, 7, 5);         
             }
             else if (entity->state == aiming_state)
             {
@@ -166,7 +156,7 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
 
                 if (aiming_state->firing_animation_cd > 0)
                 {
-                    result = extract_image_from_sheet(&game_state->ss_texture_sheet, 2, 6);
+                    result = extract_image_from_sheet(&game_asset->ss_texture_sheet, 2, 6);
                 }
                 else
                 {
@@ -175,7 +165,7 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
                     {
                         x_index = 0;
                     }
-                    result = extract_image_from_sheet(&game_state->ss_texture_sheet, x_index, 6);
+                    result = extract_image_from_sheet(&game_asset->ss_texture_sheet, x_index, 6);
                 }
             }
             else 
@@ -184,42 +174,42 @@ get_currently_playing_texture(Game_State *game_state, Entity *entity)
                 int32 walk_index_count = 4;
                 int32 walk_init_stride = 1;
                 
-                int32 dir_index = get_directional_index(4, 8, entity->angle, game_state->player.angle);
+                int32 dir_index = get_directional_index(4, 8, entity->angle, camera_angle);
                 int32 walk_index = get_walk_index(walk_init_stride, walk_index_count, walk_cycle_period, entity->clock[walking_state]);
                 if (entity->state != walking_state)
                 {
                     walk_index = 0;
                 }
                 
-                result = extract_image_from_sheet(&game_state->ss_texture_sheet, dir_index, walk_index);
+                result = extract_image_from_sheet(&game_asset->ss_texture_sheet, dir_index, walk_index);
             }
             
         } break;
             
         default:
         {
-            assert(!"unknown entity type");
+            result = entity->sprite;
         };
     }
-
+    
     return result;
 }
 
 internal void
-generate_sprite_list(Game_State *game_state, Sprite_List *list,
-                     Entity *entity_list, int32 entity_count)
+generate_sprite_list(Game_Asset *game_asset, Sprite_List *list,
+                     DBuffer(Entity) *entity_buffer, real32 camera_angle)
 {
     //reset
     list->count = 0;
     
-    for (int32 i = 0; i < entity_count; ++i)
+    for (int32 i = 0; i < entity_buffer->count; ++i)
     {
         Sprite temp = {};
-        temp.owner = &entity_list[i];
+        temp.owner = &entity_buffer->e[i];
         temp.size.x = 1.0f;
         temp.size.y = 1.0f;
-        temp.position = entity_list[i].body.position;
-        temp.texture = get_currently_playing_texture(game_state, &entity_list[i]);
+        temp.position = entity_buffer->e[i].body.position;
+        temp.texture = get_currently_playing_texture(game_asset, &entity_buffer->e[i], camera_angle);
         add_sprite(list, temp);
     }
 

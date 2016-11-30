@@ -97,7 +97,7 @@ simulate_body(Rigid_Body *body, Tile_Map *tile_map)
     v2 desired_velocity = lerp(body->velocity, body->velocity_to_apply, velocity_lerp);
     
     //apply force
-    real32 force_constant = 5000.0f;
+    real32 force_constant = 2000.0f;
     desired_velocity += (body->force_to_apply / force_constant) / body->mass;
     
     //update physical representation of body

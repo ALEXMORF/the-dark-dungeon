@@ -2,10 +2,14 @@
 
 enum Entity_Type
 {
-    barrel,
-    pillar,
+    //dynamic entity types
     guard,
-    ss, 
+    ss,
+
+    //static entity types
+    light,
+    lamp,
+    
     entity_type_count
 };
 
@@ -38,5 +42,7 @@ struct Entity
     
     bool variant_block_is_initialized;
     Memory variant_block;
+
+    Loaded_Image sprite;
 };
 

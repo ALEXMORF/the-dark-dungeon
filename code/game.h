@@ -26,6 +26,27 @@
 
 #include "game_meta.h"
 
+struct Game_Asset
+{
+    DBuffer(Loaded_Image) wall_texture_buffer;
+    
+    Loaded_Image floor_texture;
+    Loaded_Image ceiling_texture;
+    Loaded_Image_Sheet guard_texture_sheet;
+    Loaded_Image_Sheet ss_texture_sheet;
+    Loaded_Image_Sheet weapon_texture_sheet;
+    Loaded_Image_Sheet entity_sheet;
+    
+    Loaded_Image_Sheet font_bitmap_sheet;
+
+    Loaded_Audio pistol_sound;
+    Loaded_Audio pistol2_sound;
+    Loaded_Audio pistol_reload_sound;
+    Loaded_Audio rifle_sound;
+    Loaded_Audio minigun_sound;
+    Loaded_Audio background_music;
+};
+
 struct Game_State
 {
     //memory
@@ -37,27 +58,7 @@ struct Game_State
     Tile_Map tile_map;
     DBuffer(Entity) entity_buffer;
     
-    //bitmap asset
-    DBuffer(Loaded_Image) wall_texture_buffer;
-    Loaded_Image floor_texture;
-    Loaded_Image ceiling_texture;
-    Loaded_Image barrel_texture;
-    Loaded_Image pillar_texture;
-    Loaded_Image light_texture;
-    Loaded_Image_Sheet guard_texture_sheet;
-    Loaded_Image_Sheet ss_texture_sheet;
-    Loaded_Image_Sheet weapon_texture_sheet;
-    
-    //font
-    Loaded_Image_Sheet font_bitmap_sheet;
-    
-    //audio asset
-    Loaded_Audio pistol_sound;
-    Loaded_Audio pistol2_sound;
-    Loaded_Audio pistol_reload_sound;
-    Loaded_Audio rifle_sound;
-    Loaded_Audio minigun_sound;
-    Loaded_Audio background_music;
+    Game_Asset asset;
     
     //render
     Render_Context render_context;
