@@ -7,8 +7,6 @@ enum Entity_Type
     ss,
 
     //static entity types
-    light,
-    lamp,
     
     entity_type_count
 };

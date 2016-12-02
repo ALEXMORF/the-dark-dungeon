@@ -2,9 +2,8 @@
  *TODO LIST:
  
  Code cleanness:
- . Extract out a physics system as service component??? YES!!
  . Replace unnecessary dynamic buffer with static buffer
- . Replace the sprite generation duplicate code with an animation system
+ . Replace the sprite generation duplicate code with an animation system??? (necessary??)
  
  Gameplay: 
  . Add static entity initialization code -> finish make_static_entity() (decorations, collectables)
