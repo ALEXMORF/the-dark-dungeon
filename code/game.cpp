@@ -4,13 +4,15 @@
  Code cleanness:
  . Replace unnecessary dynamic buffer with static buffer
  . Replace the sprite generation duplicate code with an animation system??? (necessary??)
+
+ Engine:
+ . Make asset loading stream-lined (use array & enum instead hardcode, and use a key-value map to load automaticallyy)
+ . Centralize Asset memory (make it cache-friendly) 
  
  Gameplay: 
  . Add static entity initialization code -> finish make_static_entity() (decorations, collectables)
  . Add advanced entities (bosses)
  . Show the direction from where the damage comes from
- . Make asset loading stream-lined (use array & enum instead hardcode, and use a map to load automaticallyy)
- . Centralize Asset memory 
  . Physics: add entity vs entity & entity vs player collision
  . Add more interactiviy (screen turns red when shot, enemies pushed back when shot, etc)
  . Make the difference between penetrating bullets and non-penetrating bullet
