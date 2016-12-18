@@ -9,6 +9,8 @@
  . Add static entity initialization code -> finish make_static_entity() (decorations, collectables)
  . Add advanced entities (bosses)
  . Show the direction from where the damage comes from
+ . Make asset loading stream-lined (use array & enum instead hardcode, and use a map to load automaticallyy)
+ . Centralize Asset memory 
  . Physics: add entity vs entity & entity vs player collision
  . Add more interactiviy (screen turns red when shot, enemies pushed back when shot, etc)
  . Make the difference between penetrating bullets and non-penetrating bullet
@@ -80,7 +82,7 @@ load_assets(Game_Asset *game_asset, Linear_Allocator *allocator,
     
     game_asset->entity_sheet = load_image_sheet(platform_load_image, "../data/objects.png");
     config_image_sheet(&game_asset->entity_sheet, 5, 10, 1, 64, 64);
-
+    
     game_asset->font_bitmap_sheet = load_image_sheet(platform_load_image, "../data/font_8x8.png");
     auto_config_image_sheet(&game_asset->font_bitmap_sheet, 77, 1);
     
