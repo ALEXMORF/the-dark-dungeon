@@ -79,7 +79,7 @@ get_currently_playing_texture(Game_Asset *game_asset, Entity *entity, real32 cam
     
     switch (entity->type)
     {
-        case guard:
+        case ENTITY_TYPE_GUARD:
         {
             if (entity->state == death_state)
             {
@@ -134,7 +134,7 @@ get_currently_playing_texture(Game_Asset *game_asset, Entity *entity, real32 cam
             
         } break;
         
-        case ss:
+        case ENTITY_TYPE_SS:
         {
             if (entity->state == death_state)
             {

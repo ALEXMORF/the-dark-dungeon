@@ -38,7 +38,7 @@ struct Game_Asset
     Loaded_Image_Sheet entity_sheet;
     
     Loaded_Image_Sheet font_bitmap_sheet;
-
+    
     Loaded_Audio pistol_sound;
     Loaded_Audio pistol2_sound;
     Loaded_Audio pistol_reload_sound;

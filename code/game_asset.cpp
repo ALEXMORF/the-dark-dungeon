@@ -1,5 +1,9 @@
 #include "game_asset.h"
 
+//////////////////////////////////////////////////
+// Primary functions
+//////////////////////////////////////////////////
+
 inline Loaded_Image
 load_image(Platform_Load_Image *platform_load_image, char *filename)
 {
@@ -112,3 +116,4 @@ load_audio(Platform_Load_Audio *platform_load_audio, char *filename)
     result.memory = platform_load_audio(filename, &result.channels, &result.byte_per_sample, &result.byte_size);
     return result;
 }
+

@@ -6,16 +6,34 @@ make_static_entity(Entity_Type type, v2 position, Game_Asset *asset)
     Entity result = {};
     result.type = type;
     result.body = default_rigid_body(position, 0.3f);
-
+    result.body.is_unmovable = true;
+    
     //TODO(chen): expand entity types
     Loaded_Image_Sheet *sprite_sheet = &asset->entity_sheet;
     switch (type)
     {
+        case ENTITY_TYPE_BARREL:
+        {
+            result.sprite = extract_image_from_sheet(sprite_sheet, 2, 7);
+            result.body.is_unmovable = false;
+        } break;
+        
+        case ENTITY_TYPE_HEALTHPACK:
+        {
+            result.sprite = extract_image_from_sheet(sprite_sheet, 2, 5);
+        } break;
+        
+        case ENTITY_TYPE_AMMOPACK:
+        {
+            result.sprite = extract_image_from_sheet(sprite_sheet, 3, 5);
+        } break;
+        
         default:
         {
             assert(!"unknown static entity type");
         } break;
     }
+    
     return result;
 }
 
@@ -30,13 +48,13 @@ make_dynamic_entity(Linear_Allocator *allocator, Entity_Type type, v2 position, 
 
     switch (result.type)
     {
-        case guard:
+        case ENTITY_TYPE_GUARD:
         {
             result.hp = 3;
             result.weapon_force = 50.0f;
         } break;
 
-        case ss:
+        case ENTITY_TYPE_SS:
         {
             result.hp = 5;
             result.weapon_force = 30.0f;
@@ -159,12 +177,12 @@ update_basic_entity(Entity *entity, Tile_Map *tile_map, v2 player_position, real
                     //startup code
                     switch (entity->type)
                     {
-                        case guard:
+                        case ENTITY_TYPE_GUARD:
                         {
                             aiming_state->allowed_firing_interval = 1.0f;
                         } break;
                         
-                        case ss:
+                        case ENTITY_TYPE_SS:
                         {
                             aiming_state->allowed_firing_interval = 0.5f;
                         } break;

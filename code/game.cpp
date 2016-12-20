@@ -4,18 +4,19 @@
  Code cleanness:
  . Replace unnecessary dynamic buffer with static buffer
  . Replace the sprite generation duplicate code with an animation system??? (necessary??)
-
- Engine:
- . Make asset loading stream-lined (use array & enum instead hardcode, and use a key-value map to load automaticallyy)
- . Centralize Asset memory (make it cache-friendly) 
  
- Gameplay: 
+ Gameplay:
  . Add static entity initialization code -> finish make_static_entity() (decorations, collectables)
+ . Make static entities block bullets
  . Add advanced entities (bosses)
  . Show the direction from where the damage comes from
  . Physics: add entity vs entity & entity vs player collision
  . Add more interactiviy (screen turns red when shot, enemies pushed back when shot, etc)
  . Make the difference between penetrating bullets and non-penetrating bullet
+ 
+ Engine:
+ . Make asset loading stream-lined (use array & enum instead hardcode, and use a key-value map to load automaticallyy)
+ . Centralize Asset memory (make it cache-friendly) 
  
  Optimization:
  . Multithreaded rendering (simutaniously drawing 8 portions of the screen)
@@ -78,7 +79,7 @@ load_assets(Game_Asset *game_asset, Linear_Allocator *allocator,
     
     game_asset->guard_texture_sheet = load_image_sheet(platform_load_image, "../data/guard.png");
     config_image_sheet(&game_asset->guard_texture_sheet, 8, 7, 1, 64, 64);
-
+    
     game_asset->ss_texture_sheet = load_image_sheet(platform_load_image, "../data/ss.png");
     config_image_sheet(&game_asset->ss_texture_sheet, 8, 7, 1, 63, 63);
     
@@ -97,17 +98,22 @@ load_assets(Game_Asset *game_asset, Linear_Allocator *allocator,
 }
 
 inline void
-fill_entities(Linear_Allocator *allocator, DBuffer(Entity) *entity_buffer)
+fill_entities(Linear_Allocator *allocator, Game_Asset *asset, DBuffer(Entity) *entity_buffer)
 {
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, guard, {6.0f, 15.5f}));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, guard, {15.0f, 7.0f}, pi32));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, guard, {6.0f, 7.0f}));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {15.0f, 6.0f}, pi32));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {15.0f, 8.0f}, pi32));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {15.0f, 9.0f}));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {15.0f, 15.0f}, pi32));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {14.0f, 15.0f}));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ss, {16.0f, 15.0f}));
+#if 0
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_GUARD, {6.0f, 15.5f}));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_GUARD, {15.0f, 7.0f}, pi32));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_GUARD, {6.0f, 7.0f}));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_SS, {15.0f, 6.0f}, pi32));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_SS, {15.0f, 8.0f}, pi32));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_SS, {15.0f, 9.0f}));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_SS, {15.0f, 15.0f}, pi32));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_SS, {14.0f, 15.0f}));
+    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_SS, {16.0f, 15.0f}));
+#endif
+    add_Entity(entity_buffer, make_static_entity(ENTITY_TYPE_BARREL, {16.0f, 15.0f}, asset));
+    add_Entity(entity_buffer, make_static_entity(ENTITY_TYPE_HEALTHPACK, {17.0f, 15.0f}, asset));
+    add_Entity(entity_buffer, make_static_entity(ENTITY_TYPE_AMMOPACK, {12.0f, 15.0f}, asset));
 }
 
 internal void
@@ -131,8 +137,8 @@ update_game_state(Game_State *game_state, Game_Input *input)
         Entity *entity = &game_state->entity_buffer.e[i];
         switch (entity->type)
         {
-            case guard:
-            case ss:
+            case ENTITY_TYPE_GUARD:
+            case ENTITY_TYPE_SS:
             {
                 update_basic_entity(entity, &game_state->tile_map, player->body.position, dt);
             } break;
@@ -245,15 +251,15 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         int32 tile_count = tile_map->tile_count_x * tile_map->tile_count_y;
         tile_map->tiles = Push_Array(&game_state->permanent_allocator, tile_count, uint32);
         Copy_Array(temp_tiles, tile_map->tiles, tile_count, uint32);
+        
+        load_assets(game_asset, &game_state->permanent_allocator,
+                    memory->platform_load_image, memory->platform_load_audio);
 
         initialize_player(&game_state->player);
         
         game_state->entity_buffer.capacity = ENTITY_COUNT_LIMIT;
         game_state->entity_buffer.e = Push_Array(&game_state->permanent_allocator, game_state->entity_buffer.capacity, Entity);
-        fill_entities(&game_state->permanent_allocator, &game_state->entity_buffer);
-        
-        load_assets(game_asset, &game_state->permanent_allocator,
-                    memory->platform_load_image, memory->platform_load_audio);
+        fill_entities(&game_state->permanent_allocator, game_asset, &game_state->entity_buffer);
         
         Render_Context *render_context = &game_state->render_context;
         render_context->z_buffer = Push_Array(&game_state->permanent_allocator, buffer->width, real32);
@@ -279,7 +285,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         Tile_Map *tile_map = &game_state->tile_map;
         DBuffer(Entity) *entity_buffer = &game_state->entity_buffer;
         Player *player = &game_state->player;
-        
+	
         for (int i = 0; i < entity_buffer->count; ++i)
         {
             simulate_body(&entity_buffer->e[i].body, tile_map);
@@ -368,7 +374,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         {
             real32 animation_firing_period = player->get_weapon()->cd - 0.02f;
             real32 animation_cooling_period = player->get_weapon()->cd;
-
+            
             real32 firing_base_index = 1.0f;
             real32 firing_end_index = 3.0f;
             real32 cooling_base_index = 4.0f;

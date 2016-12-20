@@ -3,12 +3,15 @@
 enum Entity_Type
 {
     //dynamic entity types
-    guard,
-    ss,
-
-    //static entity types
+    ENTITY_TYPE_GUARD,
+    ENTITY_TYPE_SS,
     
-    entity_type_count
+    //static entity types
+    ENTITY_TYPE_BARREL,
+    ENTITY_TYPE_HEALTHPACK,
+    ENTITY_TYPE_AMMOPACK,
+    
+    ENTITY_TYPE_COUNT,
 };
 
 enum Entity_State
@@ -40,7 +43,7 @@ struct Entity
     
     bool variant_block_is_initialized;
     Memory variant_block;
-
+    
     Loaded_Image sprite;
 };
 
