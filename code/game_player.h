@@ -30,8 +30,15 @@ struct Weapon
     int32 animation_index;
 };
 
+#define PLAYER_FLAG_HAS_FIRED 0x1
+#define PLAYER_FLAG_IS_DAMAGED 0x2
+#define PLAYER_FLAG_IS_HEALED 0x4
+#define PLAYER_FLAG_GET_AMMO 0x8
+
 struct Player
 {
+    uint32 transient_flags;
+    
     //coordniate
     Rigid_Body body;
     real32 angle;
@@ -42,7 +49,6 @@ struct Player
     real32 weapon_reload_offset;
     
     //record
-    bool32 has_fired;
     int32 hp;
     
     //weapon system

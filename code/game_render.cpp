@@ -198,7 +198,7 @@ draw_bitmap(Game_Offscreen_Buffer *buffer, Loaded_Image *bitmap, int32 min_x, in
             uint8 new_R = (uint8)((src_value & red_mask) >> 16);
             uint8 new_G = (uint8)((src_value & green_mask) >> 8);
             uint8 new_B = (uint8)((src_value & blue_mask) >> 0);
-            
+
             real32 A = (real32)new_A / 255.0f;
 
             uint8 R = (uint8)((1.0f - A) * (real32)old_R + A * (real32)new_R);
@@ -213,5 +213,41 @@ draw_bitmap(Game_Offscreen_Buffer *buffer, Loaded_Image *bitmap, int32 min_x, in
         dest_ptr += buffer->width;
 
         bitmap_y += image_to_bitmap_y;
+    }
+}
+
+internal void
+fill_screen(Game_Offscreen_Buffer *buffer, uint32 color, uint8 alpha)
+{
+    uint32 *buffer_memory = (uint32 *)buffer->memory;
+    int32 pixel_count = buffer->width * buffer->height;
+    
+    real32 A = (real32)alpha / 255.0f;
+    real32 A_complement = 1.0f - A;
+    
+    uint8 color_R = (uint8)((color & red_mask) >> 16);
+    uint8 color_G = (uint8)((color & green_mask) >> 8);
+    uint8 color_B = (uint8)(color & blue_mask);
+    uint8 new_R = (uint8)(A * (real32)color_R);
+    uint8 new_G = (uint8)(A * (real32)color_G);
+    uint8 new_B = (uint8)(A * (real32)color_B);
+    
+    real32 new_R_comp = A * (real32)new_R;
+    real32 new_G_comp = A * (real32)new_G;
+    real32 new_B_comp = A * (real32)new_B;
+
+    for (int32 i = 0; i < pixel_count; ++i)
+    {
+        uint32 old_value = buffer_memory[i];
+        
+        uint8 old_R = (uint8)((old_value & red_mask) >> 16);
+        uint8 old_G = (uint8)((old_value & green_mask) >> 8);
+        uint8 old_B = (uint8)(old_value & blue_mask);
+        
+        uint8 R = (uint8)((real32)old_R * A_complement + new_R_comp);
+        uint8 G = (uint8)((real32)old_G * A_complement + new_G_comp);
+        uint8 B = (uint8)((real32)old_B * A_complement + new_B_comp);
+
+        buffer_memory[i] = (uint32)((R << 16) | (G << 8) | B);
     }
 }

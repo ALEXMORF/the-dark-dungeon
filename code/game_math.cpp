@@ -196,10 +196,9 @@ len(v2 a)
 }
 
 inline real32
-get_distance_squared(v2 a, v2 b)
+len_squared(v2 a)
 {
-    v2 dist = a - b;
-    return (dist.x*dist.x + dist.y*dist.y);
+    return (a.x*a.x + a.y*a.y);
 }
 
 inline real32

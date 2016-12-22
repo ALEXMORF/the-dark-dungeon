@@ -73,7 +73,7 @@ internal void
 initialize_player(Player *player)
 {
     player->hp = PLAYER_MAX_HP;
-
+    
     player->body = default_rigid_body({3.0f, 3.0f}, 0.3f);
     player->angle = 0.0f;
     
@@ -86,6 +86,8 @@ initialize_player(Player *player)
 internal void
 player_input_process(Player *player, Game_Input *input)
 {
+    player->transient_flags = 0;
+    
     //movement
     {
         real32 player_speed = 3.0f;
@@ -130,7 +132,6 @@ player_input_process(Player *player, Game_Input *input)
     
     //firing system
     {
-        player->has_fired = false;
         Weapon *weapon = player->get_weapon();
         
         if (weapon->is_reloading == false && input->keyboard.R)
@@ -165,7 +166,7 @@ player_input_process(Player *player, Game_Input *input)
             if (weapon->cache_ammo > 0)
             {
                 weapon->cd_counter = weapon->cd;
-                player->has_fired = true;
+                player->transient_flags |= PLAYER_FLAG_HAS_FIRED;
                 weapon->cache_ammo -= 1;
             }
             //reload

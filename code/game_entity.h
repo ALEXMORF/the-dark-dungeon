@@ -9,7 +9,9 @@ enum Entity_Type
     //static entity types
     ENTITY_TYPE_BARREL,
     ENTITY_TYPE_HEALTHPACK,
-    ENTITY_TYPE_AMMOPACK,
+    ENTITY_TYPE_PISTOL_AMMO,
+    ENTITY_TYPE_RIFLE_AMMO,
+    ENTITY_TYPE_MINIGUN_AMMO,
     
     ENTITY_TYPE_COUNT,
 };
@@ -27,10 +29,11 @@ enum Entity_State
 
 struct Entity
 {
+    bool32 is_static;
     Entity_Type type;
     Entity_State state;
     real32 clock[entity_state_count];
-
+    
     Rigid_Body body;
     real32 angle;
     

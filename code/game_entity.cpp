@@ -5,8 +5,8 @@ make_static_entity(Entity_Type type, v2 position, Game_Asset *asset)
 {
     Entity result = {};
     result.type = type;
+    result.is_static = true;
     result.body = default_rigid_body(position, 0.3f);
-    result.body.is_unmovable = true;
     
     //TODO(chen): expand entity types
     Loaded_Image_Sheet *sprite_sheet = &asset->entity_sheet;
@@ -15,7 +15,6 @@ make_static_entity(Entity_Type type, v2 position, Game_Asset *asset)
         case ENTITY_TYPE_BARREL:
         {
             result.sprite = extract_image_from_sheet(sprite_sheet, 2, 7);
-            result.body.is_unmovable = false;
         } break;
         
         case ENTITY_TYPE_HEALTHPACK:
@@ -23,9 +22,19 @@ make_static_entity(Entity_Type type, v2 position, Game_Asset *asset)
             result.sprite = extract_image_from_sheet(sprite_sheet, 2, 5);
         } break;
         
-        case ENTITY_TYPE_AMMOPACK:
+        case ENTITY_TYPE_PISTOL_AMMO:
         {
             result.sprite = extract_image_from_sheet(sprite_sheet, 3, 5);
+        } break;
+        
+        case ENTITY_TYPE_RIFLE_AMMO:
+        {
+            result.sprite = extract_image_from_sheet(sprite_sheet, 4, 5);
+        } break;
+        
+        case ENTITY_TYPE_MINIGUN_AMMO:
+        {
+            result.sprite = extract_image_from_sheet(sprite_sheet, 0, 6);
         } break;
         
         default:

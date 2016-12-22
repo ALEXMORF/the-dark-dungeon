@@ -94,20 +94,17 @@ simulate_body(Rigid_Body *body, Tile_Map *tile_map)
     //TODO(chen): simulate entity vs entity collision
     
     //apply velocity
-    if (!body->is_unmovable)
-    {
-        v2 desired_velocity = lerp(body->velocity, body->velocity_to_apply, velocity_lerp);
+    v2 desired_velocity = lerp(body->velocity, body->velocity_to_apply, velocity_lerp);
     
-        //apply force
-        real32 force_constant = 2000.0f;
-        desired_velocity += (body->force_to_apply / force_constant) / body->mass;
+    //apply force
+    real32 force_constant = 2000.0f;
+    desired_velocity += (body->force_to_apply / force_constant) / body->mass;
     
-        //update physical representation of body
-        body->velocity = Movement_Search_Wall(tile_map, body, desired_velocity);
-        body->position += body->velocity;
+    //update physical representation of body
+    body->velocity = Movement_Search_Wall(tile_map, body, desired_velocity);
+    body->position += body->velocity;
         
-        //reset rigid body, since all variables have been applied, they are discarded
-        body->velocity_to_apply = {0.0f, 0.0f};
-        body->force_to_apply = {0.0f};
-    }
+    //reset rigid body, since all variables have been applied, they are discarded
+    body->velocity_to_apply = {0.0f, 0.0f};
+    body->force_to_apply = {0.0f};
 }

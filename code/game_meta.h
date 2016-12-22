@@ -27,6 +27,11 @@
     {                                                           \
         assert(buffer->count < buffer->capacity);               \
         buffer->e[buffer->count++] = item;                      \
+    }                                                           \
+    void remove_##Type(DBuffer(Type) *buffer, int index)        \
+    {                                                           \
+        assert(index < buffer->count && index >= 0);            \
+        buffer->e[index] = buffer->e[--buffer->count];          \
     }
 
 #define DBuffer(Type) Type##_DBuffer

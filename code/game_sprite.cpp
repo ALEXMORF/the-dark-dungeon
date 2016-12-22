@@ -5,7 +5,7 @@ compute_sprite_order(Sprite *sprite_list, int32 len, v2 relative_position)
 {
     for (int32 i = 0; i < len; ++i)
     {
-        sprite_list[i].distance_squared = get_distance_squared(sprite_list[i].position, relative_position);
+        sprite_list[i].distance_squared = len_squared(sprite_list[i].position - relative_position);
     }
 }
 

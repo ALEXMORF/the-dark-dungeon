@@ -31,7 +31,5 @@ struct Rigid_Body
     
     v2 velocity_to_apply;
     v2 force_to_apply;
-
-    bool32 is_unmovable;
 };
 

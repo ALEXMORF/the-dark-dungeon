@@ -57,15 +57,11 @@ struct Game_State
     Player player;
     Tile_Map tile_map;
     DBuffer(Entity) entity_buffer;
-    
+
+    //system
     Game_Asset asset;
-    
-    //render
     Render_Context render_context;
-    
-    //audio system
     Audio_System audio_system;
-    
-    //HUD persistent data
+
     real32 hp_display_width;
 };
