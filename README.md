@@ -47,7 +47,9 @@ TODO List:
 things to test out: global game event queue(?)
  
 #Things I took away from this project
-
+  
+  first, follow my own gut.
+  
   The urge to apply abstractions/OOP, in most cases, originates from the inability to read code. Then in that case, what abstractions achieve is not making the code readable, but conceiving the programmer that it is readable, which really leaves the program more complicated and fragmented than it should have been. 
 
   A rule to assess the readability of a program:    
