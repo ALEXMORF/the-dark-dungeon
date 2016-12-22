@@ -35,7 +35,7 @@ things I implemented:
  17. Added rifle and minigun into the game (11/24/2016)
  18. Extracted out a physics simulation layer to centralize all physics simulations (11/28/2016)
  19. Added force to bullets and tuned a force constant for a nice bullet recoil (11/28/2016)
- 
+ 20. Added collectables (ammo, health pack, etc) (12/21/2016) 
 TODO List: 
  1. apply effects like shadow, fog, etc. 
  2. destructable obstacles. 
@@ -47,7 +47,9 @@ TODO List:
 things to test out: global game event queue(?)
  
 #Things I took away from this project
-
+  
+  first, follow my own gut.
+  
   The urge to apply abstractions/OOP, in most cases, originates from the inability to read code. Then in that case, what abstractions achieve is not making the code readable, but conceiving the programmer that it is readable, which really leaves the program more complicated and fragmented than it should have been. 
 
   A rule to assess the readability of a program:    
