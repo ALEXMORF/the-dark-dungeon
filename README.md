@@ -42,8 +42,6 @@ TODO List:
  2. UI and multiple states
  3. fix the bug with cast_ray()
  
-things to test out: global game event queue(?)
- 
 #Things I took away from this project
   
   first, follow my own gut.
