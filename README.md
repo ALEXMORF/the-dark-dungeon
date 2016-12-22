@@ -36,13 +36,11 @@ things I implemented:
  18. Extracted out a physics simulation layer to centralize all physics simulations (11/28/2016)
  19. Added force to bullets and tuned a force constant for a nice bullet recoil (11/28/2016)
  20. Added collectables (ammo, health pack, etc) (12/21/2016) 
+ 
 TODO List: 
- 1. apply effects like shadow, fog, etc. 
- 2. destructable obstacles. 
- 3. refine the sound engine 
- 4. canonicalize asset loading routine
- 5. procedurally generated map
- 6. expanded entity types (enemies, decoratives, ammo, health packs, tc)
+ 1. procedurally generated map
+ 2. UI and multiple states
+ 3. fix the bug with cast_ray()
  
 things to test out: global game event queue(?)
  
