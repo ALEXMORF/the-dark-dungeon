@@ -47,6 +47,8 @@ struct Game_Asset
     Loaded_Audio background_music;
 };
 
+#define HUD_EFFECT_LAST_TIME 0.2f
+
 struct Game_State
 {
     //memory
@@ -57,11 +59,13 @@ struct Game_State
     Player player;
     Tile_Map tile_map;
     DBuffer(Entity) entity_buffer;
-
+    
     //system
     Game_Asset asset;
     Render_Context render_context;
     Audio_System audio_system;
-
+    
+    real32 hud_effect_last_time;
+    uint32 hud_effect_color;
     real32 hp_display_width;
 };

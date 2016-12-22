@@ -527,9 +527,39 @@ update_game_state(Game_State *game_state, Game_Input *input)
              texture_x += texture_mapper;
          }
      }
-
+     
      //HUD overlay
      {
+         //draw effect (hurt, healed, etc)
+         if (game_state->hud_effect_last_time == 0.0f)
+         {
+             game_state->hud_effect_last_time = HUD_EFFECT_LAST_TIME;
+             
+             if (game_state->player.transient_flags & PLAYER_FLAG_IS_DAMAGED)
+             {
+                 game_state->hud_effect_color = 0x00ff0000;
+             }
+             else if (game_state->player.transient_flags & PLAYER_FLAG_IS_HEALED)
+             {
+                 game_state->hud_effect_color = 0x0000ff00;
+             }
+             else if (game_state->player.transient_flags & PLAYER_FLAG_GET_AMMO)
+             {
+                 assert(0);
+                 game_state->hud_effect_color = 0x00ffff00;
+             }
+             //NOTE(chen): if no effect should take place
+             else
+             {
+                 game_state->hud_effect_last_time = 0.0f;
+             }
+         }
+         else
+         {
+             fill_screen(buffer, game_state->hud_effect_color, 50);
+             game_state->hud_effect_last_time = reduce(game_state->hud_effect_last_time, input->dt_per_frame);
+         }
+         
          String_Drawer str_drawer = {};
          str_drawer.font_sheet = &game_asset->font_bitmap_sheet;
          str_drawer.buffer = buffer;
