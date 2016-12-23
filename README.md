@@ -38,7 +38,7 @@ things I implemented:
  20. Added collectables (ammo, health pack, etc) (12/21/2016) 
  
 TODO List: 
- 1. procedurally generated map
+ 1. procedurally generated map link:http://www.gamasutra.com/blogs/AAdonaac/20150903/252889/Procedural_Dungeon_Generation_Algorithm.php
  2. UI and multiple states
  3. fix the bug with cast_ray()
  
