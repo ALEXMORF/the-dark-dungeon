@@ -1,6 +1,12 @@
 #include "math.h"
 
 inline v2
+make_v2(real32 x, real32 y)
+{
+    return {x, y};
+}
+
+inline v2
 normalize(v2 a)
 {
     real32 length = sqrtf(a.x*a.x + a.y*a.y);

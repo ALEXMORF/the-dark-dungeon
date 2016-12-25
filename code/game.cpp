@@ -1,23 +1,14 @@
 /*
  *TODO LIST:
  
- Optimization:
- . Multithreaded rendering (simutaniously drawing 8 portions of the screen)
- 
  Future Features:
  . Procedure map generation
  . add ui and multiple game states
- . Robust asset loading routine
-
+ 
  TODO BUGS:
 
  . cast_ray() function sometimes returns non-valid result,
    tentative fix by inclusively determining quadrants, see how it helps.
-   
- TODO LINGERING:
- 
- . A bug where game freezes for 3 seconds then slowly recovers (sometimes even crashes)
- . Fix the audio engine's clipping issue
 */
 
 #include "game.h"
@@ -36,6 +27,19 @@
 #include "game_player.cpp"
 #include "game_entity.cpp"
 #include "game_ui.cpp"
+
+v2
+Rectangle::position()
+{
+    return (min + max) / 2.0f;
+}
+
+void
+Rectangle::move(v2 dp)
+{
+    min += dp;
+    max += dp;
+}
 
 inline void
 load_assets(Game_Asset *game_asset, Linear_Allocator *allocator,
@@ -80,29 +84,91 @@ load_assets(Game_Asset *game_asset, Linear_Allocator *allocator,
     game_asset->background_music = load_audio(platform_load_audio, "../data/background1.wav");
 }
 
+//TODO(chen): procedural generation
+internal void
+generate_world(World *world)
+{
+    //first phase
+    Rectangle rooms[50];
+    real32 room_max_width = 100.0f;
+    real32 room_max_height = 100.0f;
+    real32 circle_radius = 50.0f;
+
+    for (int room_index = 0; room_index < array_count(rooms); ++room_index)
+    {
+        v2 random_point = {real_quick_rand(-circle_radius, circle_radius), 
+                           real_quick_rand(-circle_radius, circle_radius)};
+        real32 random_width = real_quick_rand(room_max_width / 4.0f, room_max_width);
+        real32 random_height = real_quick_rand(room_max_height / 4.0f, room_max_height);
+        rooms[room_index].min = {random_point.x - random_width/2.0f,
+                                 random_point.y - random_height/2.0f};
+        rooms[room_index].max = {random_point.x + random_width/2.0f,
+                                 random_point.y + random_height/2.0f};
+        
+        //NOTE(chen): make sure all tile indexs are positive, prob replace this
+        rooms[room_index].move({400.0f, 300.f});
+    }
+    
+    auto rectangle_vs_rectangle = [](Rectangle *r1, Rectangle *r2) -> bool {
+        bool32 h_overlap = r1->max.x > r2->min.x && r1->min.x < r2->max.x;
+        bool32 v_overlap = r1->max.y > r2->min.y && r1->min.y < r2->max.y;
+        return h_overlap && v_overlap;
+    };
+    
+    //separate rooms
+    real32 SEPARATION_SPEED = 5.0f;
+    bool32 rooms_are_separated = false;
+    while (!rooms_are_separated)
+    {
+        rooms_are_separated = true;
+        for (int32 room_index = 0; room_index < array_count(rooms); ++room_index)
+        {
+            v2 dp = {};
+            
+            for (int32 room_check_index = 0; room_check_index < array_count(rooms); ++room_check_index)
+            {
+                if (room_check_index == room_index) continue;
+                
+                if (rectangle_vs_rectangle(&rooms[room_index], &rooms[room_check_index]))
+                {
+                    v2 dist = rooms[room_check_index].position() - rooms[room_index].position();
+                    dp += normalize(dist);
+                    rooms_are_separated = false;
+                }
+            }
+
+            if (len(dp) > SEPARATION_SPEED)
+                dp = normalize(dp) * SEPARATION_SPEED;
+            rooms[room_index].move(dp * -1.0f);
+        }
+    }
+}
+
+#define AddEntity(type, p, angle) add_Entity(entity_buffer, make_dynamic_entity(allocator, type, p, angle))
+#define AddStaticEntity(type, p) add_Entity(entity_buffer, make_static_entity(type, p, asset))
 inline void
 fill_entities(Linear_Allocator *allocator, Game_Asset *asset, DBuffer(Entity) *entity_buffer)
 {
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_GUARD, {6.0f, 15.5f}));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_GUARD, {15.0f, 7.0f}, pi32));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_GUARD, {6.0f, 7.0f}));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_SS, {15.0f, 6.0f}, pi32));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_SS, {15.0f, 8.0f}, pi32));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_SS, {15.0f, 9.0f}));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_SS, {15.0f, 15.0f}, pi32));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_SS, {14.0f, 15.0f}));
-    add_Entity(entity_buffer, make_dynamic_entity(allocator, ENTITY_TYPE_SS, {16.0f, 15.0f}));
+    AddEntity(ENTITY_TYPE_GUARD, make_v2(6.0f, 15.5f), 0.0f);
+    AddEntity(ENTITY_TYPE_GUARD, make_v2(15.0f, 7.0f), 0.0f);
+    AddEntity(ENTITY_TYPE_GUARD, make_v2(6.0f, 7.0f), 0.0f);
+    AddEntity(ENTITY_TYPE_SS, make_v2(15.0f, 6.0f), pi32);
+    AddEntity(ENTITY_TYPE_SS, make_v2(15.0f, 8.0f), pi32);
+    AddEntity(ENTITY_TYPE_SS, make_v2(15.0f, 9.0f), 0.0f);
+    AddEntity(ENTITY_TYPE_SS, make_v2(15.0f, 15.0f), pi32);
+    AddEntity(ENTITY_TYPE_SS, make_v2(14.0f, 15.0f), 0.0f);
+    AddEntity(ENTITY_TYPE_SS, make_v2(16.0f, 15.0f), 0.0f);
     
-    add_Entity(entity_buffer, make_static_entity(ENTITY_TYPE_BARREL, {16.0f, 15.0f}, asset));
-    add_Entity(entity_buffer, make_static_entity(ENTITY_TYPE_HEALTHPACK, {17.0f, 15.0f}, asset));
-    add_Entity(entity_buffer, make_static_entity(ENTITY_TYPE_PISTOL_AMMO, {12.0f, 15.0f}, asset));
+    AddStaticEntity(ENTITY_TYPE_BARREL, make_v2(16.0f, 15.0f));
+    AddStaticEntity(ENTITY_TYPE_HEALTHPACK, make_v2(17.0f, 15.0f));
+    AddStaticEntity(ENTITY_TYPE_PISTOL_AMMO, make_v2(12.0f, 15.0f));
 }
 
 internal void
-update_game_state(Game_State *game_state, Game_Input *input)
+update_game_state(World *world, Game_Input *input)
 {
     real32 dt = input->dt_per_frame;
-    Player *player = &game_state->player;
+    Player *player = &world->player;
     
     //update player
     {
@@ -114,9 +180,9 @@ update_game_state(Game_State *game_state, Game_Input *input)
     }
     
     //update entities
-    for (int32 i = 0; i < game_state->entity_buffer.count; ++i)
+    for (int32 i = 0; i < world->entity_buffer.count; ++i)
     {
-        Entity *entity = &game_state->entity_buffer.e[i];
+        Entity *entity = &world->entity_buffer.e[i];
         if (entity->is_static) continue;
         
         switch (entity->type)
@@ -124,15 +190,15 @@ update_game_state(Game_State *game_state, Game_Input *input)
             case ENTITY_TYPE_GUARD:
             case ENTITY_TYPE_SS:
             {
-                update_basic_entity(entity, &game_state->tile_map, player->body.position, dt);
+                update_basic_entity(entity, &world->tile_map, player->body.position, dt);
             } break;
         }
     }
     
     //check for player being hit by bullets
-    for (int32 i = 0; i < game_state->entity_buffer.count; ++i)
+    for (int32 i = 0; i < world->entity_buffer.count; ++i)
     {
-        Entity *entity = &game_state->entity_buffer.e[i];
+        Entity *entity = &world->entity_buffer.e[i];
         if (entity->state == aiming_state)
         {
             Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
@@ -140,7 +206,7 @@ update_game_state(Game_State *game_state, Game_Input *input)
             {
                 Line_Segment bullet_line = {};
                 bullet_line.start = entity->body.position;
-                bullet_line.end = cast_ray(&game_state->tile_map, entity->body.position, entity->angle).hit_position;
+                bullet_line.end = cast_ray(&world->tile_map, entity->body.position, entity->angle).hit_position;
                 
                 Circle player_hitbox = {};
                 player_hitbox.position = player->body.position;
@@ -166,11 +232,11 @@ update_game_state(Game_State *game_state, Game_Input *input)
     {
         Line_Segment bullet_line = {};
         bullet_line.start = player->body.position;
-        bullet_line.end = cast_ray(&game_state->tile_map, player->body.position, player->angle).hit_position;
+        bullet_line.end = cast_ray(&world->tile_map, player->body.position, player->angle).hit_position;
         
-        for (int i = 0; i < game_state->entity_buffer.count; ++i)
+        for (int i = 0; i < world->entity_buffer.count; ++i)
         {
-            Entity *entity = &game_state->entity_buffer.e[i];
+            Entity *entity = &world->entity_buffer.e[i];
             if (entity->is_static) continue;
             
             Circle entity_hitbox = {};
@@ -189,9 +255,9 @@ update_game_state(Game_State *game_state, Game_Input *input)
     }
 
     //check player vs collectables
-    for (int i = 0; i < game_state->entity_buffer.count; ++i)
+    for (int i = 0; i < world->entity_buffer.count; ++i)
     {
-        Entity *entity = &game_state->entity_buffer.e[i];
+        Entity *entity = &world->entity_buffer.e[i];
 
         real32 collision_dist = entity->body.collision_radius + player->body.collision_radius;
         collision_dist *= collision_dist;
@@ -222,7 +288,7 @@ update_game_state(Game_State *game_state, Game_Input *input)
                 case ENTITY_TYPE_RIFLE_AMMO:
                 {
                     player->transient_flags |= PLAYER_FLAG_GET_AMMO;
-
+                    
                     player->weapons[rifle].bank_ammo += 60;
                 } break;
 
@@ -241,7 +307,7 @@ update_game_state(Game_State *game_state, Game_Input *input)
 
             if (remove_entity)
             {
-                remove_Entity(&game_state->entity_buffer, i--);
+                remove_Entity(&world->entity_buffer, i--);
             }
         }
     }
@@ -261,7 +327,27 @@ update_game_state(Game_State *game_state, Game_Input *input)
          initialize_linear_allocator(&game_state->transient_allocator,
                                      (uint8 *)memory->transient_memory.storage,
                                      memory->transient_memory.size);
+         
+         //system stuff
+         {
+             load_assets(game_asset, &game_state->permanent_allocator,
+                         memory->platform_load_image, memory->platform_load_audio);
 
+             Render_Context *render_context = &game_state->render_context;
+             render_context->z_buffer = Push_Array(&game_state->permanent_allocator, buffer->width, real32);
+             render_context->floorcast_table_count = buffer->height/2;
+             render_context->floorcast_table = Push_Array(&game_state->permanent_allocator, render_context->floorcast_table_count, real32);
+             for (int32 i = 0; i < render_context->floorcast_table_count; ++i)
+             {
+                 real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
+                 real32 real_scan_y = ((real32)buffer->height/2 + (real32)i / inverse_aspect_ratio);
+                 render_context->floorcast_table[i] = (real32)buffer->height / (2*real_scan_y - buffer->height);
+             }
+         
+             game_state->audio_system.push_task_looped(&game_asset->background_music);
+         }
+         
+         World *world = &game_state->world;
  //TODO(chen): this is some improv tile-map init code, replace this with procedural generation later
  #define map_width 20
  #define map_height 20
@@ -288,7 +374,7 @@ update_game_state(Game_State *game_state, Game_Input *input)
                  1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                  1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1
              };
-         Tile_Map *tile_map = &game_state->tile_map;
+         Tile_Map *tile_map = &world->tile_map;
          tile_map->tile_count_x = map_width;
          tile_map->tile_count_y = map_height;
          tile_map->exception_tile_value = 1;
@@ -296,39 +382,26 @@ update_game_state(Game_State *game_state, Game_Input *input)
          tile_map->tiles = Push_Array(&game_state->permanent_allocator, tile_count, uint32);
          Copy_Array(temp_tiles, tile_map->tiles, tile_count, uint32);
 
-         load_assets(game_asset, &game_state->permanent_allocator,
-                     memory->platform_load_image, memory->platform_load_audio);
+         initialize_player(&world->player);
+         
+         world->entity_buffer.capacity = ENTITY_COUNT_LIMIT;
+         world->entity_buffer.e = Push_Array(&game_state->permanent_allocator, world->entity_buffer.capacity, Entity);
+         fill_entities(&game_state->permanent_allocator, game_asset, &world->entity_buffer);
 
-         initialize_player(&game_state->player);
-
-         game_state->entity_buffer.capacity = ENTITY_COUNT_LIMIT;
-         game_state->entity_buffer.e = Push_Array(&game_state->permanent_allocator, game_state->entity_buffer.capacity, Entity);
-         fill_entities(&game_state->permanent_allocator, game_asset, &game_state->entity_buffer);
-
-         Render_Context *render_context = &game_state->render_context;
-         render_context->z_buffer = Push_Array(&game_state->permanent_allocator, buffer->width, real32);
-         render_context->floorcast_table_count = buffer->height/2;
-         render_context->floorcast_table = Push_Array(&game_state->permanent_allocator, render_context->floorcast_table_count, real32);
-         for (int32 i = 0; i < render_context->floorcast_table_count; ++i)
-         {
-             real32 inverse_aspect_ratio = (real32)buffer->width / (real32)buffer->height;
-             real32 real_scan_y = ((real32)buffer->height/2 + (real32)i / inverse_aspect_ratio);
-             render_context->floorcast_table[i] = (real32)buffer->height / (2*real_scan_y - buffer->height);
-         }
-
-         game_state->audio_system.push_task_looped(&game_asset->background_music);
-
+         generate_world(world);
+         
          memory->is_initialized = true;
      }
      game_state->transient_allocator.used = 0;
-
-     update_game_state(game_state, input);
-
+     World *world = &game_state->world;
+     
+     update_game_state(world, input);
+     
      //physics backend
      {
-         Tile_Map *tile_map = &game_state->tile_map;
-         DBuffer(Entity) *entity_buffer = &game_state->entity_buffer;
-         Player *player = &game_state->player;
+         Tile_Map *tile_map = &world->tile_map;
+         DBuffer(Entity) *entity_buffer = &world->entity_buffer;
+         Player *player = &world->player;
 
          for (int i = 0; i < entity_buffer->count; ++i)
          {
@@ -343,9 +416,9 @@ update_game_state(Game_State *game_state, Game_Input *input)
          Audio_System *audio_system = &game_state->audio_system;
 
          //player fire sound
-         if (game_state->player.transient_flags & PLAYER_FLAG_HAS_FIRED)
+         if (world->player.transient_flags & PLAYER_FLAG_HAS_FIRED)
          {
-             switch (game_state->player.get_weapon()->type)
+             switch (world->player.get_weapon()->type)
              {
                  case pistol:
                  {
@@ -370,15 +443,15 @@ update_game_state(Game_State *game_state, Game_Input *input)
          }
 
          //player reload sound
-         if (game_state->player.get_weapon()->reload_time == game_state->player.get_weapon()->max_reload_time)
+         if (world->player.get_weapon()->reload_time == world->player.get_weapon()->max_reload_time)
          {
              audio_system->push_task(&game_asset->pistol_reload_sound, 1.0f);
          }
 
          //enemy fire sound
-         for (int i = 0; i < game_state->entity_buffer.count; ++i)
+         for (int i = 0; i < world->entity_buffer.count; ++i)
          {
-             Entity *entity = (Entity *)&game_state->entity_buffer.e[i];
+             Entity *entity = (Entity *)&world->entity_buffer.e[i];
              if (entity->state == aiming_state)
              {
                  Aiming_State *aiming_state = (Aiming_State *)entity->variant_block.storage;
@@ -394,24 +467,23 @@ update_game_state(Game_State *game_state, Game_Input *input)
      //
      //Render game
      fill_buffer(buffer, 0);
-
+     
      Sprite_List sprite_list = {};
-     sprite_list.capacity = game_state->entity_buffer.capacity;
+     sprite_list.capacity = world->entity_buffer.capacity;
      sprite_list.content = Push_Array(&game_state->transient_allocator, sprite_list.capacity, Sprite);
 
      //draw 3d scene and sprites
-     generate_sprite_list(game_asset, &sprite_list, &game_state->entity_buffer,
-                          game_state->player.angle);
-     sort_sprites(sprite_list.content, sprite_list.count, game_state->player.body.position);
-     render_3d_scene(buffer, &game_state->render_context, &game_state->tile_map,
-                     game_state->player.body.position, game_state->player.angle, 
+     generate_sprite_list(game_asset, &sprite_list, &world->entity_buffer, world->player.angle);
+     sort_sprites(sprite_list.content, sprite_list.count, world->player.body.position);
+     render_3d_scene(buffer, &game_state->render_context, &world->tile_map,
+                     world->player.body.position, world->player.angle, 
                      &game_asset->floor_texture, &game_asset->ceiling_texture,
                      &game_asset->wall_texture_buffer, sprite_list.content, sprite_list.count,
                      memory->platform_eight_async_proc);
 
      //animate first-person weapon
      {
-         Player *player = &game_state->player;
+         Player *player = &world->player;
 
          //minigun animation
          if (player->get_weapon()->type == minigun)
@@ -472,7 +544,7 @@ update_game_state(Game_State *game_state, Game_Input *input)
 
      //draw first-person weapon
      {
-         Player *player = &game_state->player;
+         Player *player = &world->player;
 
          //calculate offset for reloading animation
          real32 animation_lerp = 0.1f;
@@ -489,9 +561,9 @@ update_game_state(Game_State *game_state, Game_Input *input)
          //bob and render weapon sprite
          real32 y_scale = (real32)buffer->height / 50;
          real32 x_scale = (real32)buffer->width / 40;
-         game_state->player.pace += len(game_state->player.body.velocity);
-         int32 bob_x = (int32)(sinf(game_state->player.pace * 2.5f) * x_scale);
-         int32 bob_y = (int32)(cosf(game_state->player.pace * 5.0f) * y_scale) + (int32)y_scale;
+         world->player.pace += len(world->player.body.velocity);
+         int32 bob_x = (int32)(sinf(world->player.pace * 2.5f) * x_scale);
+         int32 bob_y = (int32)(cosf(world->player.pace * 5.0f) * y_scale) + (int32)y_scale;
 
          v2 weapon_sprite_size = {(real32)buffer->height, (real32)buffer->height};
          int32 weapon_upper_left = bob_x + (buffer->width - (int32)weapon_sprite_size.x) / 2;
@@ -518,17 +590,16 @@ update_game_state(Game_State *game_state, Game_Input *input)
          {
              game_state->hud_effect_last_time = HUD_EFFECT_LAST_TIME;
              
-             if (game_state->player.transient_flags & PLAYER_FLAG_IS_DAMAGED)
+             if (world->player.transient_flags & PLAYER_FLAG_IS_DAMAGED)
              {
                  game_state->hud_effect_color = 0x00ff0000;
              }
-             else if (game_state->player.transient_flags & PLAYER_FLAG_IS_HEALED)
+             else if (world->player.transient_flags & PLAYER_FLAG_IS_HEALED)
              {
                  game_state->hud_effect_color = 0x0000ff00;
              }
-             else if (game_state->player.transient_flags & PLAYER_FLAG_GET_AMMO)
+             else if (world->player.transient_flags & PLAYER_FLAG_GET_AMMO)
              {
-                 assert(0);
                  game_state->hud_effect_color = 0x00ffff00;
              }
              //NOTE(chen): if no effect should take place
@@ -554,7 +625,7 @@ update_game_state(Game_State *game_state, Game_Input *input)
 
              real32 width_per_hp = (real32)((max.x - min.x) / PLAYER_MAX_HP);
              real32 lerp_ratio = 3.0f * input->dt_per_frame;
-             real32 hp_count = clamp((real32)game_state->player.hp, 0.0f, (real32)PLAYER_MAX_HP);
+             real32 hp_count = clamp((real32)world->player.hp, 0.0f, (real32)PLAYER_MAX_HP);
 
              real32 target_hp_display_width = width_per_hp * hp_count;
              game_state->hp_display_width = lerp(game_state->hp_display_width, target_hp_display_width, lerp_ratio);
@@ -571,7 +642,7 @@ update_game_state(Game_State *game_state, Game_Input *input)
              int32 font_size = 20;
 
              draw_string_autosized(&str_drawer, min_x, min_y, font_size, font_size,
-                                   "ammo: %d / %d", game_state->player.get_weapon()->cache_ammo, game_state->player.get_weapon()->bank_ammo);
+                                   "ammo: %d / %d", world->player.get_weapon()->cache_ammo, world->player.get_weapon()->bank_ammo);
          }
 
          //performance layout
@@ -580,7 +651,7 @@ update_game_state(Game_State *game_state, Game_Input *input)
              int32 layout_x = 10;
              int32 layout_height = 80;
              int32 layout_dheight = 30;
-
+             
              print("DEBUG:");
              print(" process time: %.2fms", debug_state->last_frame_process_time);
              print(" mtsc: %lld cycles", debug_state->last_frame_mtsc);
@@ -589,7 +660,7 @@ update_game_state(Game_State *game_state, Game_Input *input)
              print(" task count/capacity: %d/%d", game_state->audio_system.length, AUDIO_TASK_MAX);
 
              print("Entity System:");
-             print(" entity count/capacity: %d/%d", game_state->entity_buffer.count, game_state->entity_buffer.capacity);
+             print(" entity count/capacity: %d/%d", world->entity_buffer.count, world->entity_buffer.capacity);
          }
      }
  }

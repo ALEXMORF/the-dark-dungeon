@@ -208,7 +208,15 @@ int quick_rand()
 {
     if (random_index == array_count(random_table)-1)
     {
-	random_index = 0;
+        random_index = 0;
     }
     return random_table[random_index++];
+}
+
+inline real32
+real_quick_rand(real32 lo, real32 hi)
+{
+    real32 result;
+    result = (real32)(quick_rand() % (int32)(hi - lo) + (int32)lo);
+    return result;
 }

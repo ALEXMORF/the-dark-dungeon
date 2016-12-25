@@ -152,11 +152,6 @@ void eight_async_proc(platform_thread_fn *fn, void *data[8])
     global_threads[5] = SDL_CreateThread(fn, "thread_5", data[5]);
     global_threads[6] = SDL_CreateThread(fn, "thread_6", data[6]);
     global_threads[7] = SDL_CreateThread(fn, "thread_7", data[7]);
-    for (int i = 0; i < 8; ++i)
-    {
-        SDL_WaitThread(global_threads[i], 0);
-        global_threads[i] = 0;
-    }
 }
 
 int CALLBACK

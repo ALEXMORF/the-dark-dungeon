@@ -47,23 +47,14 @@ struct Game_Asset
     Loaded_Audio background_music;
 };
 
+#define HUD_EFFECT_LAST_TIME 0.2f
+
 struct World
 {
     Player player;
     Tile_Map tile_map;
     DBuffer(Entity) entity_buffer;
 };
-
-struct Rectangle
-{
-    v2 min;
-    v2 max;
-    
-    v2 position();
-    void move(v2 dp);
-};
-
-#define HUD_EFFECT_LAST_TIME 0.2f
 
 struct Game_State
 {
