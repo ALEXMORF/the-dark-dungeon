@@ -32,9 +32,14 @@ generate_world(World *world, Linear_Allocator *permanent_allocator,
         }
     }
 
+#if 0    
     real32 spawn_position_x = (real32)(generator.rooms[0].max.x - generator.rooms[0].min.x) / 2.0f;
     real32 spawn_position_y = (real32)(generator.rooms[0].max.y - generator.rooms[0].min.y) / 2.0f;
     v2 player_spawn_position = {spawn_position_x, spawn_position_y};
+#else
+    v2 player_spawn_position = {(real32)generator.rooms[0].max.x, (real32)generator.rooms[0].max.y};
+    player_spawn_position += {0.5f, 0.5f};
+#endif
     initialize_player(&world->player, player_spawn_position);
 }
 
@@ -47,6 +52,8 @@ inline bool32 Rect::collides(Rect *other_rect, int32 min_dist = 0)
 
 void Tile_Map_Generator::run(Tile_Map *tile_map, Linear_Allocator *transient_allocator)
 {
+    seed_rand((uint32)time(0));
+        
     region_id = TILE_VALUE_FILLER + 1;
     this->x_count = tile_map->tile_count_x;
     this->y_count = tile_map->tile_count_y;

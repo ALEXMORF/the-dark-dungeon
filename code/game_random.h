@@ -204,6 +204,11 @@ global_variable int random_table[] = {
     603849, 745989, 50806, 264758, 941040,
 };
 
+void seed_rand(int32 seed)
+{
+    random_index = seed % array_count(random_table);
+}
+
 int quick_rand()
 {
     if (random_index == array_count(random_table)-1)
