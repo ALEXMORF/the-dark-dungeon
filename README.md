@@ -39,9 +39,8 @@ things I implemented:
  21. Procedural world generation (12/30/2016)
  
 TODO List: 
- 1. procedurally generated map link:http://www.gamasutra.com/blogs/AAdonaac/20150903/252889/Procedural_Dungeon_Generation_Algorithm.php
- 2. UI and multiple states
- 3. fix the bug with cast_ray()
+ 1. UI and multiple states
+ 2. fix the bug with cast_ray()
  
 #Things I took away from this project
   
