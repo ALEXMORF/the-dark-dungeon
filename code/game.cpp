@@ -2,11 +2,10 @@
  *TODO LIST:
  
  Future Features:
- . Procedure map generation
  . add ui and multiple game states
  
  TODO BUGS:
-
+ . sometimes generate_world() spawns player inside a wall
  . cast_ray() function sometimes returns non-valid result,
    tentative fix by inclusively determining quadrants, see how it helps.
 */

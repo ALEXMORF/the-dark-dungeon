@@ -32,7 +32,7 @@ generate_world(World *world, Linear_Allocator *permanent_allocator,
         }
     }
 
-#if 0    
+#if 1
     real32 spawn_position_x = (real32)(generator.rooms[0].max.x - generator.rooms[0].min.x) / 2.0f;
     real32 spawn_position_y = (real32)(generator.rooms[0].max.y - generator.rooms[0].min.y) / 2.0f;
     v2 player_spawn_position = {spawn_position_x, spawn_position_y};
