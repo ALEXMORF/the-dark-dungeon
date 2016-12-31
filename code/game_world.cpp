@@ -38,7 +38,7 @@ generate_world(World *world, Linear_Allocator *permanent_allocator,
     v2 player_spawn_position = {spawn_position_x, spawn_position_y};
 #else
     v2 player_spawn_position = {(real32)generator.rooms[0].max.x, (real32)generator.rooms[0].max.y};
-    player_spawn_position += {0.5f, 0.5f};
+    player_spawn_position += {0.5f, -0.5f};
 #endif
     initialize_player(&world->player, player_spawn_position);
 }
