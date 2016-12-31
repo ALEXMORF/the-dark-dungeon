@@ -36,6 +36,7 @@ things I implemented:
  18. Extracted out a physics simulation layer to centralize all physics simulations (11/28/2016)
  19. Added force to bullets and tuned a force constant for a nice bullet recoil (11/28/2016)
  20. Added collectables (ammo, health pack, etc) (12/21/2016) 
+ 21. Procedural world generation (12/30/2016)
  
 TODO List: 
  1. procedurally generated map link:http://www.gamasutra.com/blogs/AAdonaac/20150903/252889/Procedural_Dungeon_Generation_Algorithm.php
