@@ -32,14 +32,11 @@ generate_world(World *world, Linear_Allocator *permanent_allocator,
         }
     }
 
-#if 1
-    real32 spawn_position_x = (real32)(generator.rooms[0].max.x - generator.rooms[0].min.x) / 2.0f;
-    real32 spawn_position_y = (real32)(generator.rooms[0].max.y - generator.rooms[0].min.y) / 2.0f;
-    v2 player_spawn_position = {spawn_position_x, spawn_position_y};
-#else
-    v2 player_spawn_position = {(real32)generator.rooms[0].max.x, (real32)generator.rooms[0].max.y};
-    player_spawn_position += {0.5f, -0.5f};
-#endif
+    assert(generator.room_count != 0);
+    v2 room_min = cast_to_v2(generator.rooms[0].min);
+    v2 room_max = cast_to_v2(generator.rooms[0].max);
+    v2 player_spawn_position = lerp(room_min, room_max, 0.5f);
+    player_spawn_position += {0.5f, 0.5f};
     initialize_player(&world->player, player_spawn_position);
 }
 
@@ -50,16 +47,17 @@ inline bool32 Rect::collides(Rect *other_rect, int32 min_dist = 0)
     return h_overlap && v_overlap;
 }
 
-void Tile_Map_Generator::run(Tile_Map *tile_map, Linear_Allocator *transient_allocator)
+void Tile_Map_Generator::run(Tile_Map *in_tile_map, Linear_Allocator *transient_allocator)
 {
     seed_rand((uint32)time(0));
-        
+
+    tile_map = in_tile_map;
     region_id = TILE_VALUE_FILLER + 1;
     this->x_count = tile_map->tile_count_x;
     this->y_count = tile_map->tile_count_y;
     tiles = tile_map->tiles;
     
-    m_room_count = 0;
+    room_count = 0;
 
     //fill up with rooms
     {   
@@ -79,7 +77,7 @@ void Tile_Map_Generator::run(Tile_Map *tile_map, Linear_Allocator *transient_all
             Rect room = {room_lowerleft, room_lowerleft + room_size};
             
             bool32 room_overlaps = false;
-            loop_for(room_index, m_room_count)
+            loop_for(room_index, room_count)
             {
                 if (rooms[room_index].collides(&room, room_min_gap))
                 {
@@ -91,12 +89,12 @@ void Tile_Map_Generator::run(Tile_Map *tile_map, Linear_Allocator *transient_all
             if (!room_overlaps)
             {
                 //add room
-                rooms[m_room_count++] = room;
+                rooms[room_count++] = room;
                 for (int32 x = room.min.x; x <= room.max.x; ++x)
                 {
                     for (int32 y = room.min.y; y <= room.max.y; ++y)
                     {
-                        get_tile({x, y}) = region_id;
+                        get_tile_value(tile_map, x, y) = region_id;
                     }
                 }
                 ++region_id;
@@ -119,12 +117,12 @@ void Tile_Map_Generator::run(Tile_Map *tile_map, Linear_Allocator *transient_all
     
     //carving ports to rooms and corridors
     {
-        loop_for(room_index, m_room_count)
+        loop_for(room_index, room_count)
         {
             Rect *room = &rooms[room_index];
             int32 room_width = room->max.x - room->min.x;
             int32 room_height = room->max.y - room->min.y;
-            int32 current_room_region_id = get_tile(room->min);
+            int32 current_room_region_id = get_tile_value(tile_map, room->min);
                 
             bool32 has_ports = true;
             while (has_ports)
@@ -142,14 +140,14 @@ void Tile_Map_Generator::run(Tile_Map *tile_map, Linear_Allocator *transient_all
                     v2i bot_tile_position = {x, room->min.y};
 
                     //check bot
-                    if (is_tile_valid({x, bot_y-1}) && get_tile({x, bot_y-1}) != 0 &&
-                        get_tile({x, bot_y-1}) != get_tile(bot_tile_position))
+                    if (is_tile_valid({x, bot_y-1}) && get_tile_value(tile_map, {x, bot_y-1}) != 0 &&
+                        get_tile_value(tile_map, {x, bot_y-1}) != get_tile_value(tile_map, bot_tile_position))
                     {
                         possible_ports[ports_count++] = make_v2i(x, bot_y);
                     }
                     //check top
-                    if (is_tile_valid({x, top_y+1}) && get_tile({x, top_y+1}) != 0 &&
-                        get_tile({x, top_y+1}) != get_tile(top_tile_position))
+                    if (is_tile_valid({x, top_y+1}) && get_tile_value(tile_map, {x, top_y+1}) != 0 &&
+                        get_tile_value(tile_map, {x, top_y+1}) != get_tile_value(tile_map, top_tile_position))
                     {
                         possible_ports[ports_count++] = make_v2i(x, top_y);
                     }
@@ -164,14 +162,14 @@ void Tile_Map_Generator::run(Tile_Map *tile_map, Linear_Allocator *transient_all
                     v2i right_tile_position = {room->max.x, y};
                     
                     //check left
-                    if (is_tile_valid({left_x-1, y}) && get_tile({left_x-1, y}) != 0 &&
-                        get_tile({left_x-1, y}) != get_tile(left_tile_position))
+                    if (is_tile_valid({left_x-1, y}) && get_tile_value(tile_map, {left_x-1, y}) != 0 &&
+                        get_tile_value(tile_map, {left_x-1, y}) != get_tile_value(tile_map, left_tile_position))
                     {
                         possible_ports[ports_count++] = make_v2i(left_x, y);
                     }
                     //check right
-                    if (is_tile_valid({right_x+1, y}) && get_tile({right_x+1, y}) != 0 &&
-                        get_tile({right_x+1, y}) != get_tile(right_tile_position))
+                    if (is_tile_valid({right_x+1, y}) && get_tile_value(tile_map, {right_x+1, y}) != 0 &&
+                        get_tile_value(tile_map, {right_x+1, y}) != get_tile_value(tile_map, right_tile_position))
                     {
                         possible_ports[ports_count++] = make_v2i(right_x, y);
                     }
@@ -183,7 +181,7 @@ void Tile_Map_Generator::run(Tile_Map *tile_map, Linear_Allocator *transient_all
                     int32 random_index2 = ranged_rand(0, ports_count);
                     v2i port_position = possible_ports[random_index2];
                     
-                    get_tile(port_position) = TILE_VALUE_FILLER;
+                    get_tile_value(tile_map, port_position) = TILE_VALUE_FILLER;
                     unify_region_id(port_position, current_room_region_id);
                 }
                 else
@@ -200,14 +198,14 @@ void Tile_Map_Generator::run(Tile_Map *tile_map, Linear_Allocator *transient_all
         loop_for(y, y_count)
         {
             v2i tile_position = {x, y};
-            if (get_tile(tile_position) != 0)
+            if (get_tile_value(tile_map, tile_position) != 0)
             {
                 int32 sides_connected = 0;
                 v2i side_offsets[] = {{-1, 0}, {1, 0}, {0, 1}, {0, -1}};
                 for_each(i, side_offsets)
                 {
                     if (is_tile_valid(tile_position + side_offsets[i]) &&
-                        get_tile(tile_position + side_offsets[i]) != 0)
+                        get_tile_value(tile_map, tile_position + side_offsets[i]) != 0)
                     {
                         ++sides_connected;
                     }
@@ -215,7 +213,7 @@ void Tile_Map_Generator::run(Tile_Map *tile_map, Linear_Allocator *transient_all
 
                 if (sides_connected == 0)
                 {
-                    get_tile(tile_position) = 0;
+                    get_tile_value(tile_map, tile_position) = 0;
                 }
                 else if (sides_connected == 1)
                 {
@@ -228,7 +226,7 @@ void Tile_Map_Generator::run(Tile_Map *tile_map, Linear_Allocator *transient_all
 
 void Tile_Map_Generator::uncarve(v2i tile_position)
 {
-    if (get_tile(tile_position) == 0)
+    if (get_tile_value(tile_map, tile_position) == 0)
     {
         return;
     }
@@ -239,7 +237,7 @@ void Tile_Map_Generator::uncarve(v2i tile_position)
     for_each(i, side_offsets)
     {
         if (is_tile_valid(tile_position + side_offsets[i]) &&
-            get_tile(tile_position + side_offsets[i]) != 0)
+            get_tile_value(tile_map, tile_position + side_offsets[i]) != 0)
         {
             ++sides_connected;
             sole_side_offset = side_offsets[i];
@@ -248,17 +246,17 @@ void Tile_Map_Generator::uncarve(v2i tile_position)
     
     if (sides_connected == 1)
     {
-        get_tile(tile_position) = 0;
+        get_tile_value(tile_map, tile_position) = 0;
         uncarve(tile_position + sole_side_offset);
     }
 }
 
 void Tile_Map_Generator::unify_region_id(v2i tile_position, uint32 in_region_id)
 {
-    if (is_tile_valid(tile_position) && get_tile(tile_position) != 0 &&
-        get_tile(tile_position) != in_region_id)
+    if (is_tile_valid(tile_position) && get_tile_value(tile_map, tile_position) != 0 &&
+        get_tile_value(tile_map, tile_position) != in_region_id)
     {
-        get_tile(tile_position) = in_region_id;
+        get_tile_value(tile_map, tile_position) = in_region_id;
         
         unify_region_id(tile_position + make_v2i(1, 0), in_region_id);
         unify_region_id(tile_position + make_v2i(-1, 0), in_region_id);
@@ -285,7 +283,7 @@ bool32 Tile_Map_Generator::is_tile_walkable(v2i tile_position)
         }
         for (int32 y = tile_position.y - 1; y <= tile_position.y + 1; ++y)
         {
-            if (!is_tile_valid({x, y}) || get_tile({x, y}) != 0)
+            if (!is_tile_valid({x, y}) || get_tile_value(tile_map, {x, y}) != 0)
             {
                 is_walkable = false;
                 break;
@@ -294,13 +292,6 @@ bool32 Tile_Map_Generator::is_tile_walkable(v2i tile_position)
     }
     
     return is_walkable;
-}
-
-inline uint32 &Tile_Map_Generator::get_tile(v2i tile_position)
-{
-    assert(tile_position.x >= 0 && tile_position.x < x_count &&
-           tile_position.y >= 0 && tile_position.y < y_count);
-    return tiles[tile_position.x + tile_position.y * x_count];
 }
 
 void Tile_Map_Generator::flood_fill(v2i tile_position, v2i flood_direction)
@@ -359,7 +350,7 @@ void Tile_Map_Generator::flood_fill(v2i tile_position, v2i flood_direction)
         for_each(i, check_positions)
         {
             if (!is_tile_valid(check_positions[i]) ||
-                get_tile(check_positions[i]) != 0)
+                get_tile_value(tile_map, check_positions[i]) != 0)
             {
                 tile_position_is_walkable = false;
                 break;
@@ -370,7 +361,7 @@ void Tile_Map_Generator::flood_fill(v2i tile_position, v2i flood_direction)
     //fill tile and flood surrounding tiles
     if (tile_position_is_walkable)
     {
-        get_tile(tile_position) = region_id;
+        get_tile_value(tile_map, tile_position) = region_id;
         for_each(i, directions)
         {
             flood_fill(tile_position + directions[i], directions[i]);

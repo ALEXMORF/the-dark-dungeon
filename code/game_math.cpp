@@ -20,6 +20,13 @@ v2i_zero()
     return result;
 }
 
+inline v2
+cast_to_v2(v2i v)
+{
+    v2 result = {(real32)v.x, (real32)v.y};
+    return result;
+}
+
 inline bool32
 operator==(v2i a, v2i b)
 {

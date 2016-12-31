@@ -20,12 +20,12 @@ struct Tile_Map_Generator
 {
     int32 x_count, y_count;
     uint32 *tiles;
-
+    Tile_Map *tile_map;
+    
     Rect rooms[MAX_ROOM];
-    int32 m_room_count;
+    int32 room_count;
     uint32 region_id;
     
-    uint32 &get_tile(v2i tile_position);
     bool32 is_tile_valid(v2i tile_position);
     bool32 is_tile_walkable(v2i tile_position);
 

@@ -12,3 +12,11 @@ get_tile_value(Tile_Map *tile_map, int32 x, int32 y)
         return tile_map->exception_tile_value;
     }
 }
+
+inline uint32&
+get_tile_value(Tile_Map *tile_map, v2i tile_position)
+{
+    int32 x = tile_position.x;
+    int32 y = tile_position.y;
+    return get_tile_value(tile_map, x, y);
+}
