@@ -45,12 +45,13 @@ TODO List:
 #Things I took away from this project
   
   first, follow my own gut.
+    
+  (UPDATE: Either these solutions are going to make the code worse. It really is just about tradeoffs; we must assess the situation we are in and determine whether fragmenting the code would be a better solution or having it being big bulk is a better one.)
   
   The urge to apply abstractions/OOP, in most cases, originates from the inability to read code. Then in that case, what abstractions achieve is not making the code readable, but conceiving the programmer that it is readable, which really leaves the program more complicated and fragmented than it should have been. 
 
   A rule to assess the readability of a program:    
     Good code should actually take a bit longer to read, but very easily understandable, without 1000 layers of "abstraction"s. 
-    
     
     
     player.update();         //NOTE: okay... don't know what it really does but I will take your word for it... I guess?
