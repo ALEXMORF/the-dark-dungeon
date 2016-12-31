@@ -28,18 +28,7 @@
 #include "game_entity.cpp"
 #include "game_ui.cpp"
 
-v2
-Rectangle::position()
-{
-    return (min + max) / 2.0f;
-}
-
-void
-Rectangle::move(v2 dp)
-{
-    min += dp;
-    max += dp;
-}
+#include "game_world.cpp"
 
 inline void
 load_assets(Game_Asset *game_asset, Linear_Allocator *allocator,
@@ -82,66 +71,6 @@ load_assets(Game_Asset *game_asset, Linear_Allocator *allocator,
     game_asset->rifle_sound = load_audio(platform_load_audio, "../data/rifle.wav");
     game_asset->minigun_sound = load_audio(platform_load_audio, "../data/minigun.wav");
     game_asset->background_music = load_audio(platform_load_audio, "../data/background1.wav");
-}
-
-//TODO(chen): procedural generation
-internal void
-generate_world(World *world)
-{
-    //first phase
-    Rectangle rooms[50];
-    real32 room_max_width = 100.0f;
-    real32 room_max_height = 100.0f;
-    real32 circle_radius = 50.0f;
-
-    for (int room_index = 0; room_index < array_count(rooms); ++room_index)
-    {
-        v2 random_point = {real_quick_rand(-circle_radius, circle_radius), 
-                           real_quick_rand(-circle_radius, circle_radius)};
-        real32 random_width = real_quick_rand(room_max_width / 4.0f, room_max_width);
-        real32 random_height = real_quick_rand(room_max_height / 4.0f, room_max_height);
-        rooms[room_index].min = {random_point.x - random_width/2.0f,
-                                 random_point.y - random_height/2.0f};
-        rooms[room_index].max = {random_point.x + random_width/2.0f,
-                                 random_point.y + random_height/2.0f};
-        
-        //NOTE(chen): make sure all tile indexs are positive, prob replace this
-        rooms[room_index].move({400.0f, 300.f});
-    }
-    
-    auto rectangle_vs_rectangle = [](Rectangle *r1, Rectangle *r2) -> bool {
-        bool32 h_overlap = r1->max.x > r2->min.x && r1->min.x < r2->max.x;
-        bool32 v_overlap = r1->max.y > r2->min.y && r1->min.y < r2->max.y;
-        return h_overlap && v_overlap;
-    };
-    
-    //separate rooms
-    real32 SEPARATION_SPEED = 5.0f;
-    bool32 rooms_are_separated = false;
-    while (!rooms_are_separated)
-    {
-        rooms_are_separated = true;
-        for (int32 room_index = 0; room_index < array_count(rooms); ++room_index)
-        {
-            v2 dp = {};
-            
-            for (int32 room_check_index = 0; room_check_index < array_count(rooms); ++room_check_index)
-            {
-                if (room_check_index == room_index) continue;
-                
-                if (rectangle_vs_rectangle(&rooms[room_index], &rooms[room_check_index]))
-                {
-                    v2 dist = rooms[room_check_index].position() - rooms[room_index].position();
-                    dp += normalize(dist);
-                    rooms_are_separated = false;
-                }
-            }
-
-            if (len(dp) > SEPARATION_SPEED)
-                dp = normalize(dp) * SEPARATION_SPEED;
-            rooms[room_index].move(dp * -1.0f);
-        }
-    }
 }
 
 #define AddEntity(type, p, angle) add_Entity(entity_buffer, make_dynamic_entity(allocator, type, p, angle))
@@ -332,7 +261,7 @@ update_game_state(World *world, Game_Input *input)
          {
              load_assets(game_asset, &game_state->permanent_allocator,
                          memory->platform_load_image, memory->platform_load_audio);
-
+             
              Render_Context *render_context = &game_state->render_context;
              render_context->z_buffer = Push_Array(&game_state->permanent_allocator, buffer->width, real32);
              render_context->floorcast_table_count = buffer->height/2;
@@ -347,6 +276,7 @@ update_game_state(World *world, Game_Input *input)
              game_state->audio_system.push_task_looped(&game_asset->background_music);
          }
          
+#if 0
          World *world = &game_state->world;
  //TODO(chen): this is some improv tile-map init code, replace this with procedural generation later
  #define map_width 20
@@ -381,14 +311,15 @@ update_game_state(World *world, Game_Input *input)
          int32 tile_count = tile_map->tile_count_x * tile_map->tile_count_y;
          tile_map->tiles = Push_Array(&game_state->permanent_allocator, tile_count, uint32);
          Copy_Array(temp_tiles, tile_map->tiles, tile_count, uint32);
-
+         
          initialize_player(&world->player);
          
          world->entity_buffer.capacity = ENTITY_COUNT_LIMIT;
          world->entity_buffer.e = Push_Array(&game_state->permanent_allocator, world->entity_buffer.capacity, Entity);
          fill_entities(&game_state->permanent_allocator, game_asset, &world->entity_buffer);
-
-         generate_world(world);
+#else
+         generate_world(&game_state->world, &game_state->permanent_allocator, &game_state->transient_allocator);
+#endif
          
          memory->is_initialized = true;
      }

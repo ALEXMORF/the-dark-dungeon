@@ -70,11 +70,11 @@ weapon_start_reload(Weapon *weapon)
 //////////////////////////////////////////////////
 
 internal void
-initialize_player(Player *player)
+initialize_player(Player *player, v2 position)
 {
     player->hp = PLAYER_MAX_HP;
     
-    player->body = default_rigid_body({3.0f, 3.0f}, 0.3f);
+    player->body = default_rigid_body(position, 0.3f);
     player->angle = 0.0f;
     
     initialize_weapon(&player->weapons[pistol], pistol);

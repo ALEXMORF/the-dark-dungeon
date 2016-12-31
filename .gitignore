@@ -2,6 +2,9 @@
 Thumbs.db
 ehthumbs.db
 
+# Visual Studio garbage
+*.opensdf
+
 # Folder config file
 Desktop.ini
 

@@ -213,6 +213,12 @@ int quick_rand()
     return random_table[random_index++];
 }
 
+int ranged_rand(int32 lo, int32 hi)
+{
+    int32 result = (quick_rand() % (hi - lo)) + lo;
+    return result;
+}
+
 inline real32
 real_quick_rand(real32 lo, real32 hi)
 {

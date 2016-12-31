@@ -6,6 +6,30 @@ make_v2(real32 x, real32 y)
     return {x, y};
 }
 
+inline v2i
+make_v2i(int32 x, int32 y)
+{
+    v2i result = {x, y};
+    return result;
+}
+
+inline v2i
+v2i_zero()
+{
+    v2i result = {0, 0};
+    return result;
+}
+
+inline bool32
+operator==(v2i a, v2i b)
+{
+    if (a.x == b.x && a.y == b.y)
+    {
+        return true;
+    }
+    return false;
+}
+
 inline v2
 normalize(v2 a)
 {
@@ -104,6 +128,70 @@ operator/=(v2 &a, real32 scale)
 
 inline void
 operator*=(v2 &a, real32 scale)
+{
+    a.x *= scale;
+    a.y *= scale;
+}
+
+inline v2i
+operator+(v2i a, v2i b)
+{
+    v2i result;
+    result.x = a.x + b.x;
+    result.y = a.y + b.y;
+    return result;
+}
+
+inline v2i
+operator-(v2i a, v2i b)
+{
+    v2i result;
+    result.x = a.x - b.x;
+    result.y = a.y - b.y;
+    return result;
+}
+
+inline v2i
+operator*(v2i a, int32 scale)
+{
+    v2i result;
+    result.x = a.x * scale;
+    result.y = a.y * scale;
+    return result;
+}
+
+inline v2i
+operator/(v2i a, int32 scale)
+{
+    v2i result;
+    result.x = a.x / scale;
+    result.y = a.y / scale;
+    return result;
+}
+
+inline void
+operator-=(v2i &a, v2i b)
+{
+    a.x -= b.x;
+    a.y -= b.y;
+}
+
+inline void
+operator+=(v2i &a, v2i b)
+{
+    a.x += b.x;
+    a.y += b.y;
+}
+
+inline void
+operator/=(v2i &a, int32 scale)
+{
+    a.x /= scale;
+    a.y /= scale;
+}
+
+inline void
+operator*=(v2i &a, int32 scale)
 {
     a.x *= scale;
     a.y *= scale;

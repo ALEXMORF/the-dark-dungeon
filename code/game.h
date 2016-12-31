@@ -6,6 +6,8 @@
 #define swap(x, y) do {x ^= y; y ^= x; x ^= y;} while (0)
 #define if_do(condition, action) do { if (condition) action; } while (0)
 #define array_count(array) (sizeof(array)/sizeof(array[0]))
+#define loop_for(it_name, count) for (int32 it_name = 0; it_name < count; ++it_name)
+#define for_each(it_name, array) for (int32 it_name = 0; it_name < array_count(array); ++it_name)
 
 #include "game_random.h"
 #include "game_constraint.h"
@@ -26,6 +28,8 @@
 
 #include "game_meta.h"
 
+#include "game_world.h"
+
 struct Game_Asset
 {
     DBuffer(Loaded_Image) wall_texture_buffer;
@@ -45,22 +49,6 @@ struct Game_Asset
     Loaded_Audio rifle_sound;
     Loaded_Audio minigun_sound;
     Loaded_Audio background_music;
-};
-
-struct World
-{
-    Player player;
-    Tile_Map tile_map;
-    DBuffer(Entity) entity_buffer;
-};
-
-struct Rectangle
-{
-    v2 min;
-    v2 max;
-    
-    v2 position();
-    void move(v2 dp);
 };
 
 #define HUD_EFFECT_LAST_TIME 0.2f
