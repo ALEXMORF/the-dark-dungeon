@@ -2,10 +2,11 @@
  *TODO LIST:
  
  Future Features:
+ . fix simulate_body() since the lerp() it does is delta-time-independent
+   i.e. use canonical motion equations instead of hacks
  . add ui and multiple game states
  
  TODO BUGS:
- . sometimes generate_world() spawns player inside a wall
  . cast_ray() function sometimes returns non-valid result,
    tentative fix by inclusively determining quadrants, see how it helps.
 */
@@ -70,26 +71,6 @@ load_assets(Game_Asset *game_asset, Linear_Allocator *allocator,
     game_asset->rifle_sound = load_audio(platform_load_audio, "../data/rifle.wav");
     game_asset->minigun_sound = load_audio(platform_load_audio, "../data/minigun.wav");
     game_asset->background_music = load_audio(platform_load_audio, "../data/background1.wav");
-}
-
-#define AddEntity(type, p, angle) add_Entity(entity_buffer, make_dynamic_entity(allocator, type, p, angle))
-#define AddStaticEntity(type, p) add_Entity(entity_buffer, make_static_entity(type, p, asset))
-inline void
-fill_entities(Linear_Allocator *allocator, Game_Asset *asset, DBuffer(Entity) *entity_buffer)
-{
-    AddEntity(ENTITY_TYPE_GUARD, make_v2(6.0f, 15.5f), 0.0f);
-    AddEntity(ENTITY_TYPE_GUARD, make_v2(15.0f, 7.0f), 0.0f);
-    AddEntity(ENTITY_TYPE_GUARD, make_v2(6.0f, 7.0f), 0.0f);
-    AddEntity(ENTITY_TYPE_SS, make_v2(15.0f, 6.0f), pi32);
-    AddEntity(ENTITY_TYPE_SS, make_v2(15.0f, 8.0f), pi32);
-    AddEntity(ENTITY_TYPE_SS, make_v2(15.0f, 9.0f), 0.0f);
-    AddEntity(ENTITY_TYPE_SS, make_v2(15.0f, 15.0f), pi32);
-    AddEntity(ENTITY_TYPE_SS, make_v2(14.0f, 15.0f), 0.0f);
-    AddEntity(ENTITY_TYPE_SS, make_v2(16.0f, 15.0f), 0.0f);
-    
-    AddStaticEntity(ENTITY_TYPE_BARREL, make_v2(16.0f, 15.0f));
-    AddStaticEntity(ENTITY_TYPE_HEALTHPACK, make_v2(17.0f, 15.0f));
-    AddStaticEntity(ENTITY_TYPE_PISTOL_AMMO, make_v2(12.0f, 15.0f));
 }
 
 internal void
@@ -274,51 +255,13 @@ update_game_state(World *world, Game_Input *input)
          
              game_state->audio_system.push_task_looped(&game_asset->background_music);
          }
-         
-#if 0
+
          World *world = &game_state->world;
- //TODO(chen): this is some improv tile-map init code, replace this with procedural generation later
- #define map_width 20
- #define map_height 20
-         uint32 temp_tiles[map_width*map_height] =
-             {
-                 3, 3, 3, 3, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1,
-                 3, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 3, 0, 0, 0, 4, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 3, 0, 0, 0, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4,
-                 3, 1, 4, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 0, 0, 2, 1, 1, 1,
-                 1, 1, 1, 2, 0, 0, 2, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1,
-                 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4,
-                 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1
-             };
-         Tile_Map *tile_map = &world->tile_map;
-         tile_map->tile_count_x = map_width;
-         tile_map->tile_count_y = map_height;
-         tile_map->exception_tile_value = 1;
-         int32 tile_count = tile_map->tile_count_x * tile_map->tile_count_y;
-         tile_map->tiles = Push_Array(&game_state->permanent_allocator, tile_count, uint32);
-         Copy_Array(temp_tiles, tile_map->tiles, tile_count, uint32);
-         
-         initialize_player(&world->player);
-         
-         world->entity_buffer.capacity = ENTITY_COUNT_LIMIT;
-         world->entity_buffer.e = Push_Array(&game_state->permanent_allocator, world->entity_buffer.capacity, Entity);
-         fill_entities(&game_state->permanent_allocator, game_asset, &world->entity_buffer);
-#else
-         generate_world(&game_state->world, &game_state->permanent_allocator, &game_state->transient_allocator);
-#endif
+         {
+             world->entity_buffer.capacity = ENTITY_COUNT_LIMIT;
+             world->entity_buffer.e = Push_Array(&game_state->permanent_allocator, world->entity_buffer.capacity, Entity);
+             generate_world(world, &world->entity_buffer, &game_state->permanent_allocator, &game_state->transient_allocator);
+         }
          
          memory->is_initialized = true;
      }
@@ -556,7 +499,7 @@ update_game_state(World *world, Game_Input *input)
              real32 width_per_hp = (real32)((max.x - min.x) / PLAYER_MAX_HP);
              real32 lerp_ratio = 3.0f * input->dt_per_frame;
              real32 hp_count = clamp((real32)world->player.hp, 0.0f, (real32)PLAYER_MAX_HP);
-
+             
              real32 target_hp_display_width = width_per_hp * hp_count;
              game_state->hp_display_width = lerp(game_state->hp_display_width, target_hp_display_width, lerp_ratio);
 

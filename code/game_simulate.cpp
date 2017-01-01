@@ -85,14 +85,14 @@ line_vs_circle(Line_Segment L, Circle C)
     return false;
 }
 
+//TODO(chen): fine tune this 
 //NOTE(chen): standard for force: each 10000N moves a body of mass 1KG back 1.0 world unit
 internal void
 simulate_body(Rigid_Body *body, Tile_Map *tile_map)
 {
     real32 velocity_lerp = 0.2f;
-    
-    //TODO(chen): simulate entity vs entity collision
-    
+
+    //TODO(chen): this lerp is dt independent, fix!!!!
     //apply velocity
     v2 desired_velocity = lerp(body->velocity, body->velocity_to_apply, velocity_lerp);
     

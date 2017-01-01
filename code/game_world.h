@@ -14,7 +14,7 @@ struct Rect
     bool32 collides(Rect *other_rect, int32 min_dist);
 };
 
-#define MAX_ROOM 150
+#define MAX_ROOM 500
 #define TILE_VALUE_FILLER 1
 struct Tile_Map_Generator
 {

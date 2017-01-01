@@ -194,7 +194,10 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
 #else
     SDL_Renderer *sdl_renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_ACCELERATED);
 #endif
-    
+    SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 0xff);
+    SDL_RenderClear(sdl_renderer);
+    SDL_RenderPresent(sdl_renderer);
+
     SDL_Texture *sdl_offscreen_texture = SDL_CreateTexture(sdl_renderer,
                                                            SDL_PIXELFORMAT_ARGB8888,
                                                            SDL_TEXTUREACCESS_STREAMING,
@@ -386,7 +389,7 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
         SDL_UpdateTexture(sdl_offscreen_texture, 0, (uint32 *)game_buffer.memory, game_buffer.pitch);
         SDL_RenderClear(sdl_renderer);
         SDL_RenderCopy(sdl_renderer, sdl_offscreen_texture, 0, 0);
-
+        
         real32 ms_took_to_process = win32_get_elapsed_ms(last_counter, win32_get_wallclock());
         uint64 current_tsc = __rdtsc();
         uint64 mtsc = (current_tsc - last_tsc) / 1024*1024;

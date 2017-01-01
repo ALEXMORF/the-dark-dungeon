@@ -1,7 +1,7 @@
 #include "game_world.h"
 
 internal void
-generate_world(World *world, Linear_Allocator *permanent_allocator,
+generate_world(World *world, DBuffer(Entity) *entity_buffer, Linear_Allocator *permanent_allocator,
                Linear_Allocator *transient_allocator)
 {
     Tile_Map *tile_map = &world->tile_map;
@@ -16,7 +16,10 @@ generate_world(World *world, Linear_Allocator *permanent_allocator,
     Tile_Map_Generator generator = {};
     generator.run(tile_map, transient_allocator);
     
-    //canonicalize tiles
+    //NOTE(chen): flip tile value since Tile_Map_Generator and Tile_Map has flipped representation
+    //            for solid rock
+    //            Tile_Map_Generator: solid wall -> 0, empty space => 1
+    //            Tile_Map:           solid wall -> !0, empty space => 0
     loop_for(x, tile_map->tile_count_x)
     {
         loop_for(y, tile_map->tile_count_y)
@@ -31,23 +34,32 @@ generate_world(World *world, Linear_Allocator *permanent_allocator,
             }
         }
     }
-
-    assert(generator.room_count != 0);
-    v2 room_min = cast_to_v2(generator.rooms[0].min);
-    v2 room_max = cast_to_v2(generator.rooms[0].max);
-    v2 player_spawn_position = lerp(room_min, room_max, 0.5f);
-    player_spawn_position += {0.5f, 0.5f};
-    initialize_player(&world->player, player_spawn_position);
+    
+    
+    if (generator.room_count > 0)
+    {
+        v2 room_min = cast_to_v2(generator.rooms[0].min);
+        v2 room_max = cast_to_v2(generator.rooms[0].max);
+        v2 player_spawn_position = lerp(room_min, room_max, 0.5f);
+        player_spawn_position += {0.5f, 0.5f};
+        initialize_player(&world->player, player_spawn_position);
+    }
+    else
+    {
+        assert(!"no room generated, exception");
+    }
 }
 
-inline bool32 Rect::collides(Rect *other_rect, int32 min_dist = 0)
+inline bool32
+Rect::collides(Rect *other_rect, int32 min_dist = 0)
 {
     bool32 h_overlap = max.x >= (other_rect->min.x - min_dist) && min.x <= (other_rect->max.x + min_dist);
     bool32 v_overlap = max.y >= (other_rect->min.y - min_dist) && min.y <= (other_rect->max.y + min_dist);
     return h_overlap && v_overlap;
 }
 
-void Tile_Map_Generator::run(Tile_Map *in_tile_map, Linear_Allocator *transient_allocator)
+void
+Tile_Map_Generator::run(Tile_Map *in_tile_map, Linear_Allocator *transient_allocator)
 {
     seed_rand((uint32)time(0));
 
@@ -224,7 +236,8 @@ void Tile_Map_Generator::run(Tile_Map *in_tile_map, Linear_Allocator *transient_
     }
 }
 
-void Tile_Map_Generator::uncarve(v2i tile_position)
+void
+Tile_Map_Generator::uncarve(v2i tile_position)
 {
     if (get_tile_value(tile_map, tile_position) == 0)
     {
@@ -251,7 +264,8 @@ void Tile_Map_Generator::uncarve(v2i tile_position)
     }
 }
 
-void Tile_Map_Generator::unify_region_id(v2i tile_position, uint32 in_region_id)
+void
+Tile_Map_Generator::unify_region_id(v2i tile_position, uint32 in_region_id)
 {
     if (is_tile_valid(tile_position) && get_tile_value(tile_map, tile_position) != 0 &&
         get_tile_value(tile_map, tile_position) != in_region_id)
@@ -265,14 +279,16 @@ void Tile_Map_Generator::unify_region_id(v2i tile_position, uint32 in_region_id)
     }
 }
 
-bool32 Tile_Map_Generator::is_tile_valid(v2i tile_position)
+bool32
+Tile_Map_Generator::is_tile_valid(v2i tile_position)
 {
     bool32 x_is_valid = tile_position.x >= 0 && tile_position.x < x_count;
     bool32 y_is_valid = tile_position.y >= 0 && tile_position.y < y_count;
     return x_is_valid && y_is_valid;
 }
 
-bool32 Tile_Map_Generator::is_tile_walkable(v2i tile_position)
+bool32
+Tile_Map_Generator::is_tile_walkable(v2i tile_position)
 {
     bool32 is_walkable = true;
     for (int32 x = tile_position.x - 1; x <= tile_position.x + 1; ++x)
@@ -294,7 +310,8 @@ bool32 Tile_Map_Generator::is_tile_walkable(v2i tile_position)
     return is_walkable;
 }
 
-void Tile_Map_Generator::flood_fill(v2i tile_position, v2i flood_direction)
+void
+Tile_Map_Generator::flood_fill(v2i tile_position, v2i flood_direction)
 {
     if (!is_tile_valid(tile_position))
     {
