@@ -38,9 +38,11 @@ things I implemented:
  20. Added collectables (ammo, health pack, etc) (12/21/2016) 
  21. Procedural world generation (12/30/2016)
  
-TODO List: 
- 1. UI and multiple states
- 2. fix the bug with cast_ray()
+TODO List:
+ 1. Replace hacks in physics simulation, like lerp(), with real motion equations to make
+    the movement delta-time-dependent
+ 2. UI and multiple states
+ 3. fix the bug with cast_ray()
  
 #Things I took away from this project
   
