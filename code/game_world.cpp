@@ -1,7 +1,9 @@
 #include "game_world.h"
 
 internal void
-generate_world(World *world, DBuffer(Entity) *entity_buffer, Linear_Allocator *permanent_allocator,
+generate_world(World *world, DBuffer(Entity) *entity_buffer,
+               Game_Asset *game_asset,
+               Linear_Allocator *permanent_allocator,
                Linear_Allocator *transient_allocator)
 {
     Tile_Map *tile_map = &world->tile_map;
@@ -42,22 +44,47 @@ generate_world(World *world, DBuffer(Entity) *entity_buffer, Linear_Allocator *p
         v2 player_spawn_position = lerp(room_min, room_max, 0.5f);
         player_spawn_position += {0.5f, 0.5f};
         initialize_player(&world->player, player_spawn_position);
-
-        //spawn enemies
-        for (int32 i = 1; i < generator.room_count; ++i)
+        
+        //spawn stuff
+        Rect *player_spawn_room = &generator.rooms[0];
+        for (int32 i = 0; i < generator.room_count; ++i)
         {
-            for (int32 entity_index = 0; entity_index < 3; ++entity_index)
+            Rect *room = &generator.rooms[i];
+            
+            v2 corners[] = {
+                {room->min.x + 1.0f, room->min.y + 1.0f}, 
+                {room->min.x + 1.0f, room->max.y - 1.0f},
+                {room->max.x - 1.0f, room->max.y - 1.0f},
+                {room->max.x - 1.0f, room->min.y + 1.0f}};
+            
+            if (room == player_spawn_room)
             {
-                real32 min_x = (real32)generator.rooms[i].min.x + 1.0f;
-                real32 max_x = (real32)generator.rooms[i].max.x - 1.0f;
-                real32 min_y = (real32)generator.rooms[i].min.y + 1.0f;
-                real32 max_y = (real32)generator.rooms[i].max.y - 1.0f;
-                v2 spawn_point = {real_quick_rand(min_x, max_x), real_quick_rand(min_y, min_y)};
+                int32 corner_index = ranged_rand(0, array_count(corners));
 
-                add_Entity(entity_buffer, make_dynamic_entity(permanent_allocator, ENTITY_TYPE_GUARD,
-                                                              spawn_point));
+                for (int32 ammo_index = 0; ammo_index < 3; ++ammo_index)
+                {
+                    add_Entity(entity_buffer, make_static_entity(ENTITY_TYPE_PISTOL_AMMO,
+                                                                 corners[corner_index++],
+                                                                 game_asset));
+                    wrap_array_index(corner_index, corners);
+                }
+                add_Entity(entity_buffer, make_static_entity(ENTITY_TYPE_HEALTHPACK,
+                                                             corners[corner_index],
+                                                             game_asset));
+            }
+            else
+            {
+                int32 corner_index = ranged_rand(0, array_count(corners));
+                for (int32 entity_index = 0; entity_index < 3; ++entity_index)
+                {
+                    add_Entity(entity_buffer, make_dynamic_entity(permanent_allocator,
+                                                                  ENTITY_TYPE_GUARD,
+                                                                  corners[corner_index++]));
+                    wrap_array_index(corner_index, corners);
+                }
             }
         }
+        
     }
     else
     {

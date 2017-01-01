@@ -16,10 +16,10 @@ initialize_weapon(Weapon *weapon, Weapon_Type weapon_type)
         {
             weapon->animation_index = 1;
             weapon->cd = 0.3f;
-    
+            
             weapon->max_reload_time = 1.0f;
-            weapon->cache_max_ammo = weapon->cache_ammo = 8;
-            weapon->bank_ammo = 32;
+            weapon->cache_max_ammo = 8;
+//            weapon->bank_ammo = 32;
 
             weapon->force = 100.0f;
         } break;
@@ -30,8 +30,8 @@ initialize_weapon(Weapon *weapon, Weapon_Type weapon_type)
             weapon->cd = 0.1f;
     
             weapon->max_reload_time = 1.5f;
-            weapon->cache_max_ammo = weapon->cache_ammo = 30;
-            weapon->bank_ammo = 90;
+            weapon->cache_max_ammo = 30;
+//            weapon->bank_ammo = 90;
 
             weapon->force = 100.0f;
         } break;
@@ -42,8 +42,8 @@ initialize_weapon(Weapon *weapon, Weapon_Type weapon_type)
             weapon->cd = 0.08f;
     
             weapon->max_reload_time = 2.0f;
-            weapon->cache_max_ammo = weapon->cache_ammo = 100;
-            weapon->bank_ammo = 300;
+            weapon->cache_max_ammo = 100;
+//            weapon->bank_ammo = 300;
 
             weapon->force = 250.0f;
         } break;

@@ -2,13 +2,15 @@
  *TODO LIST:
  
  Future Features:
- . fix simulate_body() since the lerp() it does is delta-time-independent
-   i.e. use canonical motion equations instead of hacks
+ . finish up the world generation 
  . add ui and multiple game states
  
  TODO BUGS:
  . cast_ray() function sometimes returns non-valid result,
    tentative fix by inclusively determining quadrants, see how it helps.
+
+   bullet detection might be the cause of bug, since every lag is preceded by
+   player firing at enemey
 */
 
 #include "game.h"
@@ -261,7 +263,10 @@ update_game_state(World *world, Game_Input *input)
          {
              world->entity_buffer.capacity = 1000;
              world->entity_buffer.e = Push_Array(&game_state->permanent_allocator, world->entity_buffer.capacity, Entity);
-             generate_world(world, &world->entity_buffer, &game_state->permanent_allocator, &game_state->transient_allocator);
+             generate_world(world, &world->entity_buffer,
+                            &game_state->asset,
+                            &game_state->permanent_allocator,
+                            &game_state->transient_allocator);
          }
          
          memory->is_initialized = true;

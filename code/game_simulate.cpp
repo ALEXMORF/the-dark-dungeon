@@ -75,7 +75,7 @@ line_vs_circle(Line_Segment L, Circle C)
     if (a_to_c_proj_len <= len(a_to_b))
     {
         v2 a_to_c_proj = normalize(a_to_b) * a_to_c_proj_len;
-
+        
         v2 closest_point = L.start + a_to_c_proj;
         if (len(C.position - closest_point) <= C.radius)
         {
