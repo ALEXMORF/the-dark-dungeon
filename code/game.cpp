@@ -14,6 +14,7 @@
 #include "game.h"
 
 #include "game_math.cpp"
+#include "game_random.cpp"
 #include "game_tiles.cpp"
 #include "game_memory.cpp"
 
@@ -255,10 +256,10 @@ update_game_state(World *world, Game_Input *input)
          
              game_state->audio_system.push_task_looped(&game_asset->background_music);
          }
-
+         
          World *world = &game_state->world;
          {
-             world->entity_buffer.capacity = ENTITY_COUNT_LIMIT;
+             world->entity_buffer.capacity = 1000;
              world->entity_buffer.e = Push_Array(&game_state->permanent_allocator, world->entity_buffer.capacity, Entity);
              generate_world(world, &world->entity_buffer, &game_state->permanent_allocator, &game_state->transient_allocator);
          }

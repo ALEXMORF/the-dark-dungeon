@@ -203,31 +203,3 @@ global_variable int random_table[] = {
     509515, 49891, 266836, 26363, 730741,
     603849, 745989, 50806, 264758, 941040,
 };
-
-void seed_rand(int32 seed)
-{
-    random_index = seed % array_count(random_table);
-}
-
-int quick_rand()
-{
-    if (random_index == array_count(random_table)-1)
-    {
-        random_index = 0;
-    }
-    return random_table[random_index++];
-}
-
-int ranged_rand(int32 lo, int32 hi)
-{
-    int32 result = (quick_rand() % (hi - lo)) + lo;
-    return result;
-}
-
-inline real32
-real_quick_rand(real32 lo, real32 hi)
-{
-    real32 result;
-    result = (real32)(quick_rand() % (int32)(hi - lo) + (int32)lo);
-    return result;
-}

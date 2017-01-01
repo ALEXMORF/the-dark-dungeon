@@ -34,8 +34,7 @@ generate_world(World *world, DBuffer(Entity) *entity_buffer, Linear_Allocator *p
             }
         }
     }
-    
-    
+
     if (generator.room_count > 0)
     {
         v2 room_min = cast_to_v2(generator.rooms[0].min);
@@ -43,6 +42,22 @@ generate_world(World *world, DBuffer(Entity) *entity_buffer, Linear_Allocator *p
         v2 player_spawn_position = lerp(room_min, room_max, 0.5f);
         player_spawn_position += {0.5f, 0.5f};
         initialize_player(&world->player, player_spawn_position);
+
+        //spawn enemies
+        for (int32 i = 1; i < generator.room_count; ++i)
+        {
+            for (int32 entity_index = 0; entity_index < 3; ++entity_index)
+            {
+                real32 min_x = (real32)generator.rooms[i].min.x + 1.0f;
+                real32 max_x = (real32)generator.rooms[i].max.x - 1.0f;
+                real32 min_y = (real32)generator.rooms[i].min.y + 1.0f;
+                real32 max_y = (real32)generator.rooms[i].max.y - 1.0f;
+                v2 spawn_point = {real_quick_rand(min_x, max_x), real_quick_rand(min_y, min_y)};
+
+                add_Entity(entity_buffer, make_dynamic_entity(permanent_allocator, ENTITY_TYPE_GUARD,
+                                                              spawn_point));
+            }
+        }
     }
     else
     {

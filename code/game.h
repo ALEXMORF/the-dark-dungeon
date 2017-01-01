@@ -9,9 +9,9 @@
 #define loop_for(it_name, count) for (int32 it_name = 0; it_name < count; ++it_name)
 #define for_each(it_name, array) for (int32 it_name = 0; it_name < array_count(array); ++it_name)
 
+#include "game_math.h"
 #include "game_random.h"
 #include "game_constraint.h"
-#include "game_math.h"
 #include "game_tiles.h"
 #include "game_memory.h"
 
