@@ -43,46 +43,6 @@ TODO List:
  2. UI and multiple states
  3. fix the bug with cast_ray()
  
-#Things I took away from this project
-  
-  first, follow my own gut.
-    
-  (UPDATE: Either these solutions are going to make the code worse. It really is just about tradeoffs; we must assess the situation we are in and determine whether fragmenting the code would be a better solution or having it being big bulk is a better one.)
-  
-  The urge to apply abstractions/OOP, in most cases, originates from the inability to read code. Then in that case, what abstractions achieve is not making the code readable, but conceiving the programmer that it is readable, which really leaves the program more complicated and fragmented than it should have been. 
-
-  A rule to assess the readability of a program:    
-    Good code should actually take a bit longer to read, but very easily understandable, without 1000 layers of "abstraction"s. 
-    
-    
-    player.update();         //NOTE: okay... don't know what it really does but I will take your word for it... I guess?
-    
-    //player update          //NOTE: okay, I understand.
-    {
-        real32 player_speed = 3.0f;
-        real32 lerp_constant = 0.15f;
-        real32 mouse_sensitivity = 0.7f;
-        
-        real32 forward = 0.0f;
-        real32 left = 0.0f;
-        if_do(input->keyboard.left, left = 1.0f);
-        if_do(input->keyboard.right, left = -1.0f);
-        if_do(input->keyboard.up, forward = 1.0f);
-        if_do(input->keyboard.down, forward = -1.0f);
-        
-        v2 player_d_velocity = {};
-        player_d_velocity += {cosf(player->angle) *forward, sinf(player->angle) * forward};    
-        player_d_velocity += {cosf(player->angle + pi32/2.0f) * left, sinf(player->angle + pi32/2.0f) * left};    
-        player_d_velocity = normalize(player_d_velocity);
-        player_d_velocity *= player_speed * input->dt_per_frame;
-        player->velocity = lerp(player->velocity, player_d_velocity, lerp_constant);
-        
-        //orientation
-        real32 player_delta_angle = -input->mouse.dx / 500.0f * pi32/3.0f * mouse_sensitivity; 
-        player->angle += player_delta_angle;
-        recanonicalize_angle(&player->angle);
-    }                        
-
 NOTE:
  
  Functions and data type definitions, in some way, are trees. The point of "struct" in C was to create multiple layers for a complex data type. Imagine if a data type have 100 fields; it's very hard to understand it. However, if the data type itself is composed of other 5 data types, and those five data types are also composed of five data types, and so on. It's almost as if the data type hiearchy is a penta search tree, and its purpose is to make time that programmer has to spend to reason about the code O(logn), n being the number of fields that's actually there. So I had one random thought: what if there is a program that can balance the "data type tree" and maximize its understandibility, like a B-tree or something. 
