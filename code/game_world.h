@@ -1,5 +1,26 @@
 #pragma once
 
+enum Room_Type
+{
+    ROOM_TYPE_BEGIN_ROOM,
+    ROOM_TYPE_GUARD_ROOM,
+    ROOM_TYPE_SS_ROOM,    
+    ROOM_TYPE_SUPPLY_ROOM,
+    ROOM_TYPE_TORTURE_ROOM,
+    ROOM_TYPE_HEAVY_GUARD_ROOM,
+
+    ROOM_TYPE_COUNT,
+};
+
+struct Wrapped_V2_Array
+{
+    v2 *e;
+    int32 length;
+    int32 current_index;
+    
+    v2 get_next();
+};
+
 struct World
 {
     Tile_Map tile_map;
@@ -35,3 +56,4 @@ struct Tile_Map_Generator
     void flood_fill(v2i tile_position, v2i flood_direction);
     void uncarve(v2i tile_position);
 };
+

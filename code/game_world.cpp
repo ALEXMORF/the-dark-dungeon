@@ -1,5 +1,86 @@
 #include "game_world.h"
 
+v2
+Wrapped_V2_Array::get_next()
+{
+    v2 result = e[current_index++];
+    current_index %= length;
+    return result;
+}
+
+#define Add_Static_Entity(entity_type, position) add_Entity(entity_buffer, make_static_entity(entity_type, position, game_asset))
+#define Add_Dynamic_Entity(entity_type, position) add_Entity(entity_buffer, make_dynamic_entity(permanent_allocator, entity_type, position))
+internal void
+generate_room(Tile_Map *tile_map, Rect *room, Room_Type room_type, DBuffer(Entity) *entity_buffer,
+              Linear_Allocator *permanent_allocator, Game_Asset *game_asset)
+{
+    v2 corners[] = {
+        {room->min.x + 1.0f, room->min.y + 1.0f}, 
+        {room->min.x + 1.0f, room->max.y - 1.0f},
+        {room->max.x - 1.0f, room->max.y - 1.0f},
+        {room->max.x - 1.0f, room->min.y + 1.0f}};
+    
+    Wrapped_V2_Array wrapping_corners = {};
+    {
+        wrapping_corners.e             = corners;
+        wrapping_corners.length        = array_count(corners);
+        wrapping_corners.current_index = ranged_rand(0, wrapping_corners.length);
+    }
+    
+    switch (room_type)
+    {
+        case ROOM_TYPE_BEGIN_ROOM:
+        {
+            Add_Static_Entity(ENTITY_TYPE_PISTOL_AMMO, wrapping_corners.get_next());
+            Add_Static_Entity(ENTITY_TYPE_RIFLE_AMMO, wrapping_corners.get_next());
+            Add_Static_Entity(ENTITY_TYPE_PISTOL_AMMO, wrapping_corners.get_next());
+            Add_Static_Entity(ENTITY_TYPE_HEALTHPACK, wrapping_corners.get_next());
+        } break;
+        
+        case ROOM_TYPE_GUARD_ROOM:
+        {
+            loop(3)
+            {
+                Add_Dynamic_Entity(ENTITY_TYPE_GUARD, wrapping_corners.get_next());
+            }
+        } break;
+        
+        case ROOM_TYPE_SS_ROOM:
+        {
+            loop(3)
+            {
+                Add_Dynamic_Entity(ENTITY_TYPE_SS, wrapping_corners.get_next());
+            }
+        } break;
+        
+        case ROOM_TYPE_SUPPLY_ROOM:
+        {
+            Add_Static_Entity(ENTITY_TYPE_PISTOL_AMMO, wrapping_corners.get_next());
+            Add_Static_Entity(ENTITY_TYPE_HEALTHPACK, wrapping_corners.get_next());
+            Add_Static_Entity(ENTITY_TYPE_MINIGUN_AMMO, wrapping_corners.get_next());
+            Add_Static_Entity(ENTITY_TYPE_RIFLE_AMMO, wrapping_corners.get_next());
+        } break;
+        
+        case ROOM_TYPE_TORTURE_ROOM:
+        {
+            
+        } break;
+        
+        case ROOM_TYPE_HEAVY_GUARD_ROOM:
+        {
+            Add_Dynamic_Entity(ENTITY_TYPE_GUARD, wrapping_corners.get_next());
+            Add_Dynamic_Entity(ENTITY_TYPE_SS, wrapping_corners.get_next());
+            Add_Dynamic_Entity(ENTITY_TYPE_GUARD, wrapping_corners.get_next());
+            Add_Dynamic_Entity(ENTITY_TYPE_SS, wrapping_corners.get_next());
+        } break;
+        
+        default:
+        {
+            assert(!"unknown room type");
+        } break;
+    }
+}
+
 internal void
 generate_world(World *world, DBuffer(Entity) *entity_buffer,
                Game_Asset *game_asset,
@@ -45,46 +126,21 @@ generate_world(World *world, DBuffer(Entity) *entity_buffer,
         player_spawn_position += {0.5f, 0.5f};
         initialize_player(&world->player, player_spawn_position);
         
-        //spawn stuff
-        Rect *player_spawn_room = &generator.rooms[0];
         for (int32 i = 0; i < generator.room_count; ++i)
         {
-            Rect *room = &generator.rooms[i];
-            
-            v2 corners[] = {
-                {room->min.x + 1.0f, room->min.y + 1.0f}, 
-                {room->min.x + 1.0f, room->max.y - 1.0f},
-                {room->max.x - 1.0f, room->max.y - 1.0f},
-                {room->max.x - 1.0f, room->min.y + 1.0f}};
-            
-            if (room == player_spawn_room)
+            Room_Type room_type;
+            if (i == 0)
             {
-                int32 corner_index = ranged_rand(0, array_count(corners));
-
-                for (int32 ammo_index = 0; ammo_index < 3; ++ammo_index)
-                {
-                    add_Entity(entity_buffer, make_static_entity(ENTITY_TYPE_PISTOL_AMMO,
-                                                                 corners[corner_index++],
-                                                                 game_asset));
-                    wrap_array_index(corner_index, corners);
-                }
-                add_Entity(entity_buffer, make_static_entity(ENTITY_TYPE_HEALTHPACK,
-                                                             corners[corner_index],
-                                                             game_asset));
+                room_type = ROOM_TYPE_BEGIN_ROOM;
             }
             else
             {
-                int32 corner_index = ranged_rand(0, array_count(corners));
-                for (int32 entity_index = 0; entity_index < 3; ++entity_index)
-                {
-                    add_Entity(entity_buffer, make_dynamic_entity(permanent_allocator,
-                                                                  ENTITY_TYPE_GUARD,
-                                                                  corners[corner_index++]));
-                    wrap_array_index(corner_index, corners);
-                }
+                room_type = (Room_Type)ranged_rand(ROOM_TYPE_BEGIN_ROOM+1, ROOM_TYPE_COUNT);
             }
+            
+            generate_room(tile_map, &generator.rooms[i], room_type, entity_buffer,
+                          permanent_allocator, game_asset);
         }
-        
     }
     else
     {
