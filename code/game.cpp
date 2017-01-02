@@ -513,8 +513,8 @@ update_game_state(World *world, Game_Input *input)
              draw_rectangle(buffer, min.x, min.y, max.x, max.y, 0x00550000);
              draw_rectangle(buffer, min.x, min.y, min.x + game_state->hp_display_width, max.y, 0x00ff0000);
          }
-
-         //ammo count
+         
+         //player stat report
          {
              int32 min_x = 650;
              int32 min_y = 500;
@@ -523,14 +523,13 @@ update_game_state(World *world, Game_Input *input)
              draw_string_autosized(&str_drawer, min_x, min_y, font_size, font_size,
                                    "ammo: %d / %d", world->player.get_weapon()->cache_ammo, world->player.get_weapon()->bank_ammo);
          }
-
-         //performance layout
-         {
-             int32 font_size = 13;
-             int32 layout_x = 10;
-             int32 layout_height = 80;
-             int32 layout_dheight = 30;
-             
+         
+         int32 font_size = 13;
+         int32 layout_x = 10;
+         int32 layout_height = 80;
+         int32 layout_dheight = 30;
+         
+         {   //performance layout    
              print("DEBUG:");
              print(" process time: %.2fms", debug_state->last_frame_process_time);
              print(" mtsc: %lld cycles", debug_state->last_frame_mtsc);
@@ -540,6 +539,10 @@ update_game_state(World *world, Game_Input *input)
 
              print("Entity System:");
              print(" entity count/capacity: %d/%d", world->entity_buffer.count, world->entity_buffer.capacity);
+         }
+         
+         {   //player debug info
+             print("player position:(%.1f, %.1f)", game_state->world.player.body.position.x,game_state->world.player.body.position.y); 
          }
      }
  }

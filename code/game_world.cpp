@@ -39,18 +39,12 @@ generate_room(Tile_Map *tile_map, Rect *room, Room_Type room_type, DBuffer(Entit
         
         case ROOM_TYPE_GUARD_ROOM:
         {
-            loop(3)
-            {
-                Add_Dynamic_Entity(ENTITY_TYPE_GUARD, corners.get_next());
-            }
+            loop(3) Add_Dynamic_Entity(ENTITY_TYPE_GUARD, corners.get_next());
         } break;
         
         case ROOM_TYPE_SS_ROOM:
         {
-            loop(3)
-            {
-                Add_Dynamic_Entity(ENTITY_TYPE_SS, corners.get_next());
-            }
+            loop(3) Add_Dynamic_Entity(ENTITY_TYPE_SS, corners.get_next());
         } break;
         
         case ROOM_TYPE_SUPPLY_ROOM:
@@ -182,8 +176,8 @@ Tile_Map_Generator::run(Tile_Map *in_tile_map, Linear_Allocator *transient_alloc
         {
             v2i room_size = {ranged_rand(room_min_width, room_max_width),
                              ranged_rand(room_min_height, room_max_height)};
-            v2i room_lowerleft = {ranged_rand(0, x_count - room_size.x - 1),
-                                  ranged_rand(0, y_count - room_size.y - 1)};
+            v2i room_lowerleft = {ranged_rand(1, x_count - room_size.x - 1),
+                                  ranged_rand(1, y_count - room_size.y - 1)};
             Rect room = {room_lowerleft, room_lowerleft + room_size};
             
             bool32 room_overlaps = false;
@@ -320,7 +314,7 @@ Tile_Map_Generator::run(Tile_Map *in_tile_map, Linear_Allocator *transient_alloc
                         ++sides_connected;
                     }
                 }
-
+                
                 if (sides_connected == 0)
                 {
                     get_tile_value(tile_map, tile_position) = 0;

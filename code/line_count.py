@@ -1,6 +1,7 @@
 import os
     
 line_count = 0
+file_count = 0
 file_list = os.listdir()
 
 for filename in file_list:
@@ -12,5 +13,6 @@ for filename in file_list:
             line_count += 1
         
         file_handle.close()
+        file_count += 1
 
-print('Directory Line Count: ', line_count)
+print('Directory Line Count: ', line_count, '\nFile Count: ', file_count)
