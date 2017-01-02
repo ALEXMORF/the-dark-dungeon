@@ -39,8 +39,7 @@ things I implemented:
  21. Procedural world generation (12/30/2016)
  
 TODO List:
- 1. Replace hacks in physics simulation, like lerp(), with real motion equations to make
-    the movement delta-time-dependent
+ 1. Make world generation more interesting
  2. UI and multiple states
  3. fix the bug with cast_ray()
  

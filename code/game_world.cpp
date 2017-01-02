@@ -18,7 +18,8 @@ generate_room(Tile_Map *tile_map, Rect *room, Room_Type room_type, DBuffer(Entit
         {room->min.x + 1.0f, room->min.y + 1.0f}, 
         {room->min.x + 1.0f, room->max.y - 1.0f},
         {room->max.x - 1.0f, room->max.y - 1.0f},
-        {room->max.x - 1.0f, room->min.y + 1.0f}};
+        {room->max.x - 1.0f, room->min.y + 1.0f}
+    };
     
     Wrapped_V2_Array corners = {};
     {
@@ -39,12 +40,18 @@ generate_room(Tile_Map *tile_map, Rect *room, Room_Type room_type, DBuffer(Entit
         
         case ROOM_TYPE_GUARD_ROOM:
         {
-            loop(3) Add_Dynamic_Entity(ENTITY_TYPE_GUARD, corners.get_next());
+            loop(3)
+            {
+                Add_Dynamic_Entity(ENTITY_TYPE_GUARD, corners.get_next());
+            }
         } break;
         
         case ROOM_TYPE_SS_ROOM:
         {
-            loop(3) Add_Dynamic_Entity(ENTITY_TYPE_SS, corners.get_next());
+            loop(3)
+            {
+                Add_Dynamic_Entity(ENTITY_TYPE_SS, corners.get_next());
+            }
         } break;
         
         case ROOM_TYPE_SUPPLY_ROOM:
