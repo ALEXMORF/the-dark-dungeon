@@ -8,7 +8,7 @@ Wrapped_V2_Array::get_next()
     return result;
 }
 
-inline void
+internal void
 set_room(Tile_Map *tile_map, Rect *room, Tile_Type tile_type)
 {
     //NOTE(chen): since room represents empty space exclusively from walls, then expand
@@ -42,6 +42,22 @@ set_room(Tile_Map *tile_map, Rect *room, Tile_Type tile_type)
             get_tile_value(tile_map, wall_rect.max.x, y) = tile_type;
         }
     }
+}
+
+inline v2
+get_random_point(Rect *room)
+{
+    v2 result = {};
+    
+    real32 min_x = (real32)room->min.x + 1.5f;
+    real32 max_x = (real32)room->max.x - 1.5f;
+    real32 min_y = (real32)room->min.y + 1.5f;
+    real32 max_y = (real32)room->max.y - 1.5f;
+
+    result.x = real_quick_rand(min_x, max_x);
+    result.y = real_quick_rand(min_y, max_y);
+
+    return result;
 }
 
 #define Add_Static_Entity(entity_type, position) add_Entity(entity_buffer, make_static_entity(entity_type, position, game_asset))
@@ -85,6 +101,7 @@ generate_room(Tile_Map *tile_map, Rect *room, Room_Type room_type, DBuffer(Entit
             {
                 Add_Dynamic_Entity(ENTITY_TYPE_GUARD, corners.get_next());
             }
+            Add_Static_Entity(ENTITY_TYPE_TABLE, get_random_point(room));
         } break;
         
         case ROOM_TYPE_SS_ROOM:
@@ -93,8 +110,7 @@ generate_room(Tile_Map *tile_map, Rect *room, Room_Type room_type, DBuffer(Entit
             {
                 Add_Dynamic_Entity(ENTITY_TYPE_SS, corners.get_next());
             }
-
-            set_room(tile_map, room, TILE_TYPE_EAGLE);
+            Add_Static_Entity(ENTITY_TYPE_KNIGHT, get_random_point(room));
         } break;
         
         case ROOM_TYPE_SUPPLY_ROOM:
@@ -103,7 +119,8 @@ generate_room(Tile_Map *tile_map, Rect *room, Room_Type room_type, DBuffer(Entit
             Add_Static_Entity(ENTITY_TYPE_HEALTHPACK, corners.get_next());
             Add_Static_Entity(ENTITY_TYPE_MINIGUN_AMMO, corners.get_next());
             Add_Static_Entity(ENTITY_TYPE_RIFLE_AMMO, corners.get_next());
-
+            Add_Static_Entity(ENTITY_TYPE_LAMP, get_random_point(room));
+            
             set_room(tile_map, room, TILE_TYPE_PURPLESTONE);
         } break;
         
@@ -113,8 +130,15 @@ generate_room(Tile_Map *tile_map, Rect *room, Room_Type room_type, DBuffer(Entit
             Add_Static_Entity(ENTITY_TYPE_HUNG_SKELETON, corners.get_next());
             Add_Static_Entity(ENTITY_TYPE_CAGE, corners.get_next());
             Add_Static_Entity(ENTITY_TYPE_CAGED_SKELETON, corners.get_next());
-            Add_Dynamic_Entity(ENTITY_TYPE_SS, room_center);
+            Add_Static_Entity(ENTITY_TYPE_KNIGHT, get_random_point(room));
 
+            loop(3)
+            {
+                Add_Static_Entity(ENTITY_TYPE_CAGED_SKELETON, get_random_point(room));
+            }
+            
+            Add_Dynamic_Entity(ENTITY_TYPE_SS, room_center);
+            
             set_room(tile_map, room, TILE_TYPE_MOSSY);
         } break;
         
@@ -124,7 +148,8 @@ generate_room(Tile_Map *tile_map, Rect *room, Room_Type room_type, DBuffer(Entit
             Add_Dynamic_Entity(ENTITY_TYPE_SS, corners.get_next());
             Add_Dynamic_Entity(ENTITY_TYPE_GUARD, corners.get_next());
             Add_Dynamic_Entity(ENTITY_TYPE_SS, corners.get_next());
-
+            Add_Static_Entity(ENTITY_TYPE_CAGED_SKELETON, get_random_point(room));
+            
             set_room(tile_map, room, TILE_TYPE_EAGLE);
         } break;
         

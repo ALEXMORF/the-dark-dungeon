@@ -26,7 +26,7 @@ make_static_entity(Entity_Type type, v2 position, Game_Asset *asset)
         {ENTITY_TYPE_PLANT, {0, 2}},
         {ENTITY_TYPE_FALLEN_SKELETON, {1, 2}},
         {ENTITY_TYPE_LAMP2, {3, 2}},
-        {ENTITY_TYPE_KNGIHT, {3, 3}},
+        {ENTITY_TYPE_KNIGHT, {3, 3}},
         {ENTITY_TYPE_CAGE, {4, 3}},
         {ENTITY_TYPE_CAGED_SKELETON, {0, 4}},
         {ENTITY_TYPE_SKELETON_DUST, {1, 4}},
