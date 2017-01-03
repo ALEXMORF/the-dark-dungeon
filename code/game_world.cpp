@@ -14,6 +14,9 @@ internal void
 generate_room(Tile_Map *tile_map, Rect *room, Room_Type room_type, DBuffer(Entity) *entity_buffer,
               Linear_Allocator *permanent_allocator, Game_Asset *game_asset)
 {
+    v2 room_center = lerp(cast_to_v2(room->min), cast_to_v2(room->max), 0.5f);
+    Add_Static_Entity(ENTITY_TYPE_LIGHT, room_center);
+    
     v2 corner_array[] = {
         {room->min.x + 1.0f, room->min.y + 1.0f}, 
         {room->min.x + 1.0f, room->max.y - 1.0f},
@@ -53,7 +56,7 @@ generate_room(Tile_Map *tile_map, Rect *room, Room_Type room_type, DBuffer(Entit
                 Add_Dynamic_Entity(ENTITY_TYPE_SS, corners.get_next());
             }
         } break;
-        
+	
         case ROOM_TYPE_SUPPLY_ROOM:
         {
             Add_Static_Entity(ENTITY_TYPE_PISTOL_AMMO, corners.get_next());
@@ -64,7 +67,10 @@ generate_room(Tile_Map *tile_map, Rect *room, Room_Type room_type, DBuffer(Entit
         
         case ROOM_TYPE_TORTURE_ROOM:
         {
-            
+            Add_Static_Entity(ENTITY_TYPE_CAGED_SKELETON, corners.get_next());
+            Add_Static_Entity(ENTITY_TYPE_HUNG_SKELETON, corners.get_next());
+            Add_Static_Entity(ENTITY_TYPE_CAGE, corners.get_next());
+            Add_Static_Entity(ENTITY_TYPE_CAGED_SKELETON, corners.get_next());
         } break;
         
         case ROOM_TYPE_HEAVY_GUARD_ROOM:

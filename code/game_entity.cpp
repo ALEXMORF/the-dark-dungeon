@@ -1,6 +1,6 @@
 #include "game_entity.h"
 
-inline Entity
+internal Entity
 make_static_entity(Entity_Type type, v2 position, Game_Asset *asset)
 {
     Entity result = {};
@@ -8,45 +8,49 @@ make_static_entity(Entity_Type type, v2 position, Game_Asset *asset)
     result.is_static = true;
     result.body = default_rigid_body(position, 0.3f);
     
-    //TODO(chen): expand entity types
-    Loaded_Image_Sheet *sprite_sheet = &asset->entity_sheet;
-    switch (type)
+    struct Entity_Image_Pair
     {
-        case ENTITY_TYPE_BARREL:
+        Entity_Type type;
+        v2i image_index;
+    };
+    Entity_Image_Pair image_map[] = {
+        {ENTITY_TYPE_HEALTHPACK, {2, 5}},
+        {ENTITY_TYPE_PISTOL_AMMO, {3, 5}},
+        {ENTITY_TYPE_RIFLE_AMMO, {4, 5}},
+        {ENTITY_TYPE_MINIGUN_AMMO, {0, 6}},
+        {ENTITY_TYPE_BARREL, {2, 7}},
+        {ENTITY_TYPE_TABLE, {4, 0}},
+        {ENTITY_TYPE_LAMP, {0, 1}},
+        {ENTITY_TYPE_LIGHT, {1, 3}},
+        {ENTITY_TYPE_HUNG_SKELETON, {2, 1}},
+        {ENTITY_TYPE_PLANT, {0, 2}},
+        {ENTITY_TYPE_FALLEN_SKELETON, {1, 2}},
+        {ENTITY_TYPE_LAMP2, {3, 2}},
+        {ENTITY_TYPE_KNGIHT, {3, 3}},
+        {ENTITY_TYPE_CAGE, {4, 3}},
+        {ENTITY_TYPE_CAGED_SKELETON, {0, 4}},
+        {ENTITY_TYPE_SKELETON_DUST, {1, 4}},
+        {ENTITY_TYPE_SKELETON_BLOOD, {1, 7}},
+    };
+    
+    bool32 entity_matches_sprite = false;
+    for_each(i, image_map)
+    {
+        if (image_map[i].type == result.type)
         {
-            result.sprite = extract_image_from_sheet(sprite_sheet, 2, 7);
-        } break;
-        
-        case ENTITY_TYPE_HEALTHPACK:
-        {
-            result.sprite = extract_image_from_sheet(sprite_sheet, 2, 5);
-        } break;
-        
-        case ENTITY_TYPE_PISTOL_AMMO:
-        {
-            result.sprite = extract_image_from_sheet(sprite_sheet, 3, 5);
-        } break;
-        
-        case ENTITY_TYPE_RIFLE_AMMO:
-        {
-            result.sprite = extract_image_from_sheet(sprite_sheet, 4, 5);
-        } break;
-        
-        case ENTITY_TYPE_MINIGUN_AMMO:
-        {
-            result.sprite = extract_image_from_sheet(sprite_sheet, 0, 6);
-        } break;
-        
-        default:
-        {
-            assert(!"unknown static entity type");
-        } break;
+            result.sprite = extract_image_from_sheet(&asset->entity_sheet, image_map[i].image_index);
+            entity_matches_sprite = true;
+        }
+    }
+    if (!entity_matches_sprite)
+    {
+        assert(!"entity type does not match a sprite");
     }
     
     return result;
 }
 
-inline Entity
+internal Entity
 make_dynamic_entity(Linear_Allocator *allocator, Entity_Type type, v2 position, real32 angle = 0.0f)
 {
     Entity result = {};
@@ -81,7 +85,7 @@ make_dynamic_entity(Linear_Allocator *allocator, Entity_Type type, v2 position, 
     return result;
 }
 
-inline bool32
+internal bool32
 search_player(Tile_Map *tile_map, Entity *entity, v2 player_position, real32 fov)
 {
     real32 angle_player = get_angle(player_position - entity->body.position);

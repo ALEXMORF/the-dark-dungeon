@@ -87,6 +87,12 @@ extract_image_from_sheet(Loaded_Image_Sheet *sheet, int32 image_x, int32 image_y
     return result;
 }
 
+inline Loaded_Image
+extract_image_from_sheet(Loaded_Image_Sheet *sheet, v2i image_index)
+{
+    return extract_image_from_sheet(sheet, image_index.x, image_index.y);
+}
+
 inline void
 config_image_sheet(Loaded_Image_Sheet *sheet, int32 image_count_x, int32 image_count_y,
                    uint32 stride_offset, int32 image_width, int32 image_height)

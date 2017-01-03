@@ -41,9 +41,14 @@ load_assets(Game_Asset *game_asset, Linear_Allocator *allocator,
     wall_texture_buffer->capacity = 6;
     wall_texture_buffer->e = Push_Array(allocator, wall_texture_buffer->capacity, Loaded_Image);
     
-    char *texture_filenames[6] = {
-        "../data/redbrick.png", "../data/bluestone.png", "../data/colorstone.png",
-        "../data/eagle.png", "../data/purplestone.png", "../data/wood.png"
+    char *texture_filenames[] = {
+        "../data/redbrick.png",
+        "../data/bluestone.png",
+        "../data/colorstone.png",
+        "../data/eagle.png",
+        "../data/purplestone.png",
+        "../data/wood.png",
+        "../data/mossy.png",
     };
     for (int i = 0; i < array_count(texture_filenames); ++i)
     {
@@ -530,19 +535,35 @@ update_game_state(World *world, Game_Input *input)
          int32 layout_dheight = 30;
          
          {   //performance layout    
-             print("DEBUG:");
+             print("Performance:");
              print(" process time: %.2fms", debug_state->last_frame_process_time);
              print(" mtsc: %lld cycles", debug_state->last_frame_mtsc);
-
-             print("Audio System:");
-             print(" task count/capacity: %d/%d", game_state->audio_system.length, AUDIO_TASK_MAX);
-
-             print("Entity System:");
-             print(" entity count/capacity: %d/%d", world->entity_buffer.count, world->entity_buffer.capacity);
          }
+         print("");
          
-         {   //player debug info
-             print("player position:(%.1f, %.1f)", game_state->world.player.body.position.x,game_state->world.player.body.position.y); 
+         {   //world info
+             print("World:");
+
+             int32 enemy_total_count = 0;
+             int32 enemy_alive_count = 0;
+             {
+                 for (int32 i = 0; i < game_state->world.entity_buffer.count; ++i)
+                 {
+                     Entity *entity = &game_state->world.entity_buffer.e[i];
+                     if (entity->type == ENTITY_TYPE_GUARD || entity->type == ENTITY_TYPE_SS)
+                     {
+                         ++enemy_total_count;
+                         if (entity->hp > 0)
+                         {
+                             ++enemy_alive_count;
+                         }
+                     }
+                 }
+             }
+             
+             print(" Enemy count: %d/%d", enemy_alive_count, enemy_total_count);
+             print(" Player Info:");
+             print("  position:(%.1f, %.1f)", game_state->world.player.body.position.x,game_state->world.player.body.position.y); 
          }
      }
  }
