@@ -11,28 +11,35 @@ Wrapped_V2_Array::get_next()
 inline void
 set_room(Tile_Map *tile_map, Rect *room, Tile_Type tile_type)
 {
-    for (int32 x = room->min.x; x < room->max.x; ++x)
+    //NOTE(chen): since room represents empty space exclusively from walls, then expand
+    //            room rect by 1
+
+    Rect wall_rect = *room;
+    wall_rect.min += {-1, -1};
+    wall_rect.max += {1, 1};
+    
+    for (int32 x = wall_rect.min.x; x <= wall_rect.max.x; ++x)
     {
-        if (get_tile_value(tile_map, x, room->min.y))
+        if (get_tile_value(tile_map, x, wall_rect.min.y))
         {
-            get_tile_value(tile_map, x, room->min.y) = tile_type;
+            get_tile_value(tile_map, x, wall_rect.min.y) = tile_type;
         }
 
-        if (get_tile_value(tile_map, x, room->max.y))
+        if (get_tile_value(tile_map, x, wall_rect.max.y))
         {
-            get_tile_value(tile_map, x, room->max.y) = tile_type;
+            get_tile_value(tile_map, x, wall_rect.max.y) = tile_type;
         }
     }
-    for (int32 y = room->min.y; y < room->max.x; ++y)
+    for (int32 y = wall_rect.min.y; y <= wall_rect.max.y; ++y)
     {
-        if (get_tile_value(tile_map, room->min.x, y))
+        if (get_tile_value(tile_map, wall_rect.min.x, y))
         {
-            get_tile_value(tile_map, room->min.x, y) = tile_type;
+            get_tile_value(tile_map, wall_rect.min.x, y) = tile_type;
         }
 
-        if (get_tile_value(tile_map, room->max.x, y))
+        if (get_tile_value(tile_map, wall_rect.max.x, y))
         {
-            get_tile_value(tile_map, room->max.x, y) = tile_type;
+            get_tile_value(tile_map, wall_rect.max.x, y) = tile_type;
         }
     }
 }

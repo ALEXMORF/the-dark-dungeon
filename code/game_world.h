@@ -42,7 +42,10 @@ struct Tile_Map_Generator
     int32 x_count, y_count;
     uint32 *tiles;
     Tile_Map *tile_map;
-    
+
+    //NOTE(chen): the rooms represent space occupied by the empty space of this certain room
+    //            it is empty space exclusively from the wall .i.e. everything included in this
+    //            region are not walls
     Rect rooms[MAX_ROOM];
     int32 room_count;
     uint32 region_id;
