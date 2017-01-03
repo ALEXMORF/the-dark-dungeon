@@ -38,21 +38,23 @@ load_assets(Game_Asset *game_asset, Linear_Allocator *allocator,
             Platform_Load_Image *platform_load_image, Platform_Load_Audio *platform_load_audio)
 {
     DBuffer(Loaded_Image) *wall_texture_buffer = &game_asset->wall_texture_buffer;
-    wall_texture_buffer->capacity = 6;
-    wall_texture_buffer->e = Push_Array(allocator, wall_texture_buffer->capacity, Loaded_Image);
-    
-    char *texture_filenames[] = {
-        "../data/redbrick.png",
-        "../data/bluestone.png",
-        "../data/colorstone.png",
-        "../data/eagle.png",
-        "../data/purplestone.png",
-        "../data/wood.png",
-        "../data/mossy.png",
-    };
-    for (int i = 0; i < array_count(texture_filenames); ++i)
     {
-        add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, texture_filenames[i]));
+        char *texture_filenames[] = {
+            "../data/redbrick.png",
+            "../data/bluestone.png",
+            "../data/colorstone.png",
+            "../data/eagle.png",
+            "../data/purplestone.png",
+            "../data/wood.png",
+            "../data/mossy.png",
+        };
+        
+        wall_texture_buffer->capacity = array_count(texture_filenames);
+        wall_texture_buffer->e = Push_Array(allocator, wall_texture_buffer->capacity, Loaded_Image);
+        for (int i = 0; i < array_count(texture_filenames); ++i)
+        {
+            add_Loaded_Image(wall_texture_buffer, load_image(platform_load_image, texture_filenames[i]));
+        }
     }
     
     game_asset->floor_texture = load_image(platform_load_image, "../data/greystone.png");

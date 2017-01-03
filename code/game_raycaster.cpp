@@ -139,9 +139,9 @@ render_3d_scene(Game_Offscreen_Buffer *buffer, Render_Context *render_context,
         //wall rendering routine
         {
             int32 tile_value = get_tile_value(tile_map, reflection.tile_x, reflection.tile_y);
-            assert(tile_value >= 1 && tile_value < wall_texture_buffer->count);
+            assert(tile_value >= 1 && tile_value <= wall_texture_buffer->count);
             Loaded_Image *wall_texture = &wall_texture_buffer->e[tile_value-1];
-	    
+            
             real32 tile_size = 1.0f;
             real32 texture_x_percentage = (reflection.x_side_faced?
                                            modff(reflection.hit_position.x, &tile_size):
