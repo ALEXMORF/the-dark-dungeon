@@ -294,7 +294,8 @@ WinMain(HINSTANCE h_instance, HINSTANCE h_prev_instance, LPSTR cmd_line, int cmd
                     bind_key(SDLK_w, keyboard->up);
                     bind_key(SDLK_s, keyboard->down);
                     bind_key(SDLK_r, keyboard->R);
-
+                    bind_key(SDLK_q, keyboard->Q);
+                    
                     bind_key(SDLK_1, keyboard->number[1]);
                     bind_key(SDLK_2, keyboard->number[2]);
                     bind_key(SDLK_3, keyboard->number[3]);

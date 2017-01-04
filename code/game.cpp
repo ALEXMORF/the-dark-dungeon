@@ -2,7 +2,7 @@
  *TODO LIST:
  
  Future Features:
- . add ui and multiple game states
+ . add reset after death 
  
  TODO BUGS:
  . cast_ray() function sometimes returns non-valid result,
@@ -283,27 +283,41 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     }
     game_state->transient_allocator.used = 0;
     World *world = &game_state->world;
-    
+
+    //input
+    {
+        if (input->keyboard.Q)
+        {
+            toggle(&game_state->debug_hud_is_on);
+        }
+    }
+
+    //main update function
     if (!game_state->game_over)
     {
         update_game_state(world, input);
-    }
-    
-    if (!game_state->game_over && world->player.hp <= 0)
-    {
-        game_state->game_over = true;
-        set_screen_fader(&game_state->fader, 3.0f, 0x00ff0000);
-    }
-    
-    //physics backend
-    {
-        for (int i = 0; i < world->entity_buffer.count; ++i)
+        
+        //physics backend
         {
-            simulate_body(&world->entity_buffer.e[i].body, &world->tile_map);
+            for (int i = 0; i < world->entity_buffer.count; ++i)
+            {
+                simulate_body(&world->entity_buffer.e[i].body, &world->tile_map);
+            }
+            simulate_body(&world->player.body, &world->tile_map);
         }
-        simulate_body(&world->player.body, &world->tile_map);
+
+        if (world->player.hp <= 0)
+        {
+            game_state->game_over = true;
+            set_screen_fader(&game_state->fader, 3.0f, 0x00ff0000);
+        }
     }
-     
+
+    if (game_state->game_over)
+    {
+        //TODO(chen): if game over a certain time reset everything
+    }
+    
     //output sound
     if (!game_state->game_over)
     {
@@ -341,7 +355,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         {
             audio_system->push_task(&game_asset->pistol_reload_sound, 1.0f);
         }
-
+        
         //enemy fire sound
         for (int i = 0; i < world->entity_buffer.count; ++i)
         {
@@ -521,14 +535,14 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             {
                 v2 min = {100, 10};
                 v2 max = {500, 40};
-
+                
                 real32 width_per_hp = (real32)((max.x - min.x) / PLAYER_MAX_HP);
                 real32 lerp_ratio = 3.0f * input->dt_per_frame;
                 real32 hp_count = clamp((real32)world->player.hp, 0.0f, (real32)PLAYER_MAX_HP);
              
                 real32 target_hp_display_width = width_per_hp * hp_count;
                 game_state->hp_display_width = lerp(game_state->hp_display_width, target_hp_display_width, lerp_ratio);
-
+                
                 draw_string(&str_drawer, 10, 10, 120, 40, "HP: ");
                 draw_rectangle(buffer, min.x, min.y, max.x, max.y, 0x00550000);
                 draw_rectangle(buffer, min.x, min.y, min.x + game_state->hp_display_width, max.y, 0x00ff0000);
@@ -546,7 +560,17 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         }
     }
     
-    //HUD overlay
+    //fade screen
+    Screen_Fader *fader = &game_state->fader;
+    if (fader->time_left != 0.0f)
+    {
+        fader->time_left = reduce(fader->time_left, input->dt_per_frame);
+        uint8 A = (uint8)(fader->time_left * fader->time_map_alpha * 255.0f);
+        fill_screen(buffer, fader->color, A);
+    }
+    
+    //Debug HUD
+    if (game_state->debug_hud_is_on)
     {
         String_Drawer str_drawer = {};
         {
@@ -590,15 +614,6 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             print(" Player Info:");
             print("  position:(%.1f, %.1f)", game_state->world.player.body.position.x,game_state->world.player.body.position.y); 
         }
-    }
-    
-    //fade screen
-    Screen_Fader *fader = &game_state->fader;
-    if (fader->time_left != 0.0f)
-    {
-        fader->time_left = reduce(fader->time_left, input->dt_per_frame);
-        uint8 A = (uint8)(fader->time_left * fader->time_map_alpha * 255.0f);
-        fill_screen(buffer, fader->color, A);
     }
 }
 

@@ -11,6 +11,12 @@
 #define for_each(it_name, array) for (int32 it_name = 0; it_name < array_count(array); ++it_name)
 #define wrap_array_index(index, array) index %= array_count(array)
 
+inline void
+toggle(bool32 *value)
+{
+    *value = !*value;
+}
+    
 #include "game_math.h"
 #include "game_random.h"
 #include "game_constraint.h"
@@ -78,7 +84,9 @@ struct Game_State
     Game_Asset asset;
     Render_Context render_context;
     Audio_System audio_system;
-    
+
+    //debug
+    bool32 debug_hud_is_on;
     real32 hud_effect_last_time;
     uint32 hud_effect_color;
     real32 hp_display_width;

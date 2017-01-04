@@ -39,9 +39,8 @@ things I implemented:
  21. Procedural world generation (12/30/2016)
  
 TODO List:
- 1. Make world generation more interesting
- 2. UI and multiple states
- 3. fix the bug with cast_ray()
+ 1. add world_reset()
+ 2. fix the bug with cast_ray()
  
 NOTE:
  
