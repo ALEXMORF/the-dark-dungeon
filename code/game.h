@@ -55,14 +55,24 @@ struct Game_Asset
 
 #define HUD_EFFECT_LAST_TIME 0.2f
 
+struct Screen_Fader
+{
+    real32 time_left;
+    real32 time_map_alpha;
+    uint32 color;
+};
+
 struct Game_State
 {
+    Screen_Fader fader;
+    
     //memory
     Linear_Allocator permanent_allocator;
     Linear_Allocator transient_allocator;
     
     //game
     World world;
+    bool32 game_over;
     
     //system
     Game_Asset asset;

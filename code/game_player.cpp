@@ -19,7 +19,8 @@ initialize_weapon(Weapon *weapon, Weapon_Type weapon_type)
             
             weapon->max_reload_time = 1.0f;
             weapon->cache_max_ammo = 8;
-//            weapon->bank_ammo = 32;
+            weapon->cache_ammo = 8;
+            weapon->bank_ammo = 24;
 
             weapon->force = 100.0f;
         } break;
@@ -44,7 +45,7 @@ initialize_weapon(Weapon *weapon, Weapon_Type weapon_type)
             weapon->max_reload_time = 2.0f;
             weapon->cache_max_ammo = 100;
 //            weapon->bank_ammo = 300;
-
+            
             weapon->force = 250.0f;
         } break;
         
@@ -80,7 +81,7 @@ initialize_player(Player *player, v2 position)
     initialize_weapon(&player->weapons[pistol], pistol);
     initialize_weapon(&player->weapons[rifle], rifle);
     initialize_weapon(&player->weapons[minigun], minigun);
-    player->weapon_index = rifle;
+    player->weapon_index = pistol;
 }
 
 internal void
@@ -115,7 +116,7 @@ player_input_process(Player *player, Game_Input *input)
     }
     
     //weapon switch
-    for (int i = 0; i < 4; ++i)
+    for (int i = 1; i < 4; ++i)
     {
         if (input->keyboard.number[i] && player->get_weapon()->type != i)
         {

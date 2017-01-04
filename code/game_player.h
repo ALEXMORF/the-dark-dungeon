@@ -2,7 +2,7 @@
 
 enum Weapon_Type
 {
-    knife, 
+    filler, 
     pistol,
     rifle,
     minigun,
