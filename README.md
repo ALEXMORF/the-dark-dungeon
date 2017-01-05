@@ -50,6 +50,7 @@ NOTE:
 # ways you could optimize my code
 
 SIMD instructions
+
 multi-threaded rendering
 
 #screenshots
