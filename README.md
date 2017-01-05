@@ -1,7 +1,7 @@
 # the-dark-dungeon
 a game with the application of raycasting.
 
-The entire game is coded by hand without any library (well except one just for asset loading). The entire program is written without any external libraries, but the asset loading uses stb_image, because it's boring stuff and I don't feel like doing from scratch. 
+The entire program is written without any external libraries, but the asset loading uses stb_image, because it's boring stuff and I don't feel like doing from scratch. 
 
 P.S.: because I don't want to initialize OpenGL through Win32 to get the v-sync, I cheated a little by using SDL. but that's just platform layer code; the actual renderer, physics engine, gameplay code is still written from scratch. 
 
