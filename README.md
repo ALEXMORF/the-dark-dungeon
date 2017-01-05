@@ -37,13 +37,11 @@ things I implemented:
  19. Added force to bullets and tuned a force constant for a nice bullet recoil (11/28/2016)
  20. Added collectables (ammo, health pack, etc) (12/21/2016) 
  21. Procedural world generation (12/30/2016)
- 22. Added death state, screen fader, and the world is resettable (1/4/2017)
- 
+ 22. Added win state, death state, screen fader, and the world is resettable (1/4/2017)
+ 23. Game is done! ... with one bug unfortunately (1/5/2017)
+  
 TODO List:
- 1. fix the bad debug_info_toggle()
- 2. add winning condition
- 3. fix the bug with cast_ray()
- 4. unify game.dll and main.exe into one single file
+ 1. fix the bug with cast_ray()
  
 NOTE:
  

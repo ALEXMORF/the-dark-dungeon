@@ -1,9 +1,6 @@
 /*
- TODO BUGS: 
- . fix the bad debug_info_toggle()
- . add a winning condition
+ TODO FIXED??:
  . cast_ray() function sometimes returns non-valid result,
- . unify game.dll and main.exe into one single game.exe
 */
 
 #include "game.h"
@@ -225,6 +222,43 @@ update_game_state(World *world, Game_Input *input)
     }
 }
 
+inline int32
+get_enemy_alive_count(DBuffer(Entity) *entity_buffer)
+{
+    int32 result = 0;
+    
+    for (int32 i = 0; i < entity_buffer->count; ++i)
+    {
+        Entity *entity = &entity_buffer->e[i];
+        if (entity->type == ENTITY_TYPE_GUARD || entity->type == ENTITY_TYPE_SS)
+        {
+            if (entity->hp > 0)
+            {
+                ++result;
+            }
+        }
+    }
+
+    return result;
+}
+
+inline int32
+get_enemy_total_count(DBuffer(Entity) *entity_buffer)
+{
+    int32 result = 0;
+    
+    for (int32 i = 0; i < entity_buffer->count; ++i)
+    {
+        Entity *entity = &entity_buffer->e[i];
+        if (entity->type == ENTITY_TYPE_GUARD || entity->type == ENTITY_TYPE_SS)
+        {
+            ++result;
+        }
+    }
+
+    return result;
+}
+
 inline void
 set_screen_fader(Screen_Fader *fader, real32 time_left, uint32 color)
 {
@@ -275,20 +309,23 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                            &game_state->permanent_allocator, &game_state->transient_allocator);
         }
         
-        set_screen_fader(&game_state->fader, 1.0f, 0);
+        set_screen_fader(&game_state->fader, 2.0f, 0);
         memory->is_initialized = true;
     }
     game_state->transient_allocator.used = 0;
     World *world = &game_state->world;
-
+    
     //input
+    if (input->keyboard.Q && !game_state->debug_hud_just_toggled)
     {
-        if (input->keyboard.Q)
-        {
-            toggle(&game_state->debug_hud_is_on);
-        }
+        toggle(&game_state->debug_hud_is_on);
+        game_state->debug_hud_just_toggled = true;
     }
-
+    else if (!input->keyboard.Q)
+    {
+        game_state->debug_hud_just_toggled = false;
+    }
+    
     //main update function
     if (!game_state->game_over)
     {
@@ -302,11 +339,17 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             }
             simulate_body(&world->player.body, &world->tile_map);
         }
-
+        
         if (world->player.hp <= 0)
         {
             game_state->game_over = true;
             set_screen_fader(&game_state->fader, 3.0f, 0x00ff0000);
+        }
+
+        if (get_enemy_alive_count(&world->entity_buffer) == 0) 
+        {
+            game_state->game_over = true;
+            set_screen_fader(&game_state->fader, 3.0f, 0x0000ff00);
         }
     }
 
@@ -316,7 +359,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
         
         if (!game_over_state->is_initialized)
         {
-            game_over_state->timer = 2.0f;
+            game_over_state->timer = 3.0f;
             game_over_state->is_initialized = true;
         }
 
@@ -408,7 +451,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                         &game_asset->floor_texture, &game_asset->ceiling_texture,
                         &game_asset->wall_texture_buffer, sprite_list.content, sprite_list.count,
                         memory->platform_eight_async_proc);
-
+        
         //animate first-person weapon
         {
             Player *player = &world->player;
@@ -510,7 +553,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                 texture_x += texture_mapper;
             }
         }
-        
+
         //gameplay HUD
         {
             String_Drawer str_drawer = {};
@@ -518,7 +561,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                 str_drawer.font_sheet = &game_asset->font_bitmap_sheet;
                 str_drawer.buffer = buffer;
             }
-
+            
             //draw effect (hurt, healed, etc)
             if (game_state->hud_effect_last_time == 0.0f)
             {
@@ -548,6 +591,21 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                 game_state->hud_effect_last_time = reduce(game_state->hud_effect_last_time, input->dt_per_frame);
             }
             
+            //print objective
+            {
+                int32 x = 340;
+                int32 y = 70;
+                int32 font_size = 20;
+                
+                draw_string_autosized(&str_drawer, x, y, font_size, font_size, "HUNT ENEMIES");
+                y += font_size + 5;
+                
+                x = 270;
+                draw_string_autosized(&str_drawer, x, y, font_size, font_size, "ENEMIES LEFT: %d/%d",
+                                      get_enemy_alive_count(&world->entity_buffer),
+                                      get_enemy_total_count(&world->entity_buffer));
+            }
+            
             //hp-bar
             {
                 v2 min = {100, 10};
@@ -570,7 +628,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                 int32 min_x = 650;
                 int32 min_y = 500;
                 int32 font_size = 20;
-
+                
                 draw_string_autosized(&str_drawer, min_x, min_y, font_size, font_size,
                                       "ammo: %d / %d", world->player.get_weapon()->cache_ammo, world->player.get_weapon()->bank_ammo);
             }
@@ -606,30 +664,15 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
             print(" mtsc: %lld cycles", debug_state->last_frame_mtsc);
         }
         print("");
-         
+        
         {   //world info
             print("World:");
-
-            int32 enemy_total_count = 0;
-            int32 enemy_alive_count = 0;
-            {
-                for (int32 i = 0; i < game_state->world.entity_buffer.count; ++i)
-                {
-                    Entity *entity = &game_state->world.entity_buffer.e[i];
-                    if (entity->type == ENTITY_TYPE_GUARD || entity->type == ENTITY_TYPE_SS)
-                    {
-                        ++enemy_total_count;
-                        if (entity->hp > 0)
-                        {
-                            ++enemy_alive_count;
-                        }
-                    }
-                }
-            }
-             
-            print(" Enemy count: %d/%d", enemy_alive_count, enemy_total_count);
+            
+            print(" Enemy count: %d/%d",
+                  get_enemy_alive_count(&world->entity_buffer),
+                  get_enemy_total_count(&world->entity_buffer));
             print(" Player Info:");
-            print("  position:(%.1f, %.1f)", game_state->world.player.body.position.x,game_state->world.player.body.position.y); 
+            print("  position:(%.1f, %.1f)", game_state->world.player.body.position.x,game_state->world.player.body.position.y);
         }
     }
 }

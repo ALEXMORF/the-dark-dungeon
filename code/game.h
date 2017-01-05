@@ -94,6 +94,7 @@ struct Game_State
 
     //debug
     bool32 debug_hud_is_on;
+    bool32 debug_hud_just_toggled;
     real32 hud_effect_last_time;
     uint32 hud_effect_color;
     real32 hp_display_width;
