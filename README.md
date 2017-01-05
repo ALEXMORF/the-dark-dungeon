@@ -40,7 +40,9 @@ things I implemented:
  22. Added death state, screen fader, and the world is resettable (1/4/2017)
  
 TODO List:
- 1. fix the bug with cast_ray()
+ 1. fix the bad debug_info_toggle()
+ 2. fix the bug with cast_ray()
+ 3. unify game.dll and main.exe into one single file
  
 NOTE:
  

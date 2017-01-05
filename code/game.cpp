@@ -2,7 +2,7 @@
  TODO BUGS: 
  . fix the bad debug_info_toggle()
  . cast_ray() function sometimes returns non-valid result,
-   tentative fix by inclusively determining quadrants, see how it helps.
+ . unify game.dll and main.exe into one single game.exe
 */
 
 #include "game.h"
