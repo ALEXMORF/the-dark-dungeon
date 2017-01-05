@@ -1,9 +1,4 @@
 /*
- *TODO LIST:
- 
- Future Features:
- . add reset after death 
- 
  TODO BUGS:
  . cast_ray() function sometimes returns non-valid result,
    tentative fix by inclusively determining quadrants, see how it helps.
@@ -241,7 +236,7 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
     assert(sizeof(Game_State) <= memory->permanent_memory.size);
     Game_State *game_state = (Game_State *)memory->permanent_memory.storage;
     Game_Asset *game_asset = &game_state->asset;
-
+    
     if (!memory->is_initialized)
     {
         initialize_linear_allocator(&game_state->permanent_allocator,
@@ -266,10 +261,10 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
                 real32 real_scan_y = ((real32)buffer->height/2 + (real32)i / inverse_aspect_ratio);
                 render_context->floorcast_table[i] = (real32)buffer->height / (2*real_scan_y - buffer->height);
             }
-             
+            
             game_state->audio_system.push_task_looped(&game_asset->background_music);
         }
-         
+        
         World *world = &game_state->world;
         {
             world->entity_buffer.capacity = 1000;
@@ -315,7 +310,27 @@ extern "C" GAME_UPDATE_AND_RENDER(game_update_and_render)
 
     if (game_state->game_over)
     {
-        //TODO(chen): if game over a certain time reset everything
+        Game_Over_State *game_over_state = &game_state->game_over_state;
+        
+        if (!game_over_state->is_initialized)
+        {
+            game_over_state->timer = 2.0f;
+            game_over_state->is_initialized = true;
+        }
+
+        if (game_over_state->timer != 0.0f)
+        {
+            game_over_state->timer = reduce(game_over_state->timer, input->dt_per_frame);
+        }
+        else
+        {
+            game_over_state->is_initialized = false;
+            game_state->game_over = false;
+            
+            generate_world(world, &world->entity_buffer, &game_state->asset,
+                           &game_state->permanent_allocator, &game_state->transient_allocator);
+            set_screen_fader(&game_state->fader, 1.0f, 0);
+        }
     }
     
     //output sound

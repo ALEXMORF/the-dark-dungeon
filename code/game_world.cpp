@@ -167,6 +167,18 @@ generate_world(World *world, DBuffer(Entity) *entity_buffer,
                Linear_Allocator *transient_allocator)
 {
     Tile_Map *tile_map = &world->tile_map;
+    
+    if (tile_map->tiles)
+    {
+        loop_for(x, tile_map->tile_count_x)
+        {
+            loop_for(y, tile_map->tile_count_y)
+            {
+                get_tile_value(tile_map, x, y) = 0;
+            }
+        }
+    }
+    else
     {
         tile_map->tile_count_x = 40;
         tile_map->tile_count_y = 40;
@@ -197,6 +209,12 @@ generate_world(World *world, DBuffer(Entity) *entity_buffer,
         }
     }
 
+    //clear entity buffer if not empty
+    if (entity_buffer->count != 0)
+    {
+        entity_buffer->count = 0;
+    }
+    
     if (generator.room_count > 0)
     {
         v2 room_min = cast_to_v2(generator.rooms[0].min);

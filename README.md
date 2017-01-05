@@ -37,10 +37,10 @@ things I implemented:
  19. Added force to bullets and tuned a force constant for a nice bullet recoil (11/28/2016)
  20. Added collectables (ammo, health pack, etc) (12/21/2016) 
  21. Procedural world generation (12/30/2016)
+ 22. Added death state, screen fader, and the world is resettable (1/4/2017)
  
 TODO List:
- 1. add world_reset()
- 2. fix the bug with cast_ray()
+ 1. fix the bug with cast_ray()
  
 NOTE:
  

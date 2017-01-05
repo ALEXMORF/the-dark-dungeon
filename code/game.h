@@ -68,6 +68,12 @@ struct Screen_Fader
     uint32 color;
 };
 
+struct Game_Over_State
+{
+    bool32 is_initialized;
+    real32 timer;
+};
+
 struct Game_State
 {
     Screen_Fader fader;
@@ -79,6 +85,7 @@ struct Game_State
     //game
     World world;
     bool32 game_over;
+    Game_Over_State game_over_state;
     
     //system
     Game_Asset asset;
