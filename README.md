@@ -16,7 +16,7 @@ https://www.youtube.com/watch?v=ABcA5nmE6Eg&feature=youtu.be
 TTD final version (1/5/2017):
 https://www.youtube.com/watch?v=lejmK2bgtDQ
 
-#Features and TODOs
+#Features
 
 things I implemented:
  1. texture mapping for wall rendering. 
@@ -42,10 +42,7 @@ things I implemented:
  21. Procedural world generation (12/30/2016)
  22. Added win state, death state, screen fader, and the world is resettable (1/4/2017)
  23. Game is done! ... with one bug unfortunately (1/5/2017)
-  
-TODO List:
- 1. fix the bug with cast_ray()
- 
+
 NOTE:
  
  Functions and data type definitions, in some way, are trees. The point of "struct" in C was to create multiple layers for a complex data type. Imagine if a data type have 100 fields; it's very hard to understand it. However, if the data type itself is composed of other 5 data types, and those five data types are also composed of five data types, and so on. It's almost as if the data type hiearchy is a penta search tree, and its purpose is to make time that programmer has to spend to reason about the code O(logn), n being the number of fields that's actually there. So I had one random thought: what if there is a program that can balance the "data type tree" and maximize its understandibility, like a B-tree or something. 
