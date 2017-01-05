@@ -117,7 +117,7 @@ update_basic_entity(Entity *entity, Tile_Map *tile_map, v2 player_position, real
     real32 firing_state_interval = 0.3f;
     real32 fire_preparing_interval = 0.22f;
     real32 fov = pi32 / 3.0f;
-
+    
     if (entity->hp > 0)
     {
         //prestate processing stage
@@ -248,6 +248,6 @@ update_basic_entity(Entity *entity, Tile_Map *tile_map, v2 player_position, real
         entity->state = death_state;
         clock[death_state] += dt;
     }
-
+    
     entity->is_damaged = false;
 }

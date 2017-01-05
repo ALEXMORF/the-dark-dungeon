@@ -41,8 +41,9 @@ things I implemented:
  
 TODO List:
  1. fix the bad debug_info_toggle()
- 2. fix the bug with cast_ray()
- 3. unify game.dll and main.exe into one single file
+ 2. add winning condition
+ 3. fix the bug with cast_ray()
+ 4. unify game.dll and main.exe into one single file
  
 NOTE:
  

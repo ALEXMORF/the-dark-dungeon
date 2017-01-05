@@ -168,17 +168,7 @@ generate_world(World *world, DBuffer(Entity) *entity_buffer,
 {
     Tile_Map *tile_map = &world->tile_map;
     
-    if (tile_map->tiles)
-    {
-        loop_for(x, tile_map->tile_count_x)
-        {
-            loop_for(y, tile_map->tile_count_y)
-            {
-                get_tile_value(tile_map, x, y) = 0;
-            }
-        }
-    }
-    else
+    if (!tile_map->tiles)
     {
         tile_map->tile_count_x = 40;
         tile_map->tile_count_y = 40;
@@ -265,7 +255,16 @@ Tile_Map_Generator::run(Tile_Map *in_tile_map, Linear_Allocator *transient_alloc
     tiles = tile_map->tiles;
     
     room_count = 0;
-
+    
+    //zero out the entire map first
+    loop_for(x, tile_map->tile_count_x)
+    {
+        loop_for(y, tile_map->tile_count_y)
+        {
+            get_tile_value(tile_map, x, y) = 0;
+        }
+    }
+    
     //fill up with rooms
     {   
         int32 room_fill_count = MAX_ROOM;

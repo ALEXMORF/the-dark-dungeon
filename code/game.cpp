@@ -1,6 +1,7 @@
 /*
  TODO BUGS: 
  . fix the bad debug_info_toggle()
+ . add a winning condition
  . cast_ray() function sometimes returns non-valid result,
  . unify game.dll and main.exe into one single game.exe
 */

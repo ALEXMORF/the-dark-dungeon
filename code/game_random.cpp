@@ -35,3 +35,19 @@ real_quick_rand(real32 lo, real32 hi)
     
     return result;
 }
+
+inline bool32
+one_in(uint32 base_number)
+{
+    assert(base_number != 0);
+
+    bool32 result = false;
+    
+    int32 gen_number = quick_rand() % base_number;
+    if (gen_number == gen_number/2)
+    {
+        result = true;
+    }
+
+    return result;
+}
