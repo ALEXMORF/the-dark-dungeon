@@ -73,7 +73,7 @@ weapon_start_reload(Weapon *weapon)
 internal void
 initialize_player(Player *player, v2 position)
 {
-    memset((void *)player, 0, sizeof(player));
+    memset((void *)player, 0, sizeof(Player));
     
     player->hp = PLAYER_MAX_HP;
     

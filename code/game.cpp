@@ -1,5 +1,6 @@
 /*
- TODO BUGS:
+ TODO BUGS: 
+ . fix the bad debug_info_toggle()
  . cast_ray() function sometimes returns non-valid result,
    tentative fix by inclusively determining quadrants, see how it helps.
 */
