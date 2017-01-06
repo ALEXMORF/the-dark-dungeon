@@ -43,6 +43,16 @@ things I implemented:
  22. Added win state, death state, screen fader, and the world is resettable (1/4/2017)
  23. Game is done! (1/5/2017)
 
+# controls
+
+Q: toggle debug HUD
+
+W,A,S,D: move
+
+1,2,3: toggle different wepaons
+
+left_mouse/right_mouse: fire
+
 # ways you could optimize my code
 
 SIMD instructions
