@@ -87,3 +87,6 @@ multi-threaded rendering
 
  screenshot 9 (11/23/2016)
 ![image](https://cloud.githubusercontent.com/assets/16845654/20609341/1aa08602-b240-11e6-87e7-60f83c34d885.png)
+
+ screenshot 10 (1/14/2016)
+ ![image](https://cloud.githubusercontent.com/assets/16845654/21960436/8ded986a-daa0-11e6-88a5-a2780b5158a1.png)
