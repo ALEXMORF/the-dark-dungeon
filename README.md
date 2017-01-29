@@ -13,7 +13,7 @@ https://www.youtube.com/watch?v=rgWLmUx7Chw
 TTD physics engine demo (11/28/2016):
 https://www.youtube.com/watch?v=ABcA5nmE6Eg&feature=youtu.be
 
-TTD final version (1/5/2017):
+TTD version 1.0 (1/5/2017):
 https://www.youtube.com/watch?v=lejmK2bgtDQ
 
 #Features
