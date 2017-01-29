@@ -41,7 +41,7 @@ things I implemented:
  20. Added collectables (ammo, health pack, etc) (12/21/2016) 
  21. Procedural world generation (12/30/2016)
  22. Added win state, death state, screen fader, and the world is resettable (1/4/2017)
- 23. Game is done! (1/5/2017)
+ 23. Game is somewhat playable! (1/5/2017)
 
 # controls
 
@@ -54,6 +54,8 @@ W,A,S,D: move
 left_mouse/right_mouse: fire
 
 # ways you could optimize my code
+
+reorganize memory layout for frame buffer
 
 SIMD instructions
 
