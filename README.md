@@ -10,7 +10,7 @@ P.S.: because I don't want to initialize OpenGL through Win32 to get the v-sync,
 TTD early demo (11/26/2016):
 https://www.youtube.com/watch?v=rgWLmUx7Chw
 
-TTD physics engine demo (11/28/2016):
+TTD physics demo (11/28/2016):
 https://www.youtube.com/watch?v=ABcA5nmE6Eg&feature=youtu.be
 
 TTD version 1.0 (1/5/2017):
